@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nekomata"
+version = "0.1.0"
+description = "像素风猫咪塔罗牌终端占卜应用"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+dependencies = [
+    "textual>=0.50",
+    "rich>=13.0",
+    "pyyaml>=6.0",
+    "pillow>=10.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-mock>=3.12",
+]
+pixel = [
+    "rich-pixels>=1.0",
+]
+
+[project.scripts]
+nekomata = "nekomata.app:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
