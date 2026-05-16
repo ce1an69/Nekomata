@@ -4,7 +4,7 @@ import json
 import logging
 import urllib.request
 import urllib.error
-from typing import Protocol, runtime_checkable
+from typing import AsyncIterator, Protocol, runtime_checkable
 
 from nekomata.card.types import DrawnCard
 from nekomata.ai.prompts import SYSTEM_PROMPT, build_interpretation_prompt
@@ -38,6 +38,13 @@ def _cards_info(drawn_cards: list[DrawnCard]) -> str:
     return "\n".join(lines)
 
 
+def _build_messages(style: str, question: str, drawn_cards: list[DrawnCard]) -> list[dict]:
+    return [
+        {"role": "system", "content": SYSTEM_PROMPT.format(style=style)},
+        {"role": "user", "content": build_interpretation_prompt(question, _cards_info(drawn_cards))},
+    ]
+
+
 def template_interpret(drawn_cards: list[DrawnCard], question: str) -> str:
     parts = [f"🔮 问题：{question}\n"]
     for dc in drawn_cards:
@@ -49,6 +56,13 @@ def template_interpret(drawn_cards: list[DrawnCard], question: str) -> str:
         parts.append(f"  释义：{meaning}")
         parts.append("")
     return "\n".join(parts)
+
+
+async def template_interpret_stream(drawn_cards: list[DrawnCard], question: str) -> AsyncIterator[str]:
+    """Stream template interpretation line by line."""
+    text = template_interpret(drawn_cards, question)
+    for line in text.split("\n"):
+        yield line + "\n"
 
 
 class OllamaInterpreter:
@@ -75,10 +89,7 @@ class OllamaInterpreter:
     def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str:
         payload = json.dumps({
             "model": self._model,
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT.format(style=self._style)},
-                {"role": "user", "content": build_interpretation_prompt(question, _cards_info(drawn_cards))},
-            ],
+            "messages": _build_messages(self._style, question, drawn_cards),
             "stream": False,
         }).encode()
 
@@ -94,6 +105,47 @@ class OllamaInterpreter:
             raise InterpretationError(str(e), retryable=True) from e
         except (KeyError, IndexError) as e:
             raise InterpretationError(str(e), retryable=False) from e
+
+    async def interpret_stream(self, drawn_cards: list[DrawnCard], question: str) -> AsyncIterator[str]:
+        """Stream interpretation chunks from Ollama SSE endpoint."""
+        payload = json.dumps({
+            "model": self._model,
+            "messages": _build_messages(self._style, question, drawn_cards),
+            "stream": True,
+        }).encode()
+
+        req = urllib.request.Request(
+            self._url, data=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            with await loop.run_in_executor(None, lambda: urllib.request.urlopen(req, timeout=self._timeout)) as resp:
+                buffer = ""
+                while True:
+                    chunk = await loop.run_in_executor(None, resp.read, 1024)
+                    if not chunk:
+                        break
+                    buffer += chunk.decode()
+                    while "\n" in buffer:
+                        line, buffer = buffer.split("\n", 1)
+                        line = line.strip()
+                        if not line or not line.startswith("data:"):
+                            continue
+                        data_str = line[5:].strip()
+                        if data_str == "[DONE]":
+                            return
+                        try:
+                            data = json.loads(data_str)
+                            delta = data["choices"][0].get("delta", {})
+                            content = delta.get("content", "")
+                            if content:
+                                yield content
+                        except (json.JSONDecodeError, KeyError, IndexError):
+                            continue
+        except urllib.error.URLError as e:
+            raise InterpretationError(str(e), retryable=True) from e
 
 
 class OpenAIInterpreter:
@@ -122,10 +174,7 @@ class OpenAIInterpreter:
     def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str:
         payload = json.dumps({
             "model": self._model,
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT.format(style=self._style)},
-                {"role": "user", "content": build_interpretation_prompt(question, _cards_info(drawn_cards))},
-            ],
+            "messages": _build_messages(self._style, question, drawn_cards),
             "stream": False,
         }).encode()
 
@@ -142,6 +191,48 @@ class OpenAIInterpreter:
             raise InterpretationError(str(e), retryable=True) from e
         except (KeyError, IndexError) as e:
             raise InterpretationError(str(e), retryable=False) from e
+
+    async def interpret_stream(self, drawn_cards: list[DrawnCard], question: str) -> AsyncIterator[str]:
+        """Stream interpretation chunks from OpenAI SSE endpoint."""
+        payload = json.dumps({
+            "model": self._model,
+            "messages": _build_messages(self._style, question, drawn_cards),
+            "stream": True,
+        }).encode()
+
+        headers = {"Content-Type": "application/json"}
+        if self._api_key:
+            headers["Authorization"] = f"Bearer {self._api_key}"
+
+        req = urllib.request.Request(self._url, data=payload, headers=headers)
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            with await loop.run_in_executor(None, lambda: urllib.request.urlopen(req, timeout=self._timeout)) as resp:
+                buffer = ""
+                while True:
+                    chunk = await loop.run_in_executor(None, resp.read, 1024)
+                    if not chunk:
+                        break
+                    buffer += chunk.decode()
+                    while "\n" in buffer:
+                        line, buffer = buffer.split("\n", 1)
+                        line = line.strip()
+                        if not line or not line.startswith("data:"):
+                            continue
+                        data_str = line[5:].strip()
+                        if data_str == "[DONE]":
+                            return
+                        try:
+                            data = json.loads(data_str)
+                            delta = data["choices"][0].get("delta", {})
+                            content = delta.get("content", "")
+                            if content:
+                                yield content
+                        except (json.JSONDecodeError, KeyError, IndexError):
+                            continue
+        except urllib.error.URLError as e:
+            raise InterpretationError(str(e), retryable=True) from e
 
 
 def get_interpreter(config) -> AIInterpreter:
