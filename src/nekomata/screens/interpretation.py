@@ -39,6 +39,7 @@ class InterpretationScreen(Screen):
         self._typewriter = typewriter
         self._revealed = 0
         self._char_step = 3
+        self._tw_timer = None
 
     def compose(self):
         with Vertical():
@@ -50,7 +51,7 @@ class InterpretationScreen(Screen):
     def on_mount(self) -> None:
         if self._typewriter and self._full_text:
             self._revealed = 0
-            self.set_interval(0.02, self._typewriter_tick)
+            self._tw_timer = self.set_interval(0.02, self._typewriter_tick)
 
     def _typewriter_tick(self) -> None:
         self._revealed += self._char_step
@@ -58,6 +59,9 @@ class InterpretationScreen(Screen):
             self._revealed = len(self._full_text)
             content = self.query_one("#interp-content", Static)
             content.update(Markdown(self._full_text))
+            if self._tw_timer is not None:
+                self._tw_timer.stop()
+                self._tw_timer = None
             return
         content = self.query_one("#interp-content", Static)
         content.update(Markdown(self._full_text[: self._revealed]))

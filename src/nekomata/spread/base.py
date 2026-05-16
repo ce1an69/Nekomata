@@ -20,10 +20,10 @@ class Spread:
     def drawn_cards(self) -> list[DrawnCard]:
         return list(self._drawn_cards)
 
-    def draw(self, deck: Deck) -> None:
+    def draw(self, deck: Deck, reversal_prob: float = 0.5) -> None:
         self._drawn_cards.clear()
         for pos in self._positions:
-            card, is_reversed = deck.draw()
+            card, is_reversed = deck.draw(reversal_prob)
             self._drawn_cards.append(
                 DrawnCard(card=card, position=pos, is_reversed=is_reversed)
             )
