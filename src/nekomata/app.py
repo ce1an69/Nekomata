@@ -17,6 +17,7 @@ class NekomataApp(App):
         self.spread_name: str = ""
         self.spread_name_zh: str = ""
         self.render_mode: str = "compact"
+        self.animation_enabled: bool = True
 
     def on_mount(self) -> None:
         self.render_mode = get_render_mode()

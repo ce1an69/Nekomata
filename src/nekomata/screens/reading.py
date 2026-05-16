@@ -107,11 +107,24 @@ class ReadingScreen(Screen):
 
         container = self.query_one("#cards-container")
         mode = getattr(self.app, "render_mode", "compact")
-        for dc in self._drawn_cards:
-            container.mount(CardWidget(dc, render_mode=mode))
+        animation_enabled = getattr(self.app, "animation_enabled", True)
+
+        for i, dc in enumerate(self._drawn_cards):
+            widget = CardWidget(dc, render_mode=mode)
+            container.mount(widget)
+            if animation_enabled:
+                self.set_timer(
+                    i * 0.15,
+                    lambda w=widget: self._reveal_card(w),
+                )
 
         self.app.spread_name = spread.name
         self.app.spread_name_zh = spread.name_zh
+
+    @staticmethod
+    def _reveal_card(widget: CardWidget) -> None:
+        from nekomata.render.animations import animate_reveal
+        widget.run_worker(animate_reveal(widget))
 
     def on_card_widget_selected(self, event: CardWidget.Selected) -> None:
         preview = self.query_one("#card-preview")
