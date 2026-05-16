@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from textual.app import App
 
+from nekomata.render.terminal import get_render_mode
 from nekomata.screens.home import HomeScreen
 
 
@@ -15,9 +16,14 @@ class NekomataApp(App):
         self.spread_key: str = ""
         self.spread_name: str = ""
         self.spread_name_zh: str = ""
+        self.render_mode: str = "compact"
 
     def on_mount(self) -> None:
+        self.render_mode = get_render_mode()
         self.push_screen(HomeScreen())
+
+    def on_resize(self, event) -> None:
+        self.render_mode = get_render_mode()
 
 
 def main() -> None:

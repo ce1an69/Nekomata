@@ -38,9 +38,10 @@ class CardWidget(Static):
             super().__init__()
             self.drawn_card = drawn_card
 
-    def __init__(self, drawn: DrawnCard) -> None:
+    def __init__(self, drawn: DrawnCard, render_mode: str = "compact") -> None:
         self._drawn = drawn
-        img_panel = render_card_image(drawn)
+        size = "compact" if render_mode == "text" else render_mode
+        img_panel = render_card_image(drawn, size=size)
         super().__init__(img_panel if img_panel else render_card_text(drawn))
 
     def on_click(self) -> None:
@@ -105,8 +106,9 @@ class ReadingScreen(Screen):
         self._drawn_cards = spread.drawn_cards
 
         container = self.query_one("#cards-container")
+        mode = getattr(self.app, "render_mode", "compact")
         for dc in self._drawn_cards:
-            container.mount(CardWidget(dc))
+            container.mount(CardWidget(dc, render_mode=mode))
 
         self.app.spread_name = spread.name
         self.app.spread_name_zh = spread.name_zh
