@@ -3,6 +3,22 @@ import pytest
 from nekomata.app import NekomataApp
 
 
+class DummyStyles:
+    opacity = 1
+    offset = (0, 0)
+
+
+class SyncAnimateWidget:
+    def __init__(self) -> None:
+        self.styles = DummyStyles()
+        self.calls = []
+        self.styles.animate = self.styles_animate
+
+    def styles_animate(self, attribute, value, duration):
+        self.calls.append((attribute, value, duration))
+        return None
+
+
 @pytest.mark.asyncio
 async def test_reading_screen_animated_reveal():
     """Cards should mount with staggered reveal animation."""
@@ -27,3 +43,16 @@ def test_animation_functions_exist():
     assert callable(animate_slide_in)
     assert callable(animate_reveal)
     assert callable(animate_shuffle)
+
+
+@pytest.mark.asyncio
+async def test_animate_reveal_allows_sync_textual_animate():
+    """Installed Textual may return None from animate()."""
+    from nekomata.render.animations import animate_reveal
+
+    widget = SyncAnimateWidget()
+
+    await animate_reveal(widget)
+
+    assert widget.styles.opacity == 0
+    assert widget.calls == [("opacity", 1.0, 0.3)]

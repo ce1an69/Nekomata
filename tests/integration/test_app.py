@@ -13,8 +13,11 @@ async def test_app_starts():
 @pytest.mark.asyncio
 async def test_home_screen_has_title():
     app = NekomataApp()
+    app.animation_enabled = False
     async with app.run_test() as pilot:
-        assert app.screen.query_one("#title") is not None
+        title = app.screen.query_one("#title")
+        assert "███████" in str(title.render())
+        assert "NEKOMATA · 猫又塔罗 · 像素风猫咪占卜" not in str(title.render())
 
 
 @pytest.mark.asyncio
@@ -22,6 +25,39 @@ async def test_home_screen_has_input():
     app = NekomataApp()
     async with app.run_test() as pilot:
         assert app.screen.query_one("#prompt-input") is not None
+
+
+@pytest.mark.asyncio
+async def test_home_screen_hides_command_suggestions_by_default():
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        suggestions = app.screen.query_one("#command-suggestions")
+        assert not suggestions.display
+
+
+@pytest.mark.asyncio
+async def test_home_screen_shows_command_suggestions_while_typing_slash():
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/"
+        await pilot.pause()
+        suggestions = app.screen.query_one("#command-suggestions")
+        assert suggestions.display
+        assert "/browse" in str(suggestions.render())
+        assert "/quit" in str(suggestions.render())
+
+
+@pytest.mark.asyncio
+async def test_home_screen_tab_completes_matching_command():
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/br"
+        await pilot.press("tab")
+        await pilot.pause()
+        assert inp.value == "/browse"
+        assert not app.screen.query_one("#command-suggestions").display
 
 
 @pytest.mark.asyncio

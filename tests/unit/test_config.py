@@ -7,6 +7,7 @@ def test_default_config():
     config = AppConfig()
     assert config.ai_backend == "template"
     assert config.display_animation is True
+    assert config.display_theme == "catppuccin"
     assert config.reversal_prob == 0.5
 
 
@@ -28,6 +29,7 @@ def test_load_from_file(tmp_path: Path):
 def test_load_missing_file_uses_defaults(tmp_path: Path):
     config = AppConfig.load(tmp_path / "nonexistent.toml")
     assert config.ai_backend == "template"
+    assert config.display_theme == "catppuccin"
 
 
 def test_load_partial_config(tmp_path: Path):
@@ -36,3 +38,4 @@ def test_load_partial_config(tmp_path: Path):
     config = AppConfig.load(config_file)
     assert config.ai_backend == "openai_compatible"
     assert config.display_animation is True
+    assert config.display_theme == "catppuccin"

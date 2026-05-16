@@ -40,5 +40,5 @@ THEMES: dict[str, CardTheme] = {
 }
 
 
-def get_theme(name: str = "dark") -> CardTheme:
-    return THEMES.get(name, THEMES["dark"])
+def get_theme(name: str = "catppuccin") -> CardTheme:
+    return THEMES.get(name, THEMES["catppuccin"])
