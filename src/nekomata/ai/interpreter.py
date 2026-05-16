@@ -77,8 +77,9 @@ class OllamaInterpreter:
 
     def health_check(self) -> bool:
         try:
+            tags_url = self._url.replace("/v1/chat/completions", "/api/tags")
             req = urllib.request.Request(
-                self._url.rsplit("/", 2)[0] + "/api/tags",
+                tags_url,
                 headers={"Content-Type": "application/json"},
             )
             with urllib.request.urlopen(req, timeout=5) as resp:
@@ -238,6 +239,9 @@ class OpenAIInterpreter:
 def get_interpreter(config) -> AIInterpreter:
     """Factory: return the configured interpreter, with optional template fallback."""
     backend = getattr(config, "ai_backend", "template")
+    # Accept both "openai" and "openai_compatible"
+    if backend == "openai_compatible":
+        backend = "openai"
 
     if backend == "ollama":
         try:

@@ -115,7 +115,7 @@ class ReadingScreen(Screen):
         spread = get_spread(self._spread_key)
         deck = Deck()
         deck.shuffle()
-        spread.draw(deck)
+        spread.draw(deck, reversal_prob=getattr(self.app, "reversal_prob", 0.5))
         self._drawn_cards = spread.drawn_cards
 
         container = self.query_one("#cards-container")
@@ -175,16 +175,23 @@ class ReadingScreen(Screen):
             while len(self.app.screen_stack) > 1:
                 self.app.pop_screen()
         elif event.button.id == "interpret":
-            from nekomata.ai.interpreter import get_interpreter, InterpretationError
-            from nekomata.screens.interpretation import InterpretationScreen
-            from nekomata.storage.config import AppConfig
-            config = AppConfig.load()
-            interp = get_interpreter(config)
             self._show_waiting()
-            try:
-                result = interp.interpret(self._drawn_cards, self._question)
-            except InterpretationError:
-                from nekomata.ai.interpreter import template_interpret
-                result = template_interpret(self._drawn_cards, self._question)
-            self._hide_waiting()
-            self.app.push_screen(InterpretationScreen(result, self._drawn_cards, self._question))
+            self.run_worker(self._run_interpretation(), exclusive=True)
+
+    async def _run_interpretation(self) -> None:
+        from nekomata.ai.interpreter import get_interpreter, InterpretationError, template_interpret
+        from nekomata.screens.interpretation import InterpretationScreen
+        from nekomata.storage.config import AppConfig
+        import asyncio
+
+        config = AppConfig.load()
+        interp = get_interpreter(config)
+        try:
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                None, interp.interpret, self._drawn_cards, self._question
+            )
+        except InterpretationError:
+            result = template_interpret(self._drawn_cards, self._question)
+        self._hide_waiting()
+        self.app.push_screen(InterpretationScreen(result, self._drawn_cards, self._question))
