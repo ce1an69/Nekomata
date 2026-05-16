@@ -1,9 +1,12 @@
 import json
 from unittest.mock import patch, MagicMock
 
+import pytest
+
 from nekomata.card.types import Arcana, Card, DrawnCard, Position
 from nekomata.ai.interpreter import (
     template_interpret,
+    template_interpret_stream,
     OllamaInterpreter,
     OpenAIInterpreter,
     get_interpreter,
@@ -202,3 +205,46 @@ def test_openai_interpret_failure_raises():
             assert False, "Should have raised"
         except InterpretationError as e:
             assert e.retryable is True
+
+
+@pytest.mark.asyncio
+async def test_template_interpret_stream():
+    """Template stream should contain the same content as template_interpret."""
+    cards = make_drawn_cards(2)
+    expected = template_interpret(cards, "stream test")
+    chunks = []
+    async for chunk in template_interpret_stream(cards, "stream test"):
+        chunks.append(chunk)
+    result = "".join(chunks)
+    assert result.strip() == expected.strip()
+
+
+@pytest.mark.asyncio
+async def test_template_interpret_stream_yields_lines():
+    """Stream should yield multiple chunks."""
+    cards = make_drawn_cards(1)
+    chunks = []
+    async for chunk in template_interpret_stream(cards, "test"):
+        chunks.append(chunk)
+    assert len(chunks) > 1
+
+
+@pytest.mark.asyncio
+async def test_ollama_interpret_stream():
+    """Ollama streaming should parse SSE chunks."""
+    sse_data = (
+        'data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n'
+        'data: {"choices":[{"delta":{"content":" world"}}]}\n\n'
+        'data: [DONE]\n\n'
+    ).encode()
+    mock_resp = MagicMock()
+    mock_resp.read = MagicMock(side_effect=[sse_data[:50], sse_data[50:], b""])
+    mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+    mock_resp.__exit__ = MagicMock(return_value=False)
+
+    with patch("nekomata.ai.interpreter.urllib.request.urlopen", return_value=mock_resp):
+        interp = OllamaInterpreter()
+        chunks = []
+        async for chunk in interp.interpret_stream(make_drawn_cards(1), "test"):
+            chunks.append(chunk)
+        assert "Hello" in "".join(chunks) or "world" in "".join(chunks)
