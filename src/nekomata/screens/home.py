@@ -2,18 +2,23 @@ from __future__ import annotations
 
 from textual.containers import Center, Vertical
 from textual.screen import Screen
-from textual.widgets import Button, Static
+from textual.widgets import Input, Static
 
 
-BANNER = r"""
-  ███╗   ██╗███████╗ ██████╗ ███╗   ██╗
-  ████╗  ██║██╔════╝██╔═══██╗████╗  ██║
-  ██╔██╗ ██║█████╗  ██║   ██║██╔██╗ ██║
-  ██║╚██╗██║██╔══╝  ██║   ██║██║╚██╗██║
-  ██║ ╚████║███████╗╚██████╔╝██║ ╚████║
-  ╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝
-        猫又塔罗 · 像素风猫咪占卜
-"""
+BANNER_LINES = [
+    "  ███╗   ██╗███████╗ ██████╗ ███╗   ██╗",
+    "  ████╗  ██║██╔════╝██╔═══██╗████╗  ██║",
+    "  ██╔██╗ ██║█████╗  ██║   ██║██╔██╗ ██║",
+    "  ██║╚██╗██║██╔══╝  ██║   ██║██║╚██╗██║",
+    "  ██║ ╚████║███████╗╚██████╔╝██║ ╚████║",
+    "  ╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝",
+    "        猫又塔罗 · 像素风猫咪占卜",
+]
+
+SLASH_COMMANDS = {
+    "/browse": "card_browser",
+    "/quit": "quit",
+}
 
 
 class HomeScreen(Screen):
@@ -21,44 +26,81 @@ class HomeScreen(Screen):
     HomeScreen {
         align: center middle;
     }
-    HomeScreen #banner {
+    HomeScreen #title {
         text-align: center;
         margin-bottom: 2;
     }
-    HomeScreen Vertical {
-        width: auto;
+    HomeScreen #input-area {
+        width: 60;
         height: auto;
     }
-    HomeScreen Button {
-        width: 30;
-        margin-bottom: 1;
+    HomeScreen #prompt-input {
+        width: 100%;
+    }
+    HomeScreen #hint {
+        color: $text-disabled;
+        text-align: center;
+        margin-top: 1;
     }
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._banner_idx = 0
+        self._banner_timer = None
+
     def compose(self):
         with Center():
-            yield Static(BANNER, id="title")
-            with Vertical():
-                yield Button("🔮 开始占卜", id="start-reading", variant="primary")
-                yield Button("📚 牌库浏览", id="card-browser")
-                yield Button("📓 历史记录", id="journal")
-                yield Button("❌ 退出", id="quit")
+            yield Static("", id="title")
+            with Vertical(id="input-area"):
+                yield Input(
+                    placeholder="> Ask the cats anything…",
+                    id="prompt-input",
+                )
+                yield Static("/browse  /quit", id="hint")
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
+    def on_mount(self) -> None:
+        animation_enabled = getattr(self.app, "animation_enabled", True)
+        if animation_enabled:
+            self._banner_idx = 0
+            self._banner_timer = self.set_interval(0.08, self._reveal_banner_line)
+        else:
+            self.query_one("#title", Static).update("\n".join(BANNER_LINES))
+
+    def _reveal_banner_line(self) -> None:
+        if self._banner_idx >= len(BANNER_LINES):
+            if self._banner_timer is not None:
+                self._banner_timer.stop()
+                self._banner_timer = None
+            return
+        self._banner_idx += 1
+        self.query_one("#title", Static).update(
+            "\n".join(BANNER_LINES[: self._banner_idx])
+        )
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        if event.input.id != "prompt-input":
+            return
+        value = event.value.strip()
+        if not value:
+            return
+
+        cmd = SLASH_COMMANDS.get(value.lower())
+        if cmd == "card_browser":
+            from nekomata.screens.card_browser import CardBrowserScreen
+            self.app.push_screen(CardBrowserScreen())
+            return
+        if cmd == "quit":
+            self.app.exit()
+            return
+
+        self.app.question = value
         from nekomata.screens.spread_select import SpreadSelectScreen
-        from nekomata.screens.card_browser import CardBrowserScreen
-        from nekomata.screens.journal import JournalScreen
-
-        match event.button.id:
-            case "start-reading":
-                self.app.push_screen(SpreadSelectScreen(), callback=self._on_spread_selected)
-            case "card-browser":
-                self.app.push_screen(CardBrowserScreen())
-            case "journal":
-                self.app.push_screen(JournalScreen())
-            case "quit":
-                self.app.exit()
+        self.app.push_screen(
+            SpreadSelectScreen(), callback=self._on_spread_selected
+        )
 
     def _on_spread_selected(self, spread_key: str) -> None:
-        from nekomata.screens.question import QuestionScreen
-        self.app.push_screen(QuestionScreen(spread_key))
+        from nekomata.screens.reading import ReadingScreen
+        self.app.spread_key = spread_key
+        self.app.push_screen(ReadingScreen(spread_key, self.app.question))

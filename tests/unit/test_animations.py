@@ -7,15 +7,13 @@ from nekomata.app import NekomataApp
 async def test_reading_screen_animated_reveal():
     """Cards should mount with staggered reveal animation."""
     app = NekomataApp()
-    app.animation_enabled = False  # disable for test stability
+    app.animation_enabled = False
     async with app.run_test() as pilot:
-        await pilot.click("#start-reading")
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "动画测试"
+        await pilot.press("enter")
         await pilot.pause()
         await pilot.click("#spread-single")
-        await pilot.pause()
-        q_inp = app.screen.query_one("#question-input")
-        q_inp.value = "动画测试"
-        await pilot.click("#submit")
         await pilot.pause()
         from nekomata.screens.reading import ReadingScreen
         assert isinstance(app.screen, ReadingScreen)

@@ -11,13 +11,6 @@ async def test_app_starts():
 
 
 @pytest.mark.asyncio
-async def test_home_screen_has_start_button():
-    app = NekomataApp()
-    async with app.run_test() as pilot:
-        assert app.screen.query_one("#start-reading") is not None
-
-
-@pytest.mark.asyncio
 async def test_home_screen_has_title():
     app = NekomataApp()
     async with app.run_test() as pilot:
@@ -25,10 +18,19 @@ async def test_home_screen_has_title():
 
 
 @pytest.mark.asyncio
+async def test_home_screen_has_input():
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        assert app.screen.query_one("#prompt-input") is not None
+
+
+@pytest.mark.asyncio
 async def test_navigate_to_spread_select():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        await pilot.click("#start-reading")
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "测试问题"
+        await pilot.press("enter")
         await pilot.pause()
         from nekomata.screens.spread_select import SpreadSelectScreen
         assert isinstance(app.screen, SpreadSelectScreen)
@@ -38,7 +40,9 @@ async def test_navigate_to_spread_select():
 async def test_spread_select_has_options():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        await pilot.click("#start-reading")
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "测试"
+        await pilot.press("enter")
         await pilot.pause()
         buttons = app.screen.query("Button")
         ids = [b.id for b in buttons if b.id]
@@ -47,29 +51,14 @@ async def test_spread_select_has_options():
 
 
 @pytest.mark.asyncio
-async def test_question_screen_has_input():
-    app = NekomataApp()
-    async with app.run_test() as pilot:
-        await pilot.click("#start-reading")
-        await pilot.pause()
-        await pilot.click("#spread-single")
-        await pilot.pause()
-        from nekomata.screens.question import QuestionScreen
-        assert isinstance(app.screen, QuestionScreen)
-        assert app.screen.query_one("#question-input") is not None
-
-
-@pytest.mark.asyncio
 async def test_reading_screen_shows_cards():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        await pilot.click("#start-reading")
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "测试问题"
+        await pilot.press("enter")
         await pilot.pause()
         await pilot.click("#spread-single")
-        await pilot.pause()
-        q_inp = app.screen.query_one("#question-input")
-        q_inp.value = "测试问题"
-        await pilot.click("#submit")
         await pilot.pause()
         from nekomata.screens.reading import ReadingScreen
         assert isinstance(app.screen, ReadingScreen)
@@ -79,13 +68,11 @@ async def test_reading_screen_shows_cards():
 async def test_reading_screen_card_preview():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        await pilot.click("#start-reading")
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "预览测试"
+        await pilot.press("enter")
         await pilot.pause()
         await pilot.click("#spread-single")
-        await pilot.pause()
-        q_inp = app.screen.query_one("#question-input")
-        q_inp.value = "预览测试"
-        await pilot.click("#submit")
         await pilot.pause()
         assert app.screen.query_one("#card-preview") is not None
 
@@ -94,13 +81,11 @@ async def test_reading_screen_card_preview():
 async def test_full_flow_to_interpretation():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        await pilot.click("#start-reading")
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "完整流程测试"
+        await pilot.press("enter")
         await pilot.pause()
         await pilot.click("#spread-single")
-        await pilot.pause()
-        q_inp = app.screen.query_one("#question-input")
-        q_inp.value = "完整流程测试"
-        await pilot.click("#submit")
         await pilot.pause()
         await pilot.click("#interpret")
         await pilot.pause()
