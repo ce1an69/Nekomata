@@ -1,0 +1,18 @@
+# config.toml — Nekomata 用户配置
+
+[ai]
+backend = "template"            # template | ollama | openai_compatible
+model = ""
+base_url = "http://localhost:11434"
+api_key = ""
+timeout = 60.0
+style = "mystical"              # mystical | warm | direct
+max_retries = 2
+fallback_to_template = true
+
+[display]
+animation = true
+theme = "dark"
+
+[reversal]
+probability = 0.5
