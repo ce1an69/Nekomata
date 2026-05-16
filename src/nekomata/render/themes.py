@@ -30,6 +30,13 @@ THEMES: dict[str, CardTheme] = {
         reversed_border="color(75)",
         summary_border="color(213)",
     ),
+    "catppuccin": CardTheme(
+        upright_border="#f9e2af",
+        reversed_border="#89b4fa",
+        summary_border="#cba6f7",
+        title_style="bold #b4befe",
+        keyword_style="bold #fab387",
+    ),
 }
 
 

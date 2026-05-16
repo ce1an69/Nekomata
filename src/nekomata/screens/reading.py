@@ -19,6 +19,17 @@ from nekomata.spread.three_card import PastPresentFuture, SituationActionResult,
 from nekomata.spread.five_card import FiveCardCross
 from nekomata.spread.celtic import CelticCross
 
+CAT_WAITING_MESSAGES = [
+    "Flipping through the book of fate… 🐱",
+    "Meow~ the stars are aligning… ✨",
+    "Ears perked, listening to the cosmos… 🌙",
+    "Pondering the meaning of cat life… 🧶",
+    "Cards fluttering between soft paws… 🃏",
+    "Gazing into the crystal ball… 🔮",
+    "Deciphering secrets by moonlight… 🌃",
+    "Leaving paw prints on the star map… 🐾",
+]
+
 
 def get_spread(key: str) -> Spread:
     spreads = {
@@ -86,6 +97,8 @@ class ReadingScreen(Screen):
         self._spread_key = spread_key
         self._question = question
         self._drawn_cards: list[DrawnCard] = []
+        self._wait_idx = 0
+        self._wait_timer = None
 
     def compose(self) -> ComposeResult:
         yield Static(f"🔮 {self._question}", id="question-display")
@@ -126,6 +139,28 @@ class ReadingScreen(Screen):
         from nekomata.render.animations import animate_reveal
         widget.run_worker(animate_reveal(widget))
 
+    def _show_waiting(self) -> None:
+        self.query_one("#interpret").display = False
+        self.query_one("#home").display = False
+        actions = self.query_one("#actions")
+        actions.mount(Static(CAT_WAITING_MESSAGES[0], id="waiting-msg"))
+        self._wait_idx = 0
+        self._wait_timer = self.set_interval(2.0, self._tick_waiting)
+
+    def _tick_waiting(self) -> None:
+        self._wait_idx = (self._wait_idx + 1) % len(CAT_WAITING_MESSAGES)
+        msg_widget = self.query_one("#waiting-msg", Static)
+        msg_widget.update(CAT_WAITING_MESSAGES[self._wait_idx])
+
+    def _hide_waiting(self) -> None:
+        if self._wait_timer is not None:
+            self._wait_timer.stop()
+            self._wait_timer = None
+        waiting = self.query_one("#waiting-msg", Static)
+        waiting.remove()
+        self.query_one("#interpret").display = True
+        self.query_one("#home").display = True
+
     def on_card_widget_selected(self, event: CardWidget.Selected) -> None:
         preview = self.query_one("#card-preview")
         preview.remove_children()
@@ -140,7 +175,16 @@ class ReadingScreen(Screen):
             while len(self.app.screen_stack) > 1:
                 self.app.pop_screen()
         elif event.button.id == "interpret":
-            from nekomata.ai.interpreter import template_interpret
+            from nekomata.ai.interpreter import get_interpreter, InterpretationError
             from nekomata.screens.interpretation import InterpretationScreen
-            interp = template_interpret(self._drawn_cards, self._question)
-            self.app.push_screen(InterpretationScreen(interp, self._drawn_cards, self._question))
+            from nekomata.storage.config import AppConfig
+            config = AppConfig.load()
+            interp = get_interpreter(config)
+            self._show_waiting()
+            try:
+                result = interp.interpret(self._drawn_cards, self._question)
+            except InterpretationError:
+                from nekomata.ai.interpreter import template_interpret
+                result = template_interpret(self._drawn_cards, self._question)
+            self._hide_waiting()
+            self.app.push_screen(InterpretationScreen(result, self._drawn_cards, self._question))

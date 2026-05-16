@@ -8,7 +8,9 @@ from nekomata.screens.card_browser import CardBrowserScreen
 async def test_navigate_to_card_browser():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        await pilot.click("#card-browser")
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/browse"
+        await pilot.press("enter")
         await pilot.pause()
         assert isinstance(app.screen, CardBrowserScreen)
 
@@ -17,7 +19,9 @@ async def test_navigate_to_card_browser():
 async def test_card_browser_has_filter_buttons():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        await pilot.click("#card-browser")
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/browse"
+        await pilot.press("enter")
         await pilot.pause()
         buttons = app.screen.query("#filter-bar Button")
         ids = [b.id for b in buttons if b.id]
@@ -30,7 +34,9 @@ async def test_card_browser_has_filter_buttons():
 async def test_card_browser_shows_cards():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        await pilot.click("#card-browser")
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/browse"
+        await pilot.press("enter")
         await pilot.pause()
         items = app.screen.query("CardListItem")
         assert len(items) > 0
@@ -40,7 +46,9 @@ async def test_card_browser_shows_cards():
 async def test_card_browser_filter_by_suit():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        await pilot.click("#card-browser")
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/browse"
+        await pilot.press("enter")
         await pilot.pause()
         await pilot.click("#filter-cups")
         await pilot.pause()
@@ -52,7 +60,9 @@ async def test_card_browser_filter_by_suit():
 async def test_card_browser_back():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        await pilot.click("#card-browser")
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/browse"
+        await pilot.press("enter")
         await pilot.pause()
         assert isinstance(app.screen, CardBrowserScreen)
         await pilot.click("#back")
