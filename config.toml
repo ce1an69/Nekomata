@@ -12,7 +12,7 @@ fallback_to_template = true
 
 [display]
 animation = true
-theme = "dark"
+theme = "catppuccin"
 
 [reversal]
 probability = 0.5

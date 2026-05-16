@@ -127,7 +127,7 @@ class ReadingScreen(Screen):
             container.mount(widget)
             if animation_enabled:
                 self.set_timer(
-                    i * 0.15,
+                    max(i * 0.15, 0.01),
                     lambda w=widget: self._reveal_card(w),
                 )
 

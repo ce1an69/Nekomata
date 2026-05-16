@@ -16,7 +16,7 @@ class AppConfig:
     ai_max_retries: int = 2
     ai_fallback: bool = True
     display_animation: bool = True
-    display_theme: str = "dark"
+    display_theme: str = "catppuccin"
     reversal_prob: float = 0.5
 
     @classmethod
