@@ -12,6 +12,14 @@ from nekomata.ai.prompts import SYSTEM_PROMPT, build_interpretation_prompt
 log = logging.getLogger(__name__)
 
 
+class InterpretationError(Exception):
+    """AI interpretation failure."""
+
+    def __init__(self, message: str, retryable: bool = False) -> None:
+        super().__init__(message)
+        self.retryable = retryable
+
+
 @runtime_checkable
 class AIInterpreter(Protocol):
     def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str: ...
@@ -53,6 +61,17 @@ class OllamaInterpreter:
         self._timeout = timeout
         self._style = style
 
+    def health_check(self) -> bool:
+        try:
+            req = urllib.request.Request(
+                self._url.rsplit("/", 2)[0] + "/api/tags",
+                headers={"Content-Type": "application/json"},
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                return resp.status == 200
+        except Exception:
+            return False
+
     def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str:
         payload = json.dumps({
             "model": self._model,
@@ -71,9 +90,10 @@ class OllamaInterpreter:
             with urllib.request.urlopen(req, timeout=self._timeout) as resp:
                 data = json.loads(resp.read())
                 return data["choices"][0]["message"]["content"]
-        except (urllib.error.URLError, KeyError, IndexError) as e:
-            log.warning("Ollama interpretation failed: %s", e)
-            raise
+        except urllib.error.URLError as e:
+            raise InterpretationError(str(e), retryable=True) from e
+        except (KeyError, IndexError) as e:
+            raise InterpretationError(str(e), retryable=False) from e
 
 
 class OpenAIInterpreter:
@@ -87,6 +107,17 @@ class OpenAIInterpreter:
         self._api_key = api_key
         self._timeout = timeout
         self._style = style
+
+    def health_check(self) -> bool:
+        try:
+            req = urllib.request.Request(
+                self._url.rsplit("/", 1)[0] + "/models",
+                headers={"Authorization": f"Bearer {self._api_key}"} if self._api_key else {},
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                return resp.status == 200
+        except Exception:
+            return False
 
     def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str:
         payload = json.dumps({
@@ -107,9 +138,10 @@ class OpenAIInterpreter:
             with urllib.request.urlopen(req, timeout=self._timeout) as resp:
                 data = json.loads(resp.read())
                 return data["choices"][0]["message"]["content"]
-        except (urllib.error.URLError, KeyError, IndexError) as e:
-            log.warning("OpenAI interpretation failed: %s", e)
-            raise
+        except urllib.error.URLError as e:
+            raise InterpretationError(str(e), retryable=True) from e
+        except (KeyError, IndexError) as e:
+            raise InterpretationError(str(e), retryable=False) from e
 
 
 def get_interpreter(config) -> AIInterpreter:

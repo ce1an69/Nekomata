@@ -9,6 +9,7 @@ from nekomata.ai.interpreter import (
     get_interpreter,
     TemplateFallback,
     AIInterpreter,
+    InterpretationError,
 )
 from nekomata.storage.config import AppConfig
 
@@ -98,8 +99,8 @@ def test_ollama_interpret_failure_raises():
         try:
             interp.interpret(make_drawn_cards(1), "测试")
             assert False, "Should have raised"
-        except urllib.error.URLError:
-            pass
+        except InterpretationError as e:
+            assert e.retryable is True
 
 
 def test_openai_interpret_success():
@@ -150,3 +151,54 @@ def test_get_interpreter_fallback_on_failure():
         # the fallback only kicks in when interpret() is called and fails
         interp = get_interpreter(config)
         assert isinstance(interp, OllamaInterpreter)
+
+
+def test_interpretation_error_retryable():
+    err = InterpretationError("timeout", retryable=True)
+    assert err.retryable is True
+    assert "timeout" in str(err)
+
+
+def test_interpretation_error_not_retryable():
+    err = InterpretationError("bad response", retryable=False)
+    assert err.retryable is False
+
+
+def test_ollama_health_check_success():
+    mock_resp = MagicMock()
+    mock_resp.status = 200
+    mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+    mock_resp.__exit__ = MagicMock(return_value=False)
+    with patch("nekomata.ai.interpreter.urllib.request.urlopen", return_value=mock_resp):
+        interp = OllamaInterpreter()
+        assert interp.health_check() is True
+
+
+def test_ollama_health_check_failure():
+    import urllib.error
+    with patch("nekomata.ai.interpreter.urllib.request.urlopen",
+               side_effect=urllib.error.URLError("fail")):
+        interp = OllamaInterpreter()
+        assert interp.health_check() is False
+
+
+def test_openai_health_check_success():
+    mock_resp = MagicMock()
+    mock_resp.status = 200
+    mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+    mock_resp.__exit__ = MagicMock(return_value=False)
+    with patch("nekomata.ai.interpreter.urllib.request.urlopen", return_value=mock_resp):
+        interp = OpenAIInterpreter(model="gpt-4", api_key="sk-test")
+        assert interp.health_check() is True
+
+
+def test_openai_interpret_failure_raises():
+    import urllib.error
+    with patch("nekomata.ai.interpreter.urllib.request.urlopen",
+               side_effect=urllib.error.URLError("connection refused")):
+        interp = OpenAIInterpreter(model="gpt-4")
+        try:
+            interp.interpret(make_drawn_cards(1), "test")
+            assert False, "Should have raised"
+        except InterpretationError as e:
+            assert e.retryable is True
