@@ -9,7 +9,6 @@ from textual.widgets import Button, Static
 from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
 from nekomata.render.card_renderer import render_card_text, render_card_detail
-from nekomata.spread.base import Spread
 from nekomata.spread.single import SingleCardSpread
 from nekomata.spread.three_card import PastPresentFuture, SituationActionResult
 from nekomata.spread.five_card import FiveCardCross
