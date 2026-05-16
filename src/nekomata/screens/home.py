@@ -47,12 +47,15 @@ class HomeScreen(Screen):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         from nekomata.screens.spread_select import SpreadSelectScreen
         from nekomata.screens.card_browser import CardBrowserScreen
+        from nekomata.screens.journal import JournalScreen
 
         match event.button.id:
             case "start-reading":
                 self.app.push_screen(SpreadSelectScreen(), callback=self._on_spread_selected)
             case "card-browser":
                 self.app.push_screen(CardBrowserScreen())
+            case "journal":
+                self.app.push_screen(JournalScreen())
             case "quit":
                 self.app.exit()
 
