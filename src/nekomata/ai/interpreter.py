@@ -65,90 +65,6 @@ async def template_interpret_stream(drawn_cards: list[DrawnCard], question: str)
         yield line + "\n"
 
 
-class OllamaInterpreter:
-    """Interpret via local Ollama API (OpenAI-compatible endpoint)."""
-
-    def __init__(self, model: str = "llama3", base_url: str = "http://localhost:11434",
-                 timeout: float = 120.0, style: str = "mystical") -> None:
-        self._model = model
-        self._url = f"{base_url.rstrip('/')}/v1/chat/completions"
-        self._timeout = timeout
-        self._style = style
-
-    def health_check(self) -> bool:
-        try:
-            tags_url = self._url.replace("/v1/chat/completions", "/api/tags")
-            req = urllib.request.Request(
-                tags_url,
-                headers={"Content-Type": "application/json"},
-            )
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                return resp.status == 200
-        except Exception:
-            return False
-
-    def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str:
-        payload = json.dumps({
-            "model": self._model,
-            "messages": _build_messages(self._style, question, drawn_cards),
-            "stream": False,
-        }).encode()
-
-        req = urllib.request.Request(
-            self._url, data=payload,
-            headers={"Content-Type": "application/json"},
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
-                data = json.loads(resp.read())
-                return data["choices"][0]["message"]["content"]
-        except urllib.error.URLError as e:
-            raise InterpretationError(str(e), retryable=True) from e
-        except (KeyError, IndexError) as e:
-            raise InterpretationError(str(e), retryable=False) from e
-
-    async def interpret_stream(self, drawn_cards: list[DrawnCard], question: str) -> AsyncIterator[str]:
-        """Stream interpretation chunks from Ollama SSE endpoint."""
-        payload = json.dumps({
-            "model": self._model,
-            "messages": _build_messages(self._style, question, drawn_cards),
-            "stream": True,
-        }).encode()
-
-        req = urllib.request.Request(
-            self._url, data=payload,
-            headers={"Content-Type": "application/json"},
-        )
-        import asyncio
-        try:
-            loop = asyncio.get_event_loop()
-            with await loop.run_in_executor(None, lambda: urllib.request.urlopen(req, timeout=self._timeout)) as resp:
-                buffer = ""
-                while True:
-                    chunk = await loop.run_in_executor(None, resp.read, 1024)
-                    if not chunk:
-                        break
-                    buffer += chunk.decode()
-                    while "\n" in buffer:
-                        line, buffer = buffer.split("\n", 1)
-                        line = line.strip()
-                        if not line or not line.startswith("data:"):
-                            continue
-                        data_str = line[5:].strip()
-                        if data_str == "[DONE]":
-                            return
-                        try:
-                            data = json.loads(data_str)
-                            delta = data["choices"][0].get("delta", {})
-                            content = delta.get("content", "")
-                            if content:
-                                yield content
-                        except (json.JSONDecodeError, KeyError, IndexError):
-                            continue
-        except urllib.error.URLError as e:
-            raise InterpretationError(str(e), retryable=True) from e
-
-
 class OpenAIInterpreter:
     """Interpret via OpenAI-compatible remote API."""
 
@@ -239,23 +155,8 @@ class OpenAIInterpreter:
 def get_interpreter(config) -> AIInterpreter:
     """Factory: return the configured interpreter, with optional template fallback."""
     backend = getattr(config, "ai_backend", "template")
-    # Accept both "openai" and "openai_compatible"
     if backend == "openai_compatible":
         backend = "openai"
-
-    if backend == "ollama":
-        try:
-            return OllamaInterpreter(
-                model=config.ai_model or "llama3",
-                base_url=config.ai_base_url,
-                timeout=config.ai_timeout,
-                style=config.ai_style,
-            )
-        except Exception:
-            if not getattr(config, "ai_fallback", True):
-                raise
-            log.warning("Falling back to template interpreter")
-            return TemplateFallback()
 
     if backend == "openai":
         try:

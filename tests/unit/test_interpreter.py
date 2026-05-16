@@ -7,7 +7,6 @@ from nekomata.card.types import Arcana, Card, DrawnCard, Position
 from nekomata.ai.interpreter import (
     template_interpret,
     template_interpret_stream,
-    OllamaInterpreter,
     OpenAIInterpreter,
     get_interpreter,
     TemplateFallback,
@@ -84,28 +83,6 @@ def _mock_urlopen(response_body: dict):
     return mock_resp
 
 
-def test_ollama_interpret_success():
-    mock_resp = _mock_urlopen({
-        "choices": [{"message": {"content": "这是AI解读"}}]
-    })
-    with patch("nekomata.ai.interpreter.urllib.request.urlopen", return_value=mock_resp):
-        interp = OllamaInterpreter(model="llama3", base_url="http://localhost:11434")
-        result = interp.interpret(make_drawn_cards(1), "测试")
-        assert result == "这是AI解读"
-
-
-def test_ollama_interpret_failure_raises():
-    import urllib.error
-    with patch("nekomata.ai.interpreter.urllib.request.urlopen",
-               side_effect=urllib.error.URLError("connection refused")):
-        interp = OllamaInterpreter()
-        try:
-            interp.interpret(make_drawn_cards(1), "测试")
-            assert False, "Should have raised"
-        except InterpretationError as e:
-            assert e.retryable is True
-
-
 def test_openai_interpret_success():
     mock_resp = _mock_urlopen({
         "choices": [{"message": {"content": "OpenAI解读内容"}}]
@@ -133,27 +110,25 @@ def test_get_interpreter_template():
     assert isinstance(interp, TemplateFallback)
 
 
-def test_get_interpreter_ollama():
-    config = AppConfig(ai_backend="ollama", ai_model="llama3")
-    interp = get_interpreter(config)
-    assert isinstance(interp, OllamaInterpreter)
-
-
 def test_get_interpreter_openai():
     config = AppConfig(ai_backend="openai", ai_model="gpt-4", ai_api_key="sk-test")
     interp = get_interpreter(config)
     assert isinstance(interp, OpenAIInterpreter)
 
 
+def test_get_interpreter_openai_compatible_alias():
+    config = AppConfig(ai_backend="openai_compatible", ai_model="gpt-4", ai_api_key="sk-test")
+    interp = get_interpreter(config)
+    assert isinstance(interp, OpenAIInterpreter)
+
+
 def test_get_interpreter_fallback_on_failure():
-    config = AppConfig(ai_backend="ollama", ai_model="llama3", ai_fallback=True)
+    config = AppConfig(ai_backend="openai", ai_model="gpt-4", ai_fallback=True)
     import urllib.error
     with patch("nekomata.ai.interpreter.urllib.request.urlopen",
                side_effect=urllib.error.URLError("fail")):
-        # get_interpreter itself shouldn't fail; it returns the interpreter
-        # the fallback only kicks in when interpret() is called and fails
         interp = get_interpreter(config)
-        assert isinstance(interp, OllamaInterpreter)
+        assert isinstance(interp, OpenAIInterpreter)
 
 
 def test_interpretation_error_retryable():
@@ -165,24 +140,6 @@ def test_interpretation_error_retryable():
 def test_interpretation_error_not_retryable():
     err = InterpretationError("bad response", retryable=False)
     assert err.retryable is False
-
-
-def test_ollama_health_check_success():
-    mock_resp = MagicMock()
-    mock_resp.status = 200
-    mock_resp.__enter__ = MagicMock(return_value=mock_resp)
-    mock_resp.__exit__ = MagicMock(return_value=False)
-    with patch("nekomata.ai.interpreter.urllib.request.urlopen", return_value=mock_resp):
-        interp = OllamaInterpreter()
-        assert interp.health_check() is True
-
-
-def test_ollama_health_check_failure():
-    import urllib.error
-    with patch("nekomata.ai.interpreter.urllib.request.urlopen",
-               side_effect=urllib.error.URLError("fail")):
-        interp = OllamaInterpreter()
-        assert interp.health_check() is False
 
 
 def test_openai_health_check_success():
@@ -227,24 +184,3 @@ async def test_template_interpret_stream_yields_lines():
     async for chunk in template_interpret_stream(cards, "test"):
         chunks.append(chunk)
     assert len(chunks) > 1
-
-
-@pytest.mark.asyncio
-async def test_ollama_interpret_stream():
-    """Ollama streaming should parse SSE chunks."""
-    sse_data = (
-        'data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n'
-        'data: {"choices":[{"delta":{"content":" world"}}]}\n\n'
-        'data: [DONE]\n\n'
-    ).encode()
-    mock_resp = MagicMock()
-    mock_resp.read = MagicMock(side_effect=[sse_data[:50], sse_data[50:], b""])
-    mock_resp.__enter__ = MagicMock(return_value=mock_resp)
-    mock_resp.__exit__ = MagicMock(return_value=False)
-
-    with patch("nekomata.ai.interpreter.urllib.request.urlopen", return_value=mock_resp):
-        interp = OllamaInterpreter()
-        chunks = []
-        async for chunk in interp.interpret_stream(make_drawn_cards(1), "test"):
-            chunks.append(chunk)
-        assert "Hello" in "".join(chunks) or "world" in "".join(chunks)

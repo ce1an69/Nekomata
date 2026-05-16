@@ -9,7 +9,7 @@ from pathlib import Path
 class AppConfig:
     ai_backend: str = "template"
     ai_model: str = ""
-    ai_base_url: str = "http://localhost:11434"
+    ai_base_url: str = "https://api.openai.com/v1"
     ai_api_key: str | None = None
     ai_timeout: float = 60.0
     ai_style: str = "mystical"
