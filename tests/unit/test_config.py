@@ -13,14 +13,14 @@ def test_default_config():
 def test_load_from_file(tmp_path: Path):
     config_file = tmp_path / "config.toml"
     config_file.write_text(
-        '[ai]\nbackend = "ollama"\nmodel = "llama3"\n\n'
+        '[ai]\nbackend = "openai_compatible"\nmodel = "gpt-4"\n\n'
         '[display]\nanimation = false\n'
         "[reversal]\nprobability = 0.3\n",
         encoding="utf-8",
     )
     config = AppConfig.load(config_file)
-    assert config.ai_backend == "ollama"
-    assert config.ai_model == "llama3"
+    assert config.ai_backend == "openai_compatible"
+    assert config.ai_model == "gpt-4"
     assert config.display_animation is False
     assert config.reversal_prob == 0.3
 
