@@ -2,6 +2,8 @@ from nekomata.card.deck import Deck
 from nekomata.card.types import Card, Arcana
 from nekomata.spread.single import SingleCardSpread
 from nekomata.spread.three_card import PastPresentFuture, SituationActionResult
+from nekomata.spread.five_card import FiveCardCross
+from nekomata.spread.celtic import CelticCross
 
 
 def make_deck(n: int = 10) -> Deck:
@@ -69,3 +71,37 @@ def test_redraw_clears_previous():
     spread.draw(deck)
     second = spread.drawn_cards[0].card.id
     assert first != second
+
+
+class TestFiveCardCross:
+    def test_position_count(self):
+        assert len(FiveCardCross().positions) == 5
+
+    def test_draw(self):
+        spread = FiveCardCross()
+        deck = make_deck(10)
+        spread.draw(deck)
+        assert len(spread.drawn_cards) == 5
+        assert deck.remaining == 5
+
+    def test_position_names(self):
+        assert [p.name_zh for p in FiveCardCross().positions] == [
+            "现状", "挑战", "根基", "过去", "指引"
+        ]
+
+
+class TestCelticCross:
+    def test_position_count(self):
+        assert len(CelticCross().positions) == 10
+
+    def test_draw(self):
+        spread = CelticCross()
+        deck = make_deck(15)
+        spread.draw(deck)
+        assert len(spread.drawn_cards) == 10
+        assert deck.remaining == 5
+
+    def test_position_names(self):
+        names = [p.name_zh for p in CelticCross().positions]
+        assert names[0] == "当前处境"
+        assert names[9] == "最终结果"
