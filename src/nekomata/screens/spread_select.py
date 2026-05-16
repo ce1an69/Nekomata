@@ -9,6 +9,7 @@ SPREADS = [
     ("single", "spread-single", "单牌", "每日灵感"),
     ("past_present_future", "spread-past-present-future", "过去·现在·未来", "时间线三牌阵"),
     ("situation_action_result", "spread-situation-action-result", "处境·行动·结果", "问题分析"),
+    ("body_mind_spirit", "spread-body-mind-spirit", "身·心·灵", "整体状态"),
     ("five_card_cross", "spread-five-card-cross", "五牌十字", "处境+挑战+潜力"),
     ("celtic_cross", "spread-celtic-cross", "凯尔特十字", "深度全面解读（10 牌）"),
 ]

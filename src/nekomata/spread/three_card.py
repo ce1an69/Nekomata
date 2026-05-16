@@ -17,6 +17,19 @@ class PastPresentFuture(Spread):
         ]
 
 
+class BodyMindSpirit(Spread):
+    name = "Body / Mind / Spirit"
+    name_zh = "身·心·灵"
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._positions = [
+            Position(name="Body", name_zh="身", description="身体与物质状态"),
+            Position(name="Mind", name_zh="心", description="思想与情绪状态"),
+            Position(name="Spirit", name_zh="灵", description="灵性与直觉指引"),
+        ]
+
+
 class SituationActionResult(Spread):
     name = "Situation / Action / Result"
     name_zh = "处境·行动·结果"

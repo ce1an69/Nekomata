@@ -10,7 +10,7 @@ from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
 from nekomata.render.card_renderer import render_card_text, render_card_detail
 from nekomata.spread.single import SingleCardSpread
-from nekomata.spread.three_card import PastPresentFuture, SituationActionResult
+from nekomata.spread.three_card import PastPresentFuture, SituationActionResult, BodyMindSpirit
 from nekomata.spread.five_card import FiveCardCross
 from nekomata.spread.celtic import CelticCross
 
@@ -20,6 +20,7 @@ def get_spread(key: str) -> Spread:
         "single": SingleCardSpread,
         "past_present_future": PastPresentFuture,
         "situation_action_result": SituationActionResult,
+        "body_mind_spirit": BodyMindSpirit,
         "five_card_cross": FiveCardCross,
         "celtic_cross": CelticCross,
     }
