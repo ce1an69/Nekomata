@@ -7,6 +7,7 @@ from rich.panel import Panel
 from rich.text import Text
 
 from nekomata.card.types import Card, DrawnCard
+from nekomata.render.themes import CardTheme, get_theme
 
 # Card pixel sizes by layout mode
 SIZES = {
@@ -40,12 +41,13 @@ def _image_to_renderable(img: Image.Image):
     return Pixels.from_image(img)
 
 
-def render_card_image(drawn: DrawnCard, size: str = "compact") -> Panel | None:
+def render_card_image(drawn: DrawnCard, size: str = "compact", theme: CardTheme | None = None) -> Panel | None:
     """Render a card as a pixel image panel. Returns None if no PNG available."""
+    theme = theme or get_theme()
     img = _load_card_image(drawn.card, size, reversed=drawn.is_reversed)
     if img is None:
         return None
-    border_style = "blue" if drawn.is_reversed else "yellow"
+    border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
     label = "逆位 ↕" if drawn.is_reversed else ""
     title = f"[{drawn.position.name_zh}] {drawn.card.name_zh} {label}"
     return Panel(
@@ -56,15 +58,16 @@ def render_card_image(drawn: DrawnCard, size: str = "compact") -> Panel | None:
     )
 
 
-def render_card_image_detail(drawn: DrawnCard) -> Panel | None:
+def render_card_image_detail(drawn: DrawnCard, theme: CardTheme | None = None) -> Panel | None:
     """Render a card detail preview (128x192). Returns None if no PNG."""
+    theme = theme or get_theme()
     preview_path = get_preview_path(drawn.card)
     if preview_path is None or not preview_path.exists():
         return None
     img = Image.open(preview_path)
     if drawn.is_reversed:
         img = img.rotate(180)
-    border_style = "blue" if drawn.is_reversed else "yellow"
+    border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
     status = "逆位 ↕" if drawn.is_reversed else "正位"
     title = f"[{drawn.position.name_zh}] — {drawn.card.name_zh} ({status})"
     return Panel(
@@ -75,10 +78,11 @@ def render_card_image_detail(drawn: DrawnCard) -> Panel | None:
     )
 
 
-def render_card_text(drawn: DrawnCard, width: int = 40) -> Panel:
+def render_card_text(drawn: DrawnCard, width: int = 40, theme: CardTheme | None = None) -> Panel:
+    theme = theme or get_theme()
     card = drawn.card
     reversal = " ↕ 逆位" if drawn.is_reversed else ""
-    border_style = "blue" if drawn.is_reversed else "yellow"
+    border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
 
     content = Text()
     content.append(f"{card.name_zh} ({card.name}){reversal}\n\n")
@@ -103,10 +107,11 @@ def render_card_text(drawn: DrawnCard, width: int = 40) -> Panel:
     )
 
 
-def render_card_detail(drawn: DrawnCard, width: int = 60) -> Panel:
+def render_card_detail(drawn: DrawnCard, width: int = 60, theme: CardTheme | None = None) -> Panel:
     """Text-based detail view. PNG detail preview is in render_card_image_detail."""
+    theme = theme or get_theme()
     card = drawn.card
-    border_style = "blue" if drawn.is_reversed else "yellow"
+    border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
     status = "逆位 ↕" if drawn.is_reversed else "正位"
 
     content = Text()
@@ -133,11 +138,12 @@ def render_card_detail(drawn: DrawnCard, width: int = 60) -> Panel:
     )
 
 
-def render_reading_summary(drawn_cards: list[DrawnCard], question: str) -> Panel:
+def render_reading_summary(drawn_cards: list[DrawnCard], question: str, theme: CardTheme | None = None) -> Panel:
+    theme = theme or get_theme()
     content = Text()
     content.append(f"🔮 {question}\n\n")
     for dc in drawn_cards:
         status = "逆位" if dc.is_reversed else "正位"
         content.append(f"【{dc.position.name_zh}】", style="bold")
         content.append(f" {dc.card.name_zh}（{status}）\n")
-    return Panel(content, title="占卜结果", border_style="magenta")
+    return Panel(content, title="占卜结果", border_style=theme.summary_border)
