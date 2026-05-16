@@ -7,7 +7,7 @@ from textual.widgets import Button, Static
 
 from nekomata.card.data import load_all_cards
 from nekomata.card.types import Arcana, Card
-from nekomata.render.card_renderer import render_card_detail
+from nekomata.render.card_renderer import render_card_detail, render_card_image_detail
 from nekomata.card.types import Position, DrawnCard
 
 
@@ -112,8 +112,11 @@ class CardListItem(Static):
     def on_click(self) -> None:
         fake_pos = Position(name="Browser", name_zh="浏览", description="牌库浏览")
         drawn = DrawnCard(card=self._card, position=fake_pos, is_reversed=False)
-        detail = render_card_detail(drawn)
         browser = self.app.screen
         detail_panel = browser.query_one("#card-detail")
         detail_panel.remove_children()
-        detail_panel.mount(Static(detail))
+        img_detail = render_card_image_detail(drawn)
+        if img_detail:
+            detail_panel.mount(Static(img_detail))
+        else:
+            detail_panel.mount(Static(render_card_detail(drawn)))

@@ -8,7 +8,12 @@ from textual.widgets import Button, Static
 
 from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
-from nekomata.render.card_renderer import render_card_text, render_card_detail
+from nekomata.render.card_renderer import (
+    render_card_text,
+    render_card_detail,
+    render_card_image,
+    render_card_image_detail,
+)
 from nekomata.spread.single import SingleCardSpread
 from nekomata.spread.three_card import PastPresentFuture, SituationActionResult, BodyMindSpirit
 from nekomata.spread.five_card import FiveCardCross
@@ -34,8 +39,9 @@ class CardWidget(Static):
             self.drawn_card = drawn_card
 
     def __init__(self, drawn: DrawnCard) -> None:
-        super().__init__(render_card_text(drawn))
         self._drawn = drawn
+        img_panel = render_card_image(drawn)
+        super().__init__(img_panel if img_panel else render_card_text(drawn))
 
     def on_click(self) -> None:
         self.post_message(self.Selected(self._drawn))
@@ -108,7 +114,11 @@ class ReadingScreen(Screen):
     def on_card_widget_selected(self, event: CardWidget.Selected) -> None:
         preview = self.query_one("#card-preview")
         preview.remove_children()
-        preview.mount(Static(render_card_detail(event.drawn_card)))
+        img_detail = render_card_image_detail(event.drawn_card)
+        if img_detail:
+            preview.mount(Static(img_detail))
+        else:
+            preview.mount(Static(render_card_detail(event.drawn_card)))
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "home":
