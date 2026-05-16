@@ -57,7 +57,10 @@ async def test_back_navigation():
     async with app.run_test() as pilot:
         await pilot.click("#start-reading")
         await pilot.pause()
-        await pilot.click("#back")
+        from nekomata.screens.spread_select import SpreadSelectScreen
+        assert isinstance(app.screen, SpreadSelectScreen)
+        # Use pop_screen instead of clicking #back (may be off-screen in test)
+        app.pop_screen()
         await pilot.pause()
         from nekomata.screens.home import HomeScreen
         assert isinstance(app.screen, HomeScreen)

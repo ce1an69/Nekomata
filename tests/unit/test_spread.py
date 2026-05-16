@@ -1,7 +1,7 @@
 from nekomata.card.deck import Deck
 from nekomata.card.types import Card, Arcana
 from nekomata.spread.single import SingleCardSpread
-from nekomata.spread.three_card import PastPresentFuture, SituationActionResult
+from nekomata.spread.three_card import PastPresentFuture, SituationActionResult, BodyMindSpirit
 from nekomata.spread.five_card import FiveCardCross
 from nekomata.spread.celtic import CelticCross
 
@@ -47,6 +47,11 @@ class TestThreeCardSpreads:
         s = SituationActionResult()
         assert len(s.positions) == 3
         assert [p.name_zh for p in s.positions] == ["处境", "行动", "结果"]
+
+    def test_body_mind_spirit(self):
+        s = BodyMindSpirit()
+        assert len(s.positions) == 3
+        assert [p.name_zh for p in s.positions] == ["身", "心", "灵"]
 
     def test_draw_three(self):
         spread = PastPresentFuture()
