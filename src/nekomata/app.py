@@ -19,26 +19,29 @@ class NekomataApp(App):
     Screen {
         background: #11111b;
         color: #cdd6f4;
-        border: double #cba6f7;
-        padding: 0 2;
+        padding: 1 2;
     }
     Button {
-        background: #1e1e2e;
-        color: #cdd6f4;
-        border: tall #45475a;
+        background: #181825;
+        color: #a6adc8;
+        border: round #313244;
         padding: 0 2;
+        min-width: 12;
     }
     Button:hover {
-        background: #313244;
-        border: tall #585b70;
+        background: #1e1e2e;
+        color: #cdd6f4;
+        border: round #45475a;
     }
     Button:focus {
-        border: tall #cba6f7;
+        background: #1e1e2e;
+        border: round #cba6f7;
+        color: #cdd6f4;
         text-style: bold;
     }
     Button.-primary {
         background: #1e1e2e;
-        border: tall #cba6f7;
+        border: round #cba6f7;
         color: #cba6f7;
     }
     Button.-primary:hover {
@@ -50,8 +53,8 @@ class NekomataApp(App):
     }
     Button.-success {
         background: #1e1e2e;
-        border: tall #a6e3a1;
-        color: #a6e3a1;
+        border: round #b4befe;
+        color: #b4befe;
     }
     Button.-success:hover {
         background: #313244;
@@ -62,12 +65,13 @@ class NekomataApp(App):
     Input {
         background: #1e1e2e;
         color: #cdd6f4;
+        border: round #45475a;
     }
     Input:focus {
-        border: tall #cba6f7;
+        border: round #cba6f7;
     }
     VerticalScroll {
-        scrollbar-background: #1e1e2e;
+        scrollbar-background: #181825;
         scrollbar-color: #45475a;
     }
     """

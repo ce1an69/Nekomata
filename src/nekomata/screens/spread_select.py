@@ -1,29 +1,89 @@
 """Spread selection screen — choose a card layout before drawing."""
 
 from textual.app import ComposeResult
-from textual.containers import Vertical
+from textual.containers import Horizontal, Vertical
+from textual.message import Message
 from textual.screen import Screen
-from textual.widgets import Button, Static
+from textual.widgets import Static
 
 from nekomata.spread import SPREAD_REGISTRY
+
+
+class SpreadOption(Static):
+    """Focusable spread selection row with soft Catppuccin styling."""
+
+    can_focus = True
+
+    DEFAULT_CSS = """
+    SpreadOption {
+        height: 3;
+        padding: 0 2;
+        margin-bottom: 1;
+        border: round #181825;
+        background: #181825;
+        color: #a6adc8;
+    }
+    SpreadOption:hover {
+        background: #1e1e2e;
+        color: #cdd6f4;
+    }
+    SpreadOption:focus {
+        background: #1e1e2e;
+        border: round #cba6f7;
+        color: #cdd6f4;
+        text-style: bold;
+    }
+    SpreadOption.back {
+        margin-top: 1;
+        color: #a6adc8;
+    }
+    """
+
+    class Selected(Message):
+        """Posted when a spread row is activated."""
+
+        def __init__(self, option_id: str) -> None:
+            super().__init__()
+            self.option_id = option_id
+
+    def __init__(self, label: str, option_id: str, *, back: bool = False) -> None:
+        super().__init__(label, id=option_id)
+        if back:
+            self.add_class("back")
+
+    def on_click(self) -> None:
+        if self.id:
+            self.post_message(self.Selected(self.id))
+
+    def key_enter(self) -> None:
+        if self.id:
+            self.post_message(self.Selected(self.id))
 
 
 class SpreadSelectScreen(Screen):
     """Choose a card spread layout before drawing cards."""
 
-    BINDINGS = [("escape", "go_back", "Back")]
+    BINDINGS = [
+        ("q", "go_back", "Back"),
+        ("escape", "go_back", "Back"),
+    ]
 
     DEFAULT_CSS = """
     SpreadSelectScreen {
         align: center middle;
     }
+    SpreadSelectScreen #spread-shell {
+        width: 86;
+        height: auto;
+    }
     SpreadSelectScreen #question {
         text-align: center;
         color: #cdd6f4;
-        border: round #89b4fa;
+        border: round #313244;
+        background: #181825;
         padding: 0 2;
         margin-bottom: 1;
-        width: 56;
+        width: 100%;
     }
     SpreadSelectScreen #prompt {
         text-align: center;
@@ -31,25 +91,39 @@ class SpreadSelectScreen(Screen):
         text-style: bold;
         margin-bottom: 1;
     }
+    SpreadSelectScreen #spread-body {
+        height: auto;
+    }
     SpreadSelectScreen #spread-buttons {
-        width: auto;
-    }
-    SpreadSelectScreen Button {
-        width: 36;
-        margin-bottom: 0;
-    }
-    SpreadSelectScreen #back {
-        margin-top: 1;
-        border: tall #585b70;
-        color: #a6adc8;
+        width: 44;
+        height: auto;
+        border: round #313244;
+        background: #181825;
+        padding: 1 1;
     }
     SpreadSelectScreen #spread-preview {
-        width: 48;
-        height: auto;
+        width: 1fr;
+        height: 100%;
         color: #6c7086;
-        text-align: center;
-        margin-top: 0;
+        text-align: left;
+        margin-left: 1;
         margin-bottom: 0;
+        border: round #313244;
+        background: #11111b;
+        padding: 1 2;
+    }
+    SpreadSelectScreen #preview-title {
+        color: #cba6f7;
+        text-style: bold;
+        margin-bottom: 1;
+    }
+    SpreadSelectScreen #preview-desc {
+        color: #a6adc8;
+        margin-bottom: 1;
+    }
+    SpreadSelectScreen #preview-positions {
+        color: #6c7086;
+        padding: 0 2;
     }
     SpreadSelectScreen #hints {
         width: 100%;
@@ -63,47 +137,56 @@ class SpreadSelectScreen(Screen):
     def compose(self) -> ComposeResult:
         """Build the spread selection screen with numbered buttons."""
         question = self.app.question
-        if question:
-            yield Static(question, id="question")
-        yield Static("Choose a spread", id="prompt")
-        with Vertical(id="spread-buttons"):
-            for i, (key, _, cls) in enumerate(SPREAD_REGISTRY, 1):
-                n_pos = len(cls().positions)
-                yield Button(
-                    f" {i}  {cls.name}  ({n_pos})",
-                    id=f"spread-{key}",
-                )
-            yield Button(" Back", id="back")
-        yield Static("", id="spread-preview")
-        yield Static("1-6 select · Esc back", id="hints")
+        with Vertical(id="spread-shell"):
+            if question:
+                yield Static(question, id="question")
+            yield Static("Choose a spread", id="prompt")
+            with Horizontal(id="spread-body"):
+                with Vertical(id="spread-buttons"):
+                    for i, (key, _, cls) in enumerate(SPREAD_REGISTRY, 1):
+                        n_pos = len(cls().positions)
+                        yield SpreadOption(
+                            f"{i:02d}  {cls.name:<24s} {n_pos:>2d}",
+                            f"spread-{key}",
+                        )
+                    yield SpreadOption("Q   Back", "back", back=True)
+                with Vertical(id="spread-preview"):
+                    yield Static("", id="preview-title")
+                    yield Static("", id="preview-desc")
+                    yield Static("", id="preview-positions")
+            yield Static("↑/↓ move · Enter confirm · Q back", id="hints")
 
     def on_mount(self) -> None:
         """Auto-focus the first spread button and show its preview."""
-        buttons = list(self.query(Button))
-        if buttons:
-            buttons[0].focus()
-            if buttons[0].id:
-                self._update_preview(buttons[0].id)
+        options = list(self.query(SpreadOption))
+        if options:
+            options[0].focus()
+            if options[0].id:
+                self._update_preview(options[0].id)
 
     def _update_preview(self, btn_id: str) -> None:
         """Show position breakdown for the focused spread button."""
-        preview = self.query_one("#spread-preview", Static)
+        title = self.query_one("#preview-title", Static)
+        desc_text = self.query_one("#preview-desc", Static)
+        positions_text = self.query_one("#preview-positions", Static)
         for key, desc, cls in SPREAD_REGISTRY:
             if btn_id == f"spread-{key}":
-                positions = " → ".join(p.name for p in cls().positions)
-                preview.update(f"{desc}\n{positions}")
+                spread = cls()
+                positions = "\n".join(
+                    f"{idx:02d}  {position.name}"
+                    for idx, position in enumerate(spread.positions, 1)
+                )
+                title.update(spread.name)
+                desc_text.update(desc)
+                positions_text.update(positions)
                 return
-        preview.update("")
+        title.update("Back")
+        desc_text.update("Return to the question prompt.")
+        positions_text.update("")
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Dispatch on button click: back pops, spread buttons dismiss with key."""
-        if event.button.id == "back":
-            self.app.pop_screen()
-            return
-        for key, _, _ in SPREAD_REGISTRY:
-            if event.button.id == f"spread-{key}":
-                self.dismiss(key)
-                return
+    def on_spread_option_selected(self, event: SpreadOption.Selected) -> None:
+        """Dispatch when a spread option is clicked or Enter-pressed."""
+        self._activate_option(event.option_id)
 
     def action_go_back(self) -> None:
         """Escape key binding — return to home and refocus input."""
@@ -125,31 +208,41 @@ class SpreadSelectScreen(Screen):
     def key_6(self) -> None: self._select_by_index(5)
 
     def key_down(self) -> None:
-        """Move focus to the next spread button."""
-        if isinstance(self.focused, Button):
-            target = self._next_button(1)
+        """Move focus to the next spread option."""
+        if isinstance(self.focused, SpreadOption):
+            target = self._next_option(1)
             if target is not None and target.id:
                 self._update_preview(target.id)
 
     def key_up(self) -> None:
-        """Move focus to the previous spread button."""
-        if isinstance(self.focused, Button):
-            target = self._next_button(-1)
+        """Move focus to the previous spread option."""
+        if isinstance(self.focused, SpreadOption):
+            target = self._next_option(-1)
             if target is not None and target.id:
                 self._update_preview(target.id)
 
-    def _next_button(self, delta: int) -> Button | None:
-        """Focus the next/previous button and return it."""
-        buttons = list(self.query(Button))
-        if not buttons:
+    def _next_option(self, delta: int) -> SpreadOption | None:
+        """Focus the next/previous spread option and return it."""
+        options = list(self.query(SpreadOption))
+        if not options:
             return None
         try:
-            idx = buttons.index(self.focused)
+            idx = options.index(self.focused)
         except ValueError:
-            buttons[0].focus()
-            return buttons[0]
+            options[0].focus()
+            return options[0]
         new_idx = idx + delta
-        if 0 <= new_idx < len(buttons):
-            buttons[new_idx].focus()
-            return buttons[new_idx]
+        if 0 <= new_idx < len(options):
+            options[new_idx].focus()
+            return options[new_idx]
         return None
+
+    def _activate_option(self, option_id: str) -> None:
+        """Activate a spread row by id."""
+        if option_id == "back":
+            self.action_go_back()
+            return
+        for key, _, _ in SPREAD_REGISTRY:
+            if option_id == f"spread-{key}":
+                self.dismiss(key)
+                return

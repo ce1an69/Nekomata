@@ -35,6 +35,7 @@ class CardBrowserScreen(Screen):
 
     BINDINGS = [
         ("r", "toggle_reversal", "Reversal"),
+        ("q", "go_back", "Back"),
         ("escape", "go_back", "Back"),
     ]
 
@@ -45,7 +46,10 @@ class CardBrowserScreen(Screen):
     CardBrowserScreen #filter-bar {
         align: center middle;
         height: auto;
-        margin: 1 0;
+        margin: 0 0 1 0;
+        border: round #313244;
+        background: #181825;
+        padding: 0 1;
     }
     CardBrowserScreen #filter-bar Button {
         width: auto;
@@ -53,7 +57,7 @@ class CardBrowserScreen(Screen):
         margin: 0 1;
     }
     CardBrowserScreen #filter-bar Button.active-filter {
-        border: tall #cba6f7;
+        border: round #cba6f7;
         color: #cba6f7;
     }
     CardBrowserScreen #card-count {
@@ -69,12 +73,17 @@ class CardBrowserScreen(Screen):
     CardBrowserScreen #card-list {
         width: 1fr;
         height: 1fr;
+        border: round #313244;
+        background: #11111b;
+        padding: 1 1;
     }
     CardBrowserScreen #card-detail {
         width: 1fr;
         height: 1fr;
         border: round #45475a;
+        background: #181825;
         padding: 1 2;
+        margin-left: 1;
     }
     CardBrowserScreen #back-bar {
         align: center middle;
@@ -112,7 +121,7 @@ class CardBrowserScreen(Screen):
                 yield Static("Select a card", id="detail-placeholder")
         with Center(id="back-bar"):
             yield Button("Back", id="back")
-        yield Static("Up/Down browse · Tab panels · R reversal · Esc back", id="hints")
+        yield Static("↑/↓ move · Enter inspect · R reversal · Q back", id="hints")
 
     def on_mount(self) -> None:
         """Populate card list and focus the first item."""
@@ -177,6 +186,16 @@ class CardBrowserScreen(Screen):
         if isinstance(self.focused, CardListItem):
             focus_sibling(self, CardListItem, -1)
 
+    def key_left(self) -> None:
+        """Move left across filter buttons."""
+        if isinstance(self.focused, Button) and (self.focused.id or "").startswith("filter-"):
+            focus_sibling(self, Button, -1)
+
+    def key_right(self) -> None:
+        """Move right across filter buttons."""
+        if isinstance(self.focused, Button) and (self.focused.id or "").startswith("filter-"):
+            focus_sibling(self, Button, 1)
+
     def key_tab(self, event: Key) -> None:
         """Cycle focus: cards → filter buttons → back button → cards."""
         event.stop()
@@ -233,21 +252,23 @@ class CardListItem(Static):
     CardListItem {
         padding: 0 1;
         height: auto;
+        border: round #11111b;
     }
     CardListItem:focus {
-        background: #313244;
+        background: #1e1e2e;
         color: #cba6f7;
         text-style: bold;
+        border: round #cba6f7;
     }
     CardListItem:hover {
-        background: #313244;
+        background: #1e1e2e;
     }
     CardListItem.selected {
         background: #181825;
-        border-left: tall #f9e2af;
+        border: round #cba6f7;
     }
     CardListItem.selected:focus {
-        background: #313244;
+        background: #1e1e2e;
         color: #cba6f7;
         text-style: bold;
     }

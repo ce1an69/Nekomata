@@ -1,6 +1,7 @@
 """Home screen with animated banner, question input, and slash commands."""
 
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.containers import Center, Vertical
 from textual.events import Key
 from textual.screen import Screen
@@ -8,12 +9,8 @@ from textual.timer import Timer
 from textual.widgets import Input, Static
 
 BANNER_LINES = [
-    "███╗   ██╗███████╗██╗  ██╗ ██████╗ ███╗   ███╗ █████╗ ████████╗ █████╗",
-    "████╗  ██║██╔════╝██║ ██╔╝██╔═══██╗████╗ ████║██╔══██╗╚══██╔══╝██╔══██╗",
-    "██╔██╗ ██║█████╗  █████╔╝ ██║   ██║██╔████╔██║███████║   ██║   ███████║",
-    "██║╚██╗██║██╔══╝  ██╔═██╗ ██║   ██║██║╚██╔╝██║██╔══██║   ██║   ██╔══██║",
-    "██║ ╚████║███████╗██║  ██╗╚██████╔╝██║ ╚═╝ ██║██║  ██║   ██║   ██║  ██║",
-    "╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝",
+    "Nekomata",
+    "Cat Tarot",
 ]
 BANNER_WIDTH = max(len(line) for line in BANNER_LINES)
 BANNER_SCAN_FRAMES = BANNER_WIDTH + 10
@@ -26,22 +23,41 @@ SLASH_COMMANDS = {
 }
 
 
+class HomePromptInput(Input):
+    """Prompt input that reserves bare Q for quitting from an empty prompt."""
+
+    def on_key(self, event: Key) -> None:
+        if event.key == "q" and not self.value:
+            self.app.exit()
+            event.stop()
+            return
+
+
 class HomeScreen(Screen):
     """Landing screen with animated banner, question input, and slash commands."""
+
+    BINDINGS = [
+        Binding("q", "quit_if_empty", "Quit", priority=True),
+    ]
 
     DEFAULT_CSS = """
     HomeScreen {
         align: center middle;
     }
     HomeScreen #home-stack {
-        width: 100%;
+        width: 72;
         height: auto;
         align: center middle;
+        border: round #313244;
+        background: #181825;
+        padding: 1 2;
     }
     HomeScreen #title {
-        margin-bottom: 1;
-        width: 71;
+        margin-bottom: 0;
+        width: 100%;
         color: #cba6f7;
+        text-align: center;
+        text-style: bold;
     }
     HomeScreen #title-row {
         width: 100%;
@@ -52,13 +68,10 @@ class HomeScreen(Screen):
         height: auto;
         color: #a6adc8;
         text-align: center;
-        margin-bottom: 0;
+        margin-bottom: 1;
     }
     HomeScreen #ornament, HomeScreen #ornament-bottom {
-        width: 100%;
-        height: 1;
-        color: #585b70;
-        text-align: center;
+        display: none;
     }
     HomeScreen #ornament {
         margin-bottom: 1;
@@ -72,32 +85,32 @@ class HomeScreen(Screen):
         align: center top;
     }
     HomeScreen #prompt-input {
-        width: 60;
+        width: 100%;
         height: 3;
-        border: tall #89b4fa;
+        border: round #45475a;
         background: #1e1e2e;
         color: #cdd6f4;
         padding: 0 1;
     }
     HomeScreen #prompt-input:focus {
-        border: tall #cba6f7;
+        border: round #cba6f7;
         background: #181825;
     }
     HomeScreen #command-suggestions {
-        width: 60;
+        width: 100%;
         height: auto;
-        margin-top: 0;
+        margin-top: 1;
         padding: 0 1;
-        border: tall #89b4fa;
+        border: round #313244;
         color: #a6adc8;
-        background: #181825;
+        background: #11111b;
     }
     HomeScreen .command-highlight {
         color: #cba6f7;
         text-style: bold;
     }
     HomeScreen .banner-shimmer {
-        color: #f5c2e7;
+        color: #b4befe;
         text-style: bold;
     }
     HomeScreen .banner-lit {
@@ -105,7 +118,7 @@ class HomeScreen(Screen):
         text-style: bold;
     }
     HomeScreen .banner-edge {
-        color: #f5c2e7;
+        color: #b4befe;
         text-style: bold;
     }
     HomeScreen .banner-ghost {
@@ -133,13 +146,13 @@ class HomeScreen(Screen):
             yield Static("Nekomata · Cat Tarot", id="subtitle")
             yield Static("─── ✦ ───", id="ornament")
             with Vertical(id="input-area"):
-                yield Input(
+                yield HomePromptInput(
                     placeholder="> ask your question...",
                     id="prompt-input",
                 )
                 yield Static("", id="command-suggestions")
             yield Static("─── ✦ ───", id="ornament-bottom")
-            yield Static("Enter submit · Tab complete · /help commands · /quit exit", id="hints")
+            yield Static("Enter confirm · / commands · Q quit", id="hints")
 
     def resume(self) -> None:
         """Clear and refocus the input — called when returning to this screen."""
@@ -246,10 +259,10 @@ class HomeScreen(Screen):
         self._refresh_command_suggestions(event.value)
 
     def on_key(self, event: Key) -> None:
-        """Handle Tab key for command autocomplete."""
+        """Handle home keyboard shortcuts."""
+        prompt = self.query_one("#prompt-input", Input)
         if event.key != "tab":
             return
-        prompt = self.query_one("#prompt-input", Input)
         match = self._matching_command(prompt.value)
         if match is None:
             return
@@ -257,6 +270,11 @@ class HomeScreen(Screen):
         prompt.cursor_position = len(match)
         self._refresh_command_suggestions(match)
         event.stop()
+
+    def action_quit_if_empty(self) -> None:
+        """Quit from the empty home prompt with Q."""
+        if not self.query_one("#prompt-input", Input).value:
+            self.app.exit()
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle Enter: dispatch slash commands or proceed to spread selection."""

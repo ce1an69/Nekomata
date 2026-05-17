@@ -55,6 +55,45 @@ async def test_go_home_refocuses_input():
 
 
 @pytest.mark.asyncio
+async def test_q_returns_from_spread_select_to_home():
+    """Q returns from spread selection to the home screen."""
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "q back test"
+        await pilot.press("enter")
+        await pilot.pause()
+        from nekomata.screens.spread_select import SpreadSelectScreen
+        assert isinstance(app.screen, SpreadSelectScreen)
+
+        await pilot.press("q")
+        await pilot.pause()
+        from nekomata.screens.home import HomeScreen
+        assert isinstance(app.screen, HomeScreen)
+
+
+@pytest.mark.asyncio
+async def test_spread_select_arrow_keys_move_focus():
+    """Arrow keys move between spread choices."""
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "arrow test"
+        await pilot.press("enter")
+        await pilot.pause()
+        from nekomata.screens.spread_select import SpreadSelectScreen
+        assert isinstance(app.screen, SpreadSelectScreen)
+
+        assert app.screen.focused.id == "spread-single"
+        await pilot.press("down")
+        await pilot.pause()
+        assert app.screen.focused.id == "spread-past_present_future"
+        await pilot.press("up")
+        await pilot.pause()
+        assert app.screen.focused.id == "spread-single"
+
+
+@pytest.mark.asyncio
 async def test_reading_escape_goes_home():
     app = NekomataApp()
     async with app.run_test() as pilot:
@@ -106,6 +145,54 @@ async def test_reading_screen_has_interpret_and_home_buttons():
         home_btn = app.screen.query_one("#home")
         assert interpret_btn is not None
         assert home_btn is not None
+
+
+@pytest.mark.asyncio
+async def test_reading_screen_uses_spread_layout_canvas():
+    """Reading cards are mounted in a spread layout canvas, not a vertical card list."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "layout test"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-past_present_future")
+        await pilot.pause()
+        from nekomata.screens.reading import ReadingAction, ReadingScreen, CardWidget
+        screen = app.screen
+        assert isinstance(screen, ReadingScreen)
+
+        canvas = screen.query_one("#cards-container")
+        assert canvas.has_class("spread-3")
+        cards = list(screen.query(CardWidget))
+        assert len(cards) == 3
+        assert cards[0]._drawn.position.description == "过去的影响"
+
+
+@pytest.mark.asyncio
+async def test_reading_preview_updates_for_selected_card():
+    """Focusing a spread card updates the right-side preview panel."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "preview layout test"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+        from nekomata.screens.reading import ReadingAction, ReadingScreen, CardWidget
+        screen = app.screen
+        assert isinstance(screen, ReadingScreen)
+
+        card = list(screen.query(CardWidget))[0]
+        card.focus()
+        await pilot.pause()
+
+        preview = screen.query_one("#card-preview")
+        rendered = str(preview.render())
+        assert "Select a card" not in rendered
 
 
 @pytest.mark.asyncio
@@ -223,7 +310,7 @@ async def test_reading_tab_cycles_cards_to_buttons():
         await pilot.click("#spread-past_present_future")
         await pilot.pause(0)
         await pilot.pause(0)
-        from nekomata.screens.reading import ReadingScreen, CardWidget
+        from nekomata.screens.reading import ReadingAction, ReadingScreen, CardWidget
         screen = app.screen
         assert isinstance(screen, ReadingScreen)
 
@@ -236,12 +323,11 @@ async def test_reading_tab_cycles_cards_to_buttons():
         assert isinstance(screen.focused, CardWidget)
 
         await pilot.press("tab")
-        from textual.widgets import Button
         for _ in range(5):
             await pilot.pause(0)
-            if isinstance(screen.focused, Button):
+            if isinstance(screen.focused, ReadingAction):
                 break
-        assert isinstance(screen.focused, Button), f"Expected Button, got {type(screen.focused).__name__}"
+        assert isinstance(screen.focused, ReadingAction), f"Expected ReadingAction, got {type(screen.focused).__name__}"
 
         await pilot.press("tab")
         for _ in range(5):
@@ -249,6 +335,38 @@ async def test_reading_tab_cycles_cards_to_buttons():
             if isinstance(screen.focused, CardWidget):
                 break
         assert isinstance(screen.focused, CardWidget)
+
+
+@pytest.mark.asyncio
+async def test_reading_arrow_keys_reach_interpret_button():
+    """Arrow keys move from the card list into the action buttons."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "arrow action test"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-past_present_future")
+        await pilot.pause(0)
+        await pilot.pause(0)
+        from nekomata.screens.reading import ReadingAction, ReadingScreen, CardWidget
+        screen = app.screen
+        assert isinstance(screen, ReadingScreen)
+
+        cards = list(screen.query(CardWidget))
+        cards[-1].focus()
+        await pilot.pause()
+
+        await pilot.press("down")
+        await pilot.pause()
+        assert isinstance(screen.focused, ReadingAction)
+        assert screen.focused.id == "interpret"
+
+        await pilot.press("up")
+        await pilot.pause()
+        assert isinstance(screen.focused, CardWidget)
+        assert screen.focused is cards[-1]
 
 
 @pytest.mark.asyncio
@@ -318,8 +436,9 @@ async def test_spread_select_shows_position_preview():
         from nekomata.screens.spread_select import SpreadSelectScreen
         assert isinstance(app.screen, SpreadSelectScreen)
 
-        preview = app.screen.query_one("#spread-preview")
-        rendered = str(preview.render())
+        desc = app.screen.query_one("#preview-desc")
+        positions = app.screen.query_one("#preview-positions")
+        rendered = f"{desc.render()}\n{positions.render()}"
         assert "Daily" in rendered
 
 
@@ -337,8 +456,9 @@ async def test_spread_select_arrow_updates_preview():
 
         await pilot.press("down")
         await pilot.pause()
-        preview = app.screen.query_one("#spread-preview")
-        rendered = str(preview.render())
+        desc = app.screen.query_one("#preview-desc")
+        positions = app.screen.query_one("#preview-positions")
+        rendered = f"{desc.render()}\n{positions.render()}"
         assert "Past" in rendered or "Present" in rendered or "Future" in rendered
 
 

@@ -3,20 +3,23 @@
 import asyncio
 import logging
 
+from rich.console import Group
+from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Center, Horizontal, Vertical, VerticalScroll
+from textual.containers import Center, Horizontal, Vertical
 from textual.css.query import NoMatches
 from textual.events import Key
 from textual.message import Message
 from textual.screen import Screen
 from textual.timer import Timer
-from textual.widgets import Button, Static
+from textual.widgets import Static
 
 from nekomata.ai.interpreter import InterpretationError, get_interpreter
 from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
 from nekomata.render.animations import animate_reveal
 from nekomata.render.card_renderer import (
+    render_card_face,
     render_card_text,
     render_card_detail,
     render_card_image,
@@ -38,31 +41,36 @@ class CardWidget(Static):
 
     DEFAULT_CSS = """
     CardWidget {
-        margin: 0 0 1 0;
+        margin: 0 1 1 1;
         height: auto;
+        width: auto;
+        padding: 1 1;
+        border: round #313244;
+        background: #181825;
+        content-align: center middle;
     }
     CardWidget:focus {
-        border: tall #cba6f7;
-        background: #181825;
+        border: round #cba6f7;
+        background: #1e1e2e;
     }
     CardWidget:hover {
-        background: #181825;
+        background: #1e1e2e;
     }
     CardWidget.selected {
-        background: #181825;
-        border-left: tall #f9e2af;
+        background: #1e1e2e;
+        border: round #cba6f7;
     }
     CardWidget.selected:focus {
-        border: tall #cba6f7;
+        border: round #cba6f7;
     }
     CardWidget.reversed {
-        border-left: tall #89b4fa;
+        border: round #b4befe;
     }
     CardWidget.reversed.selected {
-        border-left: tall #f9e2af;
+        border: round #cba6f7;
     }
     CardWidget.reversed:focus {
-        border: tall #89b4fa;
+        border: round #b4befe;
     }
     """
 
@@ -76,10 +84,17 @@ class CardWidget(Static):
 
     def __init__(self, drawn: DrawnCard, render_mode: str = "compact") -> None:
         self._drawn = drawn
-        img_panel = None
+        face = None
         if render_mode != "text":
-            img_panel = render_card_image(drawn, size=render_mode)
-        super().__init__(img_panel if img_panel else render_card_text(drawn))
+            face = render_card_face(drawn, size=render_mode)
+        if face is None:
+            face = render_card_text(drawn, width=28)
+        description = Text(
+            f"{drawn.position.name}\n{drawn.position.description}",
+            style="#a6adc8",
+            justify="center",
+        )
+        super().__init__(Group(face, description))
         if drawn.is_reversed:
             self.add_class("reversed")
 
@@ -93,11 +108,59 @@ class CardWidget(Static):
         self.post_message(self.Selected(self._drawn, self))
 
 
+class ReadingAction(Static):
+    """Focusable action row for the reading screen."""
+
+    can_focus = True
+
+    DEFAULT_CSS = """
+    ReadingAction {
+        width: 24;
+        height: 3;
+        margin: 0 1;
+        padding: 0 2;
+        border: round #313244;
+        background: #181825;
+        color: #a6adc8;
+        content-align: center middle;
+    }
+    ReadingAction:hover {
+        background: #1e1e2e;
+        color: #cdd6f4;
+    }
+    ReadingAction:focus {
+        background: #1e1e2e;
+        border: round #cba6f7;
+        color: #cba6f7;
+        text-style: bold;
+    }
+    ReadingAction.primary {
+        color: #cba6f7;
+    }
+    """
+
+    class Selected(Message):
+        """Posted when an action is activated."""
+
+        def __init__(self, action_id: str) -> None:
+            super().__init__()
+            self.action_id = action_id
+
+    def on_click(self) -> None:
+        if self.id:
+            self.post_message(self.Selected(self.id))
+
+    def key_enter(self) -> None:
+        if self.id:
+            self.post_message(self.Selected(self.id))
+
+
 class ReadingScreen(Screen):
     """Displays drawn cards in the chosen spread layout and triggers AI interpretation."""
 
     BINDINGS = [
         ("i", "interpret", "Interpret"),
+        ("q", "handle_escape", "Back"),
         ("escape", "handle_escape", "Back"),
     ]
 
@@ -108,7 +171,7 @@ class ReadingScreen(Screen):
     ReadingScreen #question-display {
         text-align: center;
         color: #a6adc8;
-        margin: 1 0 0 0;
+        margin: 0 0 0 0;
     }
     ReadingScreen #spread-label {
         text-align: center;
@@ -117,16 +180,46 @@ class ReadingScreen(Screen):
     }
     ReadingScreen #main-area {
         height: 1fr;
+        margin-top: 1;
     }
     ReadingScreen #cards-container {
         width: 1fr;
         height: 1fr;
+        layout: grid;
+        grid-gutter: 1 2;
+        border: round #313244;
+        background: #11111b;
+        padding: 1 1;
+        align: center middle;
+    }
+    ReadingScreen #cards-container.spread-1 {
+        grid-size: 1;
+        grid-columns: 1fr;
+        grid-rows: 1fr;
+        align: center middle;
+    }
+    ReadingScreen #cards-container.spread-3 {
+        grid-size: 3 1;
+        grid-columns: 1fr 1fr 1fr;
+        grid-rows: 1fr;
+    }
+    ReadingScreen #cards-container.spread-5 {
+        grid-size: 3 2;
+        grid-columns: 1fr 1fr 1fr;
+        grid-rows: 1fr 1fr;
+    }
+    ReadingScreen #cards-container.spread-10 {
+        grid-size: 5 2;
+        grid-columns: 1fr 1fr 1fr 1fr 1fr;
+        grid-rows: 1fr 1fr;
     }
     ReadingScreen #card-preview {
         width: 1fr;
         height: 1fr;
         border: round #45475a;
+        background: #181825;
         padding: 1 2;
+        margin-left: 1;
     }
     ReadingScreen #actions {
         align: center middle;
@@ -136,10 +229,6 @@ class ReadingScreen(Screen):
     ReadingScreen #waiting-msg {
         color: #cba6f7;
         text-align: center;
-    }
-    ReadingScreen Button {
-        width: 24;
-        margin: 0 1;
     }
     ReadingScreen #hints {
         width: 100%;
@@ -168,14 +257,16 @@ class ReadingScreen(Screen):
         yield Static(self._question, id="question-display")
         yield Static("", id="spread-label")
         with Horizontal(id="main-area"):
-            with VerticalScroll(id="cards-container"):
+            with Vertical(id="cards-container"):
                 pass
             with Vertical(id="card-preview"):
                 yield Static("Select a card", id="preview-placeholder")
         with Center(id="actions"):
-            yield Button("Interpret", id="interpret", variant="primary")
-            yield Button("Home", id="home")
-        yield Static("Up/Down select · Tab panels · I interpret · Esc back", id="hints")
+            action = ReadingAction("Interpret", id="interpret")
+            action.add_class("primary")
+            yield action
+            yield ReadingAction("Home", id="home")
+        yield Static("↑/↓ move · Enter confirm · I interpret · Q back", id="hints")
 
     def on_mount(self) -> None:
         """Draw cards from the deck and mount animated CardWidgets."""
@@ -212,24 +303,42 @@ class ReadingScreen(Screen):
         preview.remove_children()
         preview.mount(Static("Select a card"))
 
-        # Clear and repopulate card list
+        # Clear and repopulate the spread layout canvas.
         container = self.query_one("#cards-container")
         container.remove_children()
+        for count in (1, 3, 5, 10):
+            container.remove_class(f"spread-{count}")
+        container.add_class(f"spread-{len(self._drawn_cards)}")
         mode = app.render_mode
 
+        widgets: list[CardWidget] = []
         for i, dc in enumerate(self._drawn_cards):
             widget = CardWidget(dc, render_mode=mode)
-            container.mount(widget)
+            widgets.append(widget)
             if animation_enabled:
                 self.set_timer(
                     max(i * 0.15, 0.01),
                     lambda w=widget: self._reveal_card(w),
                 )
+        container.mount(*self._ordered_spread_widgets(widgets))
 
         if animation_enabled:
             self.set_timer(len(self._drawn_cards) * 0.15 + 0.5, self._focus_first_card)
         else:
             self._focus_first_card()
+
+    @staticmethod
+    def _ordered_spread_widgets(widgets: list[CardWidget]) -> list[CardWidget]:
+        """Return cards in a visual order that resembles the selected spread."""
+        count = len(widgets)
+        if count == 5:
+            return [widgets[4], widgets[0], widgets[1], widgets[3], widgets[2]]
+        if count == 10:
+            return [
+                widgets[4], widgets[0], widgets[1], widgets[5], widgets[9],
+                widgets[3], widgets[2], widgets[6], widgets[7], widgets[8],
+            ]
+        return widgets
 
     def _focus_first_card(self) -> None:
         cards = list(self.query(CardWidget))
@@ -272,7 +381,7 @@ class ReadingScreen(Screen):
         self.query_one("#interpret").display = True
         self.query_one("#home").display = True
         self.query_one("#hints", Static).update(
-            "Up/Down select · Tab panels · I interpret · Esc back"
+            "↑/↓ move · Enter confirm · I interpret · Q back"
         )
 
     def _show_error(self, message: str) -> None:
@@ -304,11 +413,11 @@ class ReadingScreen(Screen):
                 return
         preview.mount(Static(render_card_detail(dc)))
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle interpret and home button clicks."""
-        if event.button.id == "home":
+    def on_reading_action_selected(self, event: ReadingAction.Selected) -> None:
+        """Handle reading action activation."""
+        if event.action_id == "home":
             go_home(self)
-        elif event.button.id == "interpret":
+        elif event.action_id == "interpret":
             self._do_interpret()
 
     @property
@@ -336,26 +445,76 @@ class ReadingScreen(Screen):
         self.run_worker(self._run_interpretation(), exclusive=True)
 
     def key_down(self) -> None:
-        """Move focus to the next CardWidget."""
+        """Move focus down through cards, then action buttons."""
         if isinstance(self.focused, CardWidget):
-            focus_sibling(self, CardWidget, 1)
+            if not self._focus_card(1):
+                self._focus_first_button()
+        elif isinstance(self.focused, ReadingAction):
+            self._focus_button(1)
 
     def key_up(self) -> None:
-        """Move focus to the previous CardWidget."""
+        """Move focus up through action buttons, then cards."""
         if isinstance(self.focused, CardWidget):
-            focus_sibling(self, CardWidget, -1)
+            self._focus_card(-1)
+        elif isinstance(self.focused, ReadingAction):
+            if not self._focus_button(-1):
+                self._focus_last_card()
 
     def key_tab(self, event: Key) -> None:
         """Cycle focus: if on a card, go to first button; if on button, go to first card."""
         event.stop()
         if isinstance(self.focused, CardWidget):
-            buttons = list(self.query(Button))
+            buttons = list(self.query(ReadingAction))
             if buttons:
                 buttons[0].focus()
-        elif isinstance(self.focused, Button):
+        elif isinstance(self.focused, ReadingAction):
             cards = list(self.query(CardWidget))
             if cards:
                 cards[0].focus()
+
+    def _focus_card(self, delta: int) -> bool:
+        """Focus a neighboring card; return whether focus moved."""
+        cards = list(self.query(CardWidget))
+        if not cards:
+            return False
+        try:
+            idx = cards.index(self.focused)
+        except ValueError:
+            cards[0].focus()
+            return True
+        new_idx = idx + delta
+        if 0 <= new_idx < len(cards):
+            cards[new_idx].focus()
+            return True
+        return False
+
+    def _focus_button(self, delta: int) -> bool:
+        """Focus a neighboring action button; return whether focus moved."""
+        buttons = [button for button in self.query(ReadingAction) if button.display]
+        if not buttons:
+            return False
+        try:
+            idx = buttons.index(self.focused)
+        except ValueError:
+            buttons[0].focus()
+            return True
+        new_idx = idx + delta
+        if 0 <= new_idx < len(buttons):
+            buttons[new_idx].focus()
+            return True
+        return False
+
+    def _focus_first_button(self) -> None:
+        """Focus the first visible action button."""
+        buttons = [button for button in self.query(ReadingAction) if button.display]
+        if buttons:
+            buttons[0].focus()
+
+    def _focus_last_card(self) -> None:
+        """Focus the last card in the card list."""
+        cards = list(self.query(CardWidget))
+        if cards:
+            cards[-1].focus()
 
     async def _run_interpretation(self) -> None:
         """Run interpretation via the configured AI backend."""
