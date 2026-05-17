@@ -91,19 +91,21 @@ async def test_reading_screen_has_spread_label():
 
 
 @pytest.mark.asyncio
-async def test_reading_screen_has_reshuffle_button():
+async def test_reading_screen_has_interpret_and_home_buttons():
     app = NekomataApp()
     async with app.run_test() as pilot:
         inp = app.screen.query_one("#prompt-input")
-        inp.value = "reshuffle test"
+        inp.value = "button test"
         await pilot.press("enter")
         await pilot.pause()
         await pilot.click("#spread-single")
         await pilot.pause()
         from nekomata.screens.reading import ReadingScreen
         assert isinstance(app.screen, ReadingScreen)
-        btn = app.screen.query_one("#reshuffle")
-        assert btn is not None
+        interpret_btn = app.screen.query_one("#interpret")
+        home_btn = app.screen.query_one("#home")
+        assert interpret_btn is not None
+        assert home_btn is not None
 
 
 @pytest.mark.asyncio
@@ -207,54 +209,6 @@ async def test_interpretation_space_skips_typewriter():
         content = screen.query_one("#interp-content")
         rendered = str(content.render())
         assert len(rendered) > 10
-
-
-@pytest.mark.asyncio
-async def test_reading_reshuffle_changes_cards():
-    """Clicking reshuffle redraws cards."""
-    app = NekomataApp()
-    async with app.run_test() as pilot:
-        inp = app.screen.query_one("#prompt-input")
-        inp.value = "reshuffle test"
-        await pilot.press("enter")
-        await pilot.pause()
-        await pilot.click("#spread-single")
-        await pilot.pause()
-        from nekomata.screens.reading import ReadingScreen, CardWidget
-        screen = app.screen
-        assert isinstance(screen, ReadingScreen)
-
-        first_cards = list(screen.query(CardWidget))
-        assert len(first_cards) >= 1
-
-        await pilot.click("#reshuffle")
-        await pilot.pause(0)
-        await pilot.pause(0)
-
-        new_cards = list(screen.query(CardWidget))
-        assert len(new_cards) >= 1
-
-
-@pytest.mark.asyncio
-async def test_reading_r_key_reshuffles():
-    """Pressing R key triggers reshuffle."""
-    app = NekomataApp()
-    async with app.run_test() as pilot:
-        inp = app.screen.query_one("#prompt-input")
-        inp.value = "R key test"
-        await pilot.press("enter")
-        await pilot.pause()
-        await pilot.click("#spread-single")
-        await pilot.pause()
-        from nekomata.screens.reading import ReadingScreen
-        assert isinstance(app.screen, ReadingScreen)
-
-        await pilot.press("r")
-        await pilot.pause(0)
-        await pilot.pause(0)
-        assert isinstance(app.screen, ReadingScreen)
-        cards = list(app.screen.query("CardWidget"))
-        assert len(cards) >= 1
 
 
 @pytest.mark.asyncio

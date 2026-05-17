@@ -98,7 +98,6 @@ class ReadingScreen(Screen):
 
     BINDINGS = [
         ("i", "interpret", "Interpret"),
-        ("r", "reshuffle", "Reshuffle"),
         ("escape", "handle_escape", "Back"),
     ]
 
@@ -175,9 +174,8 @@ class ReadingScreen(Screen):
                 yield Static("Select a card", id="preview-placeholder")
         with Center(id="actions"):
             yield Button("Interpret", id="interpret", variant="primary")
-            yield Button("Reshuffle", id="reshuffle")
             yield Button("Home", id="home")
-        yield Static("Up/Down select · Tab panels · I interpret · R reshuffle · Esc back", id="hints")
+        yield Static("Up/Down select · Tab panels · I interpret · Esc back", id="hints")
 
     def on_mount(self) -> None:
         """Draw cards from the deck and mount animated CardWidgets."""
@@ -245,7 +243,6 @@ class ReadingScreen(Screen):
     def _show_waiting(self) -> None:
         """Replace action buttons with spinner."""
         self.query_one("#interpret").display = False
-        self.query_one("#reshuffle").display = False
         self.query_one("#home").display = False
         actions = self.query_one("#actions")
         self._dot_idx = 0
@@ -273,10 +270,9 @@ class ReadingScreen(Screen):
         except NoMatches:
             pass
         self.query_one("#interpret").display = True
-        self.query_one("#reshuffle").display = True
         self.query_one("#home").display = True
         self.query_one("#hints", Static).update(
-            "Up/Down select · Tab panels · I interpret · R reshuffle · Esc back"
+            "Up/Down select · Tab panels · I interpret · Esc back"
         )
 
     def _show_error(self, message: str) -> None:
@@ -309,13 +305,11 @@ class ReadingScreen(Screen):
         preview.mount(Static(render_card_detail(dc)))
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle interpret, reshuffle, and home button clicks."""
+        """Handle interpret and home button clicks."""
         if event.button.id == "home":
             go_home(self)
         elif event.button.id == "interpret":
             self._do_interpret()
-        elif event.button.id == "reshuffle":
-            self._do_reshuffle()
 
     @property
     def _is_waiting(self) -> bool:
@@ -326,15 +320,6 @@ class ReadingScreen(Screen):
         """I key binding — trigger AI interpretation."""
         if not self._is_waiting:
             self._do_interpret()
-
-    def action_reshuffle(self) -> None:
-        """R key binding — reshuffle and redraw all cards."""
-        if not self._is_waiting:
-            self._do_reshuffle()
-
-    def _do_reshuffle(self) -> None:
-        """Clear cards, reshuffle the deck, and redraw."""
-        self._draw_and_mount(animation_enabled=self.app.animation_enabled)
 
     def action_handle_escape(self) -> None:
         """Cancel interpretation if waiting, otherwise go home."""

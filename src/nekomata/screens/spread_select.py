@@ -1,7 +1,7 @@
 """Spread selection screen — choose a card layout before drawing."""
 
 from textual.app import ComposeResult
-from textual.containers import Center, Vertical
+from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Static
 
@@ -19,8 +19,11 @@ class SpreadSelectScreen(Screen):
     }
     SpreadSelectScreen #question {
         text-align: center;
-        color: #a6adc8;
+        color: #cdd6f4;
+        border: round #89b4fa;
+        padding: 0 2;
         margin-bottom: 1;
+        width: 56;
     }
     SpreadSelectScreen #prompt {
         text-align: center;
@@ -28,14 +31,15 @@ class SpreadSelectScreen(Screen):
         text-style: bold;
         margin-bottom: 1;
     }
-    SpreadSelectScreen Button {
-        width: 48;
-        margin-bottom: 1;
+    SpreadSelectScreen #spread-buttons {
+        width: auto;
     }
-    SpreadSelectScreen Button:hover {
-        text-style: bold;
+    SpreadSelectScreen Button {
+        width: 36;
+        margin-bottom: 0;
     }
     SpreadSelectScreen #back {
+        margin-top: 1;
         border: tall #585b70;
         color: #a6adc8;
     }
@@ -58,21 +62,20 @@ class SpreadSelectScreen(Screen):
 
     def compose(self) -> ComposeResult:
         """Build the spread selection screen with numbered buttons."""
-        with Center():
-            question = self.app.question
-            if question:
-                yield Static(question, id="question")
-            yield Static("Choose a spread:", id="prompt")
-            with Vertical():
-                for i, (key, desc, cls) in enumerate(SPREAD_REGISTRY, 1):
-                    n_pos = len(cls().positions)
-                    yield Button(
-                        f"{i}  {cls.name}（{n_pos} cards）— {desc}",
-                        id=f"spread-{key}",
-                    )
-                yield Button("Back", id="back")
-            yield Static("", id="spread-preview")
-            yield Static("1-6 quick select · Up/Down navigate · Enter confirm · Esc back", id="hints")
+        question = self.app.question
+        if question:
+            yield Static(question, id="question")
+        yield Static("Choose a spread", id="prompt")
+        with Vertical(id="spread-buttons"):
+            for i, (key, _, cls) in enumerate(SPREAD_REGISTRY, 1):
+                n_pos = len(cls().positions)
+                yield Button(
+                    f" {i}  {cls.name}  ({n_pos})",
+                    id=f"spread-{key}",
+                )
+            yield Button(" Back", id="back")
+        yield Static("", id="spread-preview")
+        yield Static("1-6 select · Esc back", id="hints")
 
     def on_mount(self) -> None:
         """Auto-focus the first spread button and show its preview."""
@@ -85,10 +88,10 @@ class SpreadSelectScreen(Screen):
     def _update_preview(self, btn_id: str) -> None:
         """Show position breakdown for the focused spread button."""
         preview = self.query_one("#spread-preview", Static)
-        for key, _, cls in SPREAD_REGISTRY:
+        for key, desc, cls in SPREAD_REGISTRY:
             if btn_id == f"spread-{key}":
                 positions = " → ".join(p.name for p in cls().positions)
-                preview.update(f"Positions: {positions}")
+                preview.update(f"{desc}\n{positions}")
                 return
         preview.update("")
 
