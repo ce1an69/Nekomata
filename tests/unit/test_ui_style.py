@@ -7,7 +7,7 @@ from nekomata.render.themes import THEMES
 from nekomata.screens.card_browser import CardBrowserScreen, CardListItem
 from nekomata.screens.home import HomeScreen
 from nekomata.screens.interpretation import InterpretationScreen
-from nekomata.screens.reading import CardWidget, ReadingAction, ReadingScreen
+from nekomata.screens.reading import CardWidget, ReadingScreen
 from nekomata.screens.spread_select import SpreadSelectScreen
 
 
@@ -17,7 +17,6 @@ CSS_SOURCES = [
     SpreadSelectScreen.DEFAULT_CSS,
     ReadingScreen.DEFAULT_CSS,
     CardWidget.DEFAULT_CSS,
-    ReadingAction.DEFAULT_CSS,
     InterpretationScreen.DEFAULT_CSS,
     CardBrowserScreen.DEFAULT_CSS,
     CardListItem.DEFAULT_CSS,

@@ -130,21 +130,20 @@ async def test_reading_screen_has_spread_label():
 
 
 @pytest.mark.asyncio
-async def test_reading_screen_has_interpret_and_home_buttons():
+async def test_reading_screen_uses_shortcuts_without_action_buttons():
     app = NekomataApp()
     async with app.run_test() as pilot:
         inp = app.screen.query_one("#prompt-input")
-        inp.value = "button test"
+        inp.value = "shortcut test"
         await pilot.press("enter")
         await pilot.pause()
         await pilot.click("#spread-single")
         await pilot.pause()
         from nekomata.screens.reading import ReadingScreen
         assert isinstance(app.screen, ReadingScreen)
-        interpret_btn = app.screen.query_one("#interpret")
-        home_btn = app.screen.query_one("#home")
-        assert interpret_btn is not None
-        assert home_btn is not None
+        assert not app.screen.query("#interpret")
+        assert not app.screen.query("#home")
+        assert "I interpret" in str(app.screen.query_one("#hints").render())
 
 
 @pytest.mark.asyncio
@@ -159,7 +158,7 @@ async def test_reading_screen_uses_spread_layout_canvas():
         await pilot.pause()
         await pilot.click("#spread-past_present_future")
         await pilot.pause()
-        from nekomata.screens.reading import ReadingAction, ReadingScreen, CardWidget
+        from nekomata.screens.reading import ReadingScreen, CardWidget
         screen = app.screen
         assert isinstance(screen, ReadingScreen)
 
@@ -168,6 +167,28 @@ async def test_reading_screen_uses_spread_layout_canvas():
         cards = list(screen.query(CardWidget))
         assert len(cards) == 3
         assert cards[0]._drawn.position.description == "过去的影响"
+
+
+@pytest.mark.asyncio
+async def test_reading_layout_gives_more_width_to_cards_than_preview():
+    """The preview rail is narrower so spread cards keep their proportions."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "layout width test"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.press("5")
+        await pilot.pause()
+        from nekomata.screens.reading import ReadingScreen
+        screen = app.screen
+        assert isinstance(screen, ReadingScreen)
+
+        canvas = screen.query_one("#cards-container")
+        preview = screen.query_one("#card-preview")
+        assert canvas.styles.width.value == 2
+        assert preview.styles.width.value == 56
 
 
 @pytest.mark.asyncio
@@ -182,7 +203,7 @@ async def test_reading_preview_updates_for_selected_card():
         await pilot.pause()
         await pilot.click("#spread-single")
         await pilot.pause()
-        from nekomata.screens.reading import ReadingAction, ReadingScreen, CardWidget
+        from nekomata.screens.reading import ReadingScreen, CardWidget
         screen = app.screen
         assert isinstance(screen, ReadingScreen)
 
@@ -209,15 +230,15 @@ async def test_interpret_without_api_shows_error():
         from nekomata.screens.reading import ReadingScreen
         assert isinstance(app.screen, ReadingScreen)
 
-        await pilot.click("#interpret")
+        await pilot.press("i")
         await pilot.pause(0)
         await pilot.pause(0)
         await pilot.pause(0)
 
         # Should still be on ReadingScreen with an error message
         assert isinstance(app.screen, ReadingScreen)
-        error_msg = app.screen.query_one("#error-msg")
-        rendered_error = str(error_msg.render())
+        status = app.screen.query_one("#status")
+        rendered_error = str(status.render())
         assert "config.toml" in rendered_error or "API key" in rendered_error
 
 
@@ -278,7 +299,7 @@ async def test_interpretation_space_skips_typewriter():
         # Mock the interpreter to return a response
         from nekomata.ai.interpreter import OpenAIInterpreter
         with patch.object(OpenAIInterpreter, "interpret", return_value="Test interpretation result"):
-            await pilot.click("#interpret")
+            await pilot.press("i")
             await pilot.pause(0)
             await pilot.pause(0)
             await pilot.pause(0)
@@ -299,9 +320,10 @@ async def test_interpretation_space_skips_typewriter():
 
 
 @pytest.mark.asyncio
-async def test_reading_tab_cycles_cards_to_buttons():
-    """Tab key moves focus from cards to action buttons."""
+async def test_reading_tab_cycles_between_cards():
+    """Tab key keeps keyboard navigation inside the spread cards."""
     app = NekomataApp()
+    app.animation_enabled = False
     async with app.run_test() as pilot:
         inp = app.screen.query_one("#prompt-input")
         inp.value = "Tab test"
@@ -310,7 +332,7 @@ async def test_reading_tab_cycles_cards_to_buttons():
         await pilot.click("#spread-past_present_future")
         await pilot.pause(0)
         await pilot.pause(0)
-        from nekomata.screens.reading import ReadingAction, ReadingScreen, CardWidget
+        from nekomata.screens.reading import ReadingScreen, CardWidget
         screen = app.screen
         assert isinstance(screen, ReadingScreen)
 
@@ -325,21 +347,23 @@ async def test_reading_tab_cycles_cards_to_buttons():
         await pilot.press("tab")
         for _ in range(5):
             await pilot.pause(0)
-            if isinstance(screen.focused, ReadingAction):
+            if isinstance(screen.focused, CardWidget) and screen.focused is cards[1]:
                 break
-        assert isinstance(screen.focused, ReadingAction), f"Expected ReadingAction, got {type(screen.focused).__name__}"
+        assert isinstance(screen.focused, CardWidget)
+        assert screen.focused is cards[1]
 
         await pilot.press("tab")
         for _ in range(5):
             await pilot.pause(0)
-            if isinstance(screen.focused, CardWidget):
+            if isinstance(screen.focused, CardWidget) and screen.focused is cards[2]:
                 break
         assert isinstance(screen.focused, CardWidget)
+        assert screen.focused is cards[2]
 
 
 @pytest.mark.asyncio
-async def test_reading_arrow_keys_reach_interpret_button():
-    """Arrow keys move from the card list into the action buttons."""
+async def test_reading_arrow_keys_stay_in_spread_cards():
+    """Arrow keys move through cards without entering removed action buttons."""
     app = NekomataApp()
     app.animation_enabled = False
     async with app.run_test() as pilot:
@@ -350,7 +374,7 @@ async def test_reading_arrow_keys_reach_interpret_button():
         await pilot.click("#spread-past_present_future")
         await pilot.pause(0)
         await pilot.pause(0)
-        from nekomata.screens.reading import ReadingAction, ReadingScreen, CardWidget
+        from nekomata.screens.reading import ReadingScreen, CardWidget
         screen = app.screen
         assert isinstance(screen, ReadingScreen)
 
@@ -360,13 +384,13 @@ async def test_reading_arrow_keys_reach_interpret_button():
 
         await pilot.press("down")
         await pilot.pause()
-        assert isinstance(screen.focused, ReadingAction)
-        assert screen.focused.id == "interpret"
+        assert isinstance(screen.focused, CardWidget)
+        assert screen.focused is cards[-1]
 
         await pilot.press("up")
         await pilot.pause()
         assert isinstance(screen.focused, CardWidget)
-        assert screen.focused is cards[-1]
+        assert screen.focused is cards[-2]
 
 
 @pytest.mark.asyncio
@@ -407,7 +431,7 @@ async def test_interpretation_escape_goes_home():
 
         from nekomata.ai.interpreter import OpenAIInterpreter
         with patch.object(OpenAIInterpreter, "interpret", return_value="Test result"):
-            await pilot.click("#interpret")
+            await pilot.press("i")
             await pilot.pause(0)
             await pilot.pause(0)
             await pilot.pause(0)

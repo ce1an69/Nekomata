@@ -16,6 +16,7 @@ SIZES = {
     "full": (64, 96),
     "medium": (48, 72),
     "compact": (32, 48),
+    "preview": (56, 84),
 }
 
 
@@ -36,6 +37,18 @@ def _load_card_image(card: Card, size: str = "compact", upside_down: bool = Fals
     w, h = SIZES.get(size, SIZES["compact"])
     img = img.resize((w, h), Image.Resampling.NEAREST)
     return img
+
+
+def _load_card_detail_image(card: Card, upside_down: bool = False) -> Image.Image | None:
+    """Load and resize the detail preview PNG. Returns None if no preview exists."""
+    preview_path = get_preview_path(card)
+    if preview_path is None or not preview_path.exists():
+        return None
+    img = Image.open(preview_path)
+    if upside_down:
+        img = img.rotate(180)
+    w, h = SIZES["preview"]
+    return img.resize((w, h), Image.Resampling.NEAREST)
 
 
 def _image_to_renderable(img: Image.Image) -> Pixels:
@@ -77,12 +90,9 @@ def render_card_face(drawn: DrawnCard, size: str = "compact", theme: CardTheme |
 def render_card_image_detail(drawn: DrawnCard, theme: CardTheme | None = None) -> Panel | None:
     """Render a card detail preview from _detail.png variant. Returns None if no PNG."""
     theme = theme or get_theme()
-    preview_path = get_preview_path(drawn.card)
-    if preview_path is None or not preview_path.exists():
+    img = _load_card_detail_image(drawn.card, upside_down=drawn.is_reversed)
+    if img is None:
         return None
-    img = Image.open(preview_path)
-    if drawn.is_reversed:
-        img = img.rotate(180)
     border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
     title = f"[{drawn.position.name}] — {drawn.card.name_zh} ({drawn.status_label})"
     return Panel(
