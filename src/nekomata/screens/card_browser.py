@@ -187,13 +187,17 @@ class CardBrowserScreen(Screen):
             focus_sibling(self, CardListItem, -1)
 
     def key_left(self) -> None:
-        """Move left across filter buttons."""
-        if isinstance(self.focused, Button) and (self.focused.id or "").startswith("filter-"):
+        """Move left across filters or upward through cards."""
+        if isinstance(self.focused, CardListItem):
+            focus_sibling(self, CardListItem, -1)
+        elif isinstance(self.focused, Button) and (self.focused.id or "").startswith("filter-"):
             focus_sibling(self, Button, -1)
 
     def key_right(self) -> None:
-        """Move right across filter buttons."""
-        if isinstance(self.focused, Button) and (self.focused.id or "").startswith("filter-"):
+        """Move right across filters or downward through cards."""
+        if isinstance(self.focused, CardListItem):
+            focus_sibling(self, CardListItem, 1)
+        elif isinstance(self.focused, Button) and (self.focused.id or "").startswith("filter-"):
             focus_sibling(self, Button, 1)
 
     def key_tab(self, event: Key) -> None:

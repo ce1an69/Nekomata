@@ -388,8 +388,18 @@ class ReadingScreen(Screen):
         if isinstance(self.focused, CardWidget):
             self._focus_card(1)
 
+    def key_right(self) -> None:
+        """Move focus right through spread cards."""
+        if isinstance(self.focused, CardWidget):
+            self._focus_card(1)
+
     def key_up(self) -> None:
         """Move focus up through spread cards."""
+        if isinstance(self.focused, CardWidget):
+            self._focus_card(-1)
+
+    def key_left(self) -> None:
+        """Move focus left through spread cards."""
         if isinstance(self.focused, CardWidget):
             self._focus_card(-1)
 
