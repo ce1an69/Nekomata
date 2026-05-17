@@ -60,6 +60,20 @@ def render_card_image(drawn: DrawnCard, size: str = "compact", theme: CardTheme 
     )
 
 
+def render_card_face(drawn: DrawnCard, size: str = "compact", theme: CardTheme | None = None) -> Panel | None:
+    """Render only the card face for spread layouts. Returns None if no PNG exists."""
+    theme = theme or get_theme()
+    img = _load_card_image(drawn.card, size, upside_down=drawn.is_reversed)
+    if img is None:
+        return None
+    border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
+    return Panel(
+        _image_to_renderable(img),
+        border_style=border_style,
+        padding=(0, 1),
+    )
+
+
 def render_card_image_detail(drawn: DrawnCard, theme: CardTheme | None = None) -> Panel | None:
     """Render a card detail preview from _detail.png variant. Returns None if no PNG."""
     theme = theme or get_theme()

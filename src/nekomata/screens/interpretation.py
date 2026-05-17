@@ -16,6 +16,7 @@ class InterpretationScreen(Screen):
     """Displays AI-generated card interpretation with typewriter animation."""
 
     BINDINGS = [
+        ("q", "go_home", "Home"),
         ("escape", "go_home", "Home"),
     ]
 
@@ -27,7 +28,7 @@ class InterpretationScreen(Screen):
         text-align: center;
         color: #cba6f7;
         text-style: bold;
-        margin: 1 2 0 2;
+        margin: 0 2 0 2;
     }
     InterpretationScreen #card-summary {
         text-align: center;
@@ -43,9 +44,13 @@ class InterpretationScreen(Screen):
     }
     InterpretationScreen #interp-scroll {
         height: 1fr;
+        border: round #313244;
+        background: #181825;
+        padding: 1 2;
+        margin: 1 0 0 0;
     }
     InterpretationScreen #interp-content {
-        margin: 1 2;
+        margin: 0;
     }
     InterpretationScreen #actions {
         align: center middle;
@@ -106,7 +111,7 @@ class InterpretationScreen(Screen):
             yield Static(Markdown(initial), id="interp-content")
         with Center(id="actions"):
             yield Button("Home", id="home")
-        hint_text = "Space skip · Esc home" if self._typewriter else "Esc home"
+        hint_text = "Space skip · Q home" if self._typewriter else "Q home"
         yield Static(hint_text, id="hints")
 
     def on_mount(self) -> None:
@@ -130,7 +135,7 @@ class InterpretationScreen(Screen):
             if self._tw_timer is not None:
                 self._tw_timer.stop()
                 self._tw_timer = None
-            self.query_one("#hints", Static).update("Esc home")
+            self.query_one("#hints", Static).update("Q home")
             return
         visible = "\n".join(self._lines[: self._revealed_lines])
         self.query_one("#interp-content", Static).update(Markdown(visible))
@@ -152,7 +157,7 @@ class InterpretationScreen(Screen):
         self._tw_timer = None
         self.query_one("#interp-content", Static).update(Markdown(self._full_text))
         self._revealed_lines = len(self._lines)
-        self.query_one("#hints", Static).update("Esc home")
+        self.query_one("#hints", Static).update("Q home")
         self._scroll_to_bottom()
 
     def action_go_home(self) -> None:

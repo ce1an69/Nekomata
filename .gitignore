@@ -44,4 +44,5 @@ htmlcov/
 # Claude Code / AI tooling
 .claude/
 .agents/
+.superpowers/
 skills-lock.json

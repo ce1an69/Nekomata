@@ -16,7 +16,9 @@ async def test_home_screen_has_title():
     app.animation_enabled = False
     async with app.run_test() as pilot:
         title = app.screen.query_one("#title")
-        assert "███████" in str(title.render())
+        rendered = str(title.render())
+        assert "Nekomata" in rendered
+        assert "Cat Tarot" in rendered
 
 
 @pytest.mark.asyncio
@@ -113,6 +115,16 @@ async def test_home_screen_status_command():
 
 
 @pytest.mark.asyncio
+async def test_home_screen_q_exits_when_input_empty():
+    """Pressing Q on an empty home prompt exits the app."""
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        await pilot.press("q")
+        await pilot.pause()
+        assert app._exit
+
+
+@pytest.mark.asyncio
 async def test_navigate_to_spread_select():
     app = NekomataApp()
     async with app.run_test() as pilot:
@@ -132,8 +144,8 @@ async def test_spread_select_has_options():
         inp.value = "test"
         await pilot.press("enter")
         await pilot.pause()
-        buttons = app.screen.query("Button")
-        ids = [b.id for b in buttons if b.id]
+        options = app.screen.query("SpreadOption")
+        ids = [option.id for option in options if option.id]
         assert "spread-single" in ids
         assert "spread-past_present_future" in ids
 
