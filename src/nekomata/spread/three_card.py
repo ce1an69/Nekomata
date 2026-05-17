@@ -1,4 +1,5 @@
-from __future__ import annotations
+"""Three-card spread variants: Past/Present/Future, Body/Mind/Spirit, Situation/Action/Result."""
+
 
 from nekomata.card.types import Position
 from nekomata.spread.base import Spread

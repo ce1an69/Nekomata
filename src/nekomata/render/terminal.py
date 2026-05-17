@@ -1,4 +1,5 @@
-from __future__ import annotations
+"""Terminal capability detection for render mode selection."""
+
 
 import shutil
 

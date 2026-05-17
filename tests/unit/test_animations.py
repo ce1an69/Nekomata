@@ -38,11 +38,9 @@ async def test_reading_screen_animated_reveal():
 
 
 def test_animation_functions_exist():
-    """Verify animation module exports expected functions."""
-    from nekomata.render.animations import animate_slide_in, animate_reveal, animate_shuffle
-    assert callable(animate_slide_in)
+    """Verify animation module exports the reveal function."""
+    from nekomata.render.animations import animate_reveal
     assert callable(animate_reveal)
-    assert callable(animate_shuffle)
 
 
 @pytest.mark.asyncio

@@ -3,11 +3,10 @@
 [ai]
 backend = "template"            # template | openai_compatible
 model = ""
-base_url = "http://localhost:11434"
+base_url = "https://api.openai.com/v1"
 api_key = ""
 timeout = 60.0
 style = "mystical"              # mystical | warm | direct
-max_retries = 2
 fallback_to_template = true
 
 [display]

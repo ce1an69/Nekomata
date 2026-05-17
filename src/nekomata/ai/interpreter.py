@@ -1,13 +1,14 @@
-from __future__ import annotations
+"""AI interpretation backends: OpenAI-compatible API and template fallback."""
 
 import json
 import logging
 import urllib.request
 import urllib.error
-from typing import AsyncIterator, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from nekomata.card.types import DrawnCard
 from nekomata.ai.prompts import SYSTEM_PROMPT, build_interpretation_prompt
+from nekomata.storage.config import AppConfig
 
 log = logging.getLogger(__name__)
 
@@ -22,23 +23,27 @@ class InterpretationError(Exception):
 
 @runtime_checkable
 class AIInterpreter(Protocol):
-    def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str: ...
+    """Protocol for AI interpretation backends."""
+
+    def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str:
+        """Return a textual interpretation for the given cards and question."""
+        ...
 
 
 def _cards_info(drawn_cards: list[DrawnCard]) -> str:
+    """Format drawn cards into a structured string for AI prompt."""
     lines = []
     for dc in drawn_cards:
-        status = "逆位" if dc.is_reversed else "正位"
-        keywords = dc.card.keywords_reversed if dc.is_reversed else dc.card.keywords_upright
-        meaning = dc.card.meaning_reversed if dc.is_reversed else dc.card.meaning_upright
+        desc = f"（{dc.position.description}）" if dc.position.description else ""
         lines.append(
-            f"【{dc.position.name_zh}】{dc.card.name_zh}（{status}）"
-            f" — 关键词：{', '.join(keywords)}，释义：{meaning}"
+            f"【{dc.position.name_zh}】{desc}{dc.card.name_zh}（{dc.status_label}）"
+            f" — 关键词：{', '.join(dc.keywords)}，释义：{dc.meaning}"
         )
     return "\n".join(lines)
 
 
 def _build_messages(style: str, question: str, drawn_cards: list[DrawnCard]) -> list[dict]:
+    """Build the system + user message list for the OpenAI chat API."""
     return [
         {"role": "system", "content": SYSTEM_PROMPT.format(style=style)},
         {"role": "user", "content": build_interpretation_prompt(question, _cards_info(drawn_cards))},
@@ -46,23 +51,36 @@ def _build_messages(style: str, question: str, drawn_cards: list[DrawnCard]) -> 
 
 
 def template_interpret(drawn_cards: list[DrawnCard], question: str) -> str:
-    parts = [f"🔮 问题：{question}\n"]
+    """Generate a structured Markdown interpretation from card keywords and meanings."""
+    parts = [f"**问题：{question}**\n"]
     for dc in drawn_cards:
-        status = "逆位" if dc.is_reversed else "正位"
-        keywords = dc.card.keywords_reversed if dc.is_reversed else dc.card.keywords_upright
-        meaning = dc.card.meaning_reversed if dc.is_reversed else dc.card.meaning_upright
-        parts.append(f"【{dc.position.name_zh}】{dc.card.name_zh}（{status}）")
-        parts.append(f"  关键词：{', '.join(keywords)}")
-        parts.append(f"  释义：{meaning}")
-        parts.append("")
+        parts.append(f"### 【{dc.position.name_zh}】{dc.card.name_zh}（{dc.status_label}）")
+        if dc.position.description:
+            parts.append(f"*{dc.position.description}*")
+        parts.append(f"**关键词：** {', '.join(dc.keywords)}")
+        parts.append(f"\n{dc.meaning}\n")
+
+    # Add a brief overall summary
+    reversed_cards = [dc for dc in drawn_cards if dc.is_reversed]
+    n_reversed = len(reversed_cards)
+    if len(drawn_cards) > 1:
+        parts.append("---\n")
+        parts.append("### 综合概述\n")
+        all_keywords = []
+        for dc in drawn_cards:
+            all_keywords.extend(dc.keywords)
+        # Pick up to 6 unique keywords for a thematic summary
+        unique_kw = list(dict.fromkeys(all_keywords))[:6]
+        parts.append(f"本次占卜的主题关键词：{'、'.join(unique_kw)}。\n")
+        if n_reversed == 0:
+            parts.append("全部正位，整体能量流畅，各方面发展较为顺利。")
+        elif n_reversed == len(drawn_cards):
+            parts.append("全部逆位，提示当前可能面临较多挑战，需要内省和调整。")
+        else:
+            parts.append(f"正位 {len(drawn_cards) - n_reversed} 张、逆位 {n_reversed} 张，"
+                         "能量有进有退，提醒你在顺境中保持警觉，在逆境中寻找转机。")
+
     return "\n".join(parts)
-
-
-async def template_interpret_stream(drawn_cards: list[DrawnCard], question: str) -> AsyncIterator[str]:
-    """Stream template interpretation line by line."""
-    text = template_interpret(drawn_cards, question)
-    for line in text.split("\n"):
-        yield line + "\n"
 
 
 class OpenAIInterpreter:
@@ -77,18 +95,8 @@ class OpenAIInterpreter:
         self._timeout = timeout
         self._style = style
 
-    def health_check(self) -> bool:
-        try:
-            req = urllib.request.Request(
-                self._url.rsplit("/", 1)[0] + "/models",
-                headers={"Authorization": f"Bearer {self._api_key}"} if self._api_key else {},
-            )
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                return resp.status == 200
-        except Exception:
-            return False
-
     def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str:
+        """Send cards and question to the API and return the interpretation."""
         payload = json.dumps({
             "model": self._model,
             "messages": _build_messages(self._style, question, drawn_cards),
@@ -103,80 +111,36 @@ class OpenAIInterpreter:
         try:
             with urllib.request.urlopen(req, timeout=self._timeout) as resp:
                 data = json.loads(resp.read())
-                return data["choices"][0]["message"]["content"]
+                content = data["choices"][0]["message"]["content"]
+                if not content or not content.strip():
+                    raise InterpretationError("Empty response from API", retryable=True)
+                return content
         except urllib.error.URLError as e:
             raise InterpretationError(str(e), retryable=True) from e
         except (KeyError, IndexError) as e:
             raise InterpretationError(str(e), retryable=False) from e
 
-    async def interpret_stream(self, drawn_cards: list[DrawnCard], question: str) -> AsyncIterator[str]:
-        """Stream interpretation chunks from OpenAI SSE endpoint."""
-        payload = json.dumps({
-            "model": self._model,
-            "messages": _build_messages(self._style, question, drawn_cards),
-            "stream": True,
-        }).encode()
 
-        headers = {"Content-Type": "application/json"}
-        if self._api_key:
-            headers["Authorization"] = f"Bearer {self._api_key}"
-
-        req = urllib.request.Request(self._url, data=payload, headers=headers)
-        import asyncio
-        try:
-            loop = asyncio.get_event_loop()
-            with await loop.run_in_executor(None, lambda: urllib.request.urlopen(req, timeout=self._timeout)) as resp:
-                buffer = ""
-                while True:
-                    chunk = await loop.run_in_executor(None, resp.read, 1024)
-                    if not chunk:
-                        break
-                    buffer += chunk.decode()
-                    while "\n" in buffer:
-                        line, buffer = buffer.split("\n", 1)
-                        line = line.strip()
-                        if not line or not line.startswith("data:"):
-                            continue
-                        data_str = line[5:].strip()
-                        if data_str == "[DONE]":
-                            return
-                        try:
-                            data = json.loads(data_str)
-                            delta = data["choices"][0].get("delta", {})
-                            content = delta.get("content", "")
-                            if content:
-                                yield content
-                        except (json.JSONDecodeError, KeyError, IndexError):
-                            continue
-        except urllib.error.URLError as e:
-            raise InterpretationError(str(e), retryable=True) from e
-
-
-def get_interpreter(config) -> AIInterpreter:
+def get_interpreter(config: AppConfig) -> AIInterpreter:
     """Factory: return the configured interpreter, with optional template fallback."""
-    backend = getattr(config, "ai_backend", "template")
+    backend = config.ai_backend
     if backend == "openai_compatible":
         backend = "openai"
 
     if backend == "openai":
-        try:
-            return OpenAIInterpreter(
-                model=config.ai_model,
-                base_url=config.ai_base_url,
-                api_key=config.ai_api_key,
-                timeout=config.ai_timeout,
-                style=config.ai_style,
-            )
-        except Exception:
-            if not getattr(config, "ai_fallback", True):
-                raise
-            log.warning("Falling back to template interpreter")
-            return TemplateFallback()
+        return OpenAIInterpreter(
+            model=config.ai_model,
+            base_url=config.ai_base_url,
+            api_key=config.ai_api_key,
+            timeout=config.ai_timeout,
+            style=config.ai_style,
+        )
 
     return TemplateFallback()
 
 
 class TemplateFallback:
     """Wraps template_interpret to satisfy AIInterpreter protocol."""
+
     def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str:
         return template_interpret(drawn_cards, question)

@@ -4,6 +4,7 @@ from nekomata.spread.single import SingleCardSpread
 from nekomata.spread.three_card import PastPresentFuture, SituationActionResult, BodyMindSpirit
 from nekomata.spread.five_card import FiveCardCross
 from nekomata.spread.celtic import CelticCross
+from nekomata.spread import get_spread, SPREAD_REGISTRY
 
 
 def make_deck(n: int = 10) -> Deck:
@@ -110,3 +111,39 @@ class TestCelticCross:
         names = [p.name_zh for p in CelticCross().positions]
         assert names[0] == "当前处境"
         assert names[9] == "最终结果"
+
+
+class TestSpreadRegistry:
+    def test_registry_has_six_entries(self):
+        assert len(SPREAD_REGISTRY) == 6
+
+    def test_get_spread_returns_correct_type(self):
+        assert isinstance(get_spread("single"), SingleCardSpread)
+        assert isinstance(get_spread("past_present_future"), PastPresentFuture)
+        assert isinstance(get_spread("celtic_cross"), CelticCross)
+
+    def test_get_spread_raises_for_unknown_key(self):
+        import pytest
+        with pytest.raises(KeyError):
+            get_spread("nonexistent")
+
+    def test_registry_keys_match_get_spread(self):
+        for key, _, cls in SPREAD_REGISTRY:
+            assert isinstance(get_spread(key), cls)
+
+
+def test_draw_raises_when_deck_too_small():
+    """Spread.draw raises IndexError if deck has fewer cards than positions."""
+    import pytest
+    spread = CelticCross()  # requires 10 cards
+    deck = make_deck(5)     # only 5 cards
+    with pytest.raises(IndexError, match="Need 10 cards"):
+        spread.draw(deck)
+
+
+def test_get_spread_injects_description():
+    """get_spread sets the description from the registry."""
+    spread = get_spread("single")
+    assert spread.description == "每日灵感"
+    spread = get_spread("celtic_cross")
+    assert spread.description == "深度全面解读（10 牌）"

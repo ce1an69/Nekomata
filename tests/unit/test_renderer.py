@@ -6,7 +6,6 @@ from nekomata.card.types import Arcana, Card, DrawnCard, Position
 from nekomata.render.card_renderer import (
     render_card_text,
     render_card_detail,
-    render_reading_summary,
     get_preview_path,
     render_card_image,
     render_card_image_detail,
@@ -47,11 +46,6 @@ def test_render_card_text_upright():
 
 def test_render_card_text_position_in_title():
     assert "今日指引" in str(render_card_text(make_drawn()).title)
-
-
-def test_render_reading_summary():
-    cards = [make_drawn(False), make_drawn(True)]
-    assert isinstance(render_reading_summary(cards, "今天运势如何？"), Panel)
 
 
 def test_render_card_detail_returns_panel():
@@ -156,8 +150,8 @@ def test_load_card_image_reversed_rotates():
         meaning_upright="up", meaning_reversed="down",
         image_path=Path("assets/cards/major/major_02.png"),
     )
-    img_normal = _load_card_image(card, size="full", reversed=False)
-    img_reversed = _load_card_image(card, size="full", reversed=True)
+    img_normal = _load_card_image(card, size="full", upside_down=False)
+    img_reversed = _load_card_image(card, size="full", upside_down=True)
     # Rotated image should have different pixel data
     assert img_normal.tobytes() != img_reversed.tobytes()
 
@@ -181,3 +175,27 @@ def test_render_card_image_detail_no_image():
     """Cards without preview PNG should return None."""
     dc = make_drawn()
     assert render_card_image_detail(dc) is None
+
+
+def test_render_card_image_detail_reversed():
+    """Detail preview of a reversed card rotates the image 180 degrees."""
+    card = Card(
+        id="major_02", name="The High Priestess", name_zh="女祭司",
+        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
+        keywords_upright=("a",), keywords_reversed=("b",),
+        meaning_upright="up", meaning_reversed="down",
+        image_path=Path("assets/cards/major/major_02.png"),
+    )
+    pos = Position(name="Test", name_zh="测试", description="test")
+    dc_upright = DrawnCard(card=card, position=pos, is_reversed=False)
+    dc_reversed = DrawnCard(card=card, position=pos, is_reversed=True)
+
+    result_up = render_card_image_detail(dc_upright)
+    result_rev = render_card_image_detail(dc_reversed)
+
+    # Both should produce panels
+    assert isinstance(result_up, Panel)
+    assert isinstance(result_rev, Panel)
+
+    # Reversed title should contain "逆位"
+    assert "逆位" in result_rev.title
