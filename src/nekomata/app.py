@@ -19,6 +19,8 @@ class NekomataApp(App):
     Screen {
         background: #11111b;
         color: #cdd6f4;
+        border: double #cba6f7;
+        padding: 0 2;
     }
     Button {
         background: #1e1e2e;

@@ -35,7 +35,7 @@ class InterpretationScreen(Screen):
         margin: 0 2;
     }
     InterpretationScreen #interp-divider {
-        width: 100%;
+        width: auto;
         height: 1;
         color: #585b70;
         text-align: center;
