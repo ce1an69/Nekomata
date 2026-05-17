@@ -67,8 +67,8 @@ def test_drawn_card_status_label():
         meaning_upright="up", meaning_reversed="down",
     )
     pos = Position(name="Past", name_zh="过去", description="过去的影响")
-    assert DrawnCard(card=card, position=pos, is_reversed=False).status_label == "正位"
-    assert DrawnCard(card=card, position=pos, is_reversed=True).status_label == "逆位"
+    assert DrawnCard(card=card, position=pos, is_reversed=False).status_label == "upright"
+    assert DrawnCard(card=card, position=pos, is_reversed=True).status_label == "reversed"
 
 
 def test_drawn_card_keywords_and_meaning():

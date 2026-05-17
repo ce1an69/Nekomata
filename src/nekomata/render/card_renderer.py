@@ -50,8 +50,8 @@ def render_card_image(drawn: DrawnCard, size: str = "compact", theme: CardTheme 
     if img is None:
         return None
     border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
-    label = "逆位 ↕" if drawn.is_reversed else ""
-    title = f"[{drawn.position.name_zh}] {drawn.card.name_zh} {label}"
+    label = " ↕" if drawn.is_reversed else ""
+    title = f"[{drawn.position.name}] {drawn.card.name}{label}"
     return Panel(
         _image_to_renderable(img),
         title=title,
@@ -70,7 +70,7 @@ def render_card_image_detail(drawn: DrawnCard, theme: CardTheme | None = None) -
     if drawn.is_reversed:
         img = img.rotate(180)
     border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
-    title = f"[{drawn.position.name_zh}] — {drawn.card.name_zh} ({drawn.status_label})"
+    title = f"[{drawn.position.name}] — {drawn.card.name_zh} ({drawn.status_label})"
     return Panel(
         _image_to_renderable(img),
         title=title,
@@ -86,16 +86,16 @@ def render_card_text(drawn: DrawnCard, width: int = 40, theme: CardTheme | None 
     border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
 
     content = Text()
-    reversal = " ↕ 逆位" if drawn.is_reversed else ""
+    reversal = " ↕" if drawn.is_reversed else ""
     content.append(f"{card.name_zh} ({card.name}){reversal}\n\n")
-    content.append(f"{drawn.status_label}关键词：", style="bold")
+    content.append(f"{drawn.status_label}: ", style="bold")
     content.append(", ".join(drawn.keywords))
     content.append("\n\n")
     content.append(drawn.meaning)
 
     return Panel(
         content,
-        title=f"[{drawn.position.name_zh}]",
+        title=f"[{drawn.position.name}]",
         border_style=border_style,
         width=width,
         padding=(0, 1),
@@ -110,22 +110,22 @@ def render_card_detail(drawn: DrawnCard, width: int = 60, theme: CardTheme | Non
 
     content = Text()
     content.append(f"{card.name_zh} ({card.name})  [{drawn.status_label}]\n", style="bold")
-    content.append(f"元素：{card.element}  ·  星座：{card.astrology}\n\n")
+    content.append(f"Element: {card.element}  ·  Astrology: {card.astrology}\n\n")
 
-    content.append("正位关键词：", style="bold")
+    content.append("Upright: ", style="bold")
     content.append(", ".join(card.keywords_upright))
     content.append("\n")
     content.append(card.meaning_upright)
     content.append("\n\n")
 
-    content.append("逆位关键词：", style="bold")
+    content.append("Reversed: ", style="bold")
     content.append(", ".join(card.keywords_reversed))
     content.append("\n")
     content.append(card.meaning_reversed)
 
     return Panel(
         content,
-        title=f"[{drawn.position.name_zh}] — {card.name_zh}",
+        title=f"[{drawn.position.name}] — {card.name_zh}",
         border_style=border_style,
         width=width,
         padding=(1, 2),

@@ -37,15 +37,18 @@ def test_render_card_text_contains_name():
 
 
 def test_render_card_text_reversed():
-    assert "逆位" in str(render_card_text(make_drawn(reversed=True)).renderable)
+    s = str(render_card_text(make_drawn(reversed=True)).renderable)
+    assert "↕" in s
+    assert "reversed" in s
 
 
 def test_render_card_text_upright():
-    assert "正位" in str(render_card_text(make_drawn()).renderable)
+    s = str(render_card_text(make_drawn()).renderable)
+    assert "upright" in s
 
 
 def test_render_card_text_position_in_title():
-    assert "今日指引" in str(render_card_text(make_drawn()).title)
+    assert "Daily" in str(render_card_text(make_drawn()).title)
 
 
 def test_render_card_detail_returns_panel():
@@ -64,7 +67,7 @@ def test_render_card_detail_shows_full_info():
 
 def test_render_card_detail_reversed():
     s = str(render_card_detail(make_drawn(reversed=True)).renderable)
-    assert "逆位" in s
+    assert "reversed" in s
     assert "过于鲁莽" in s
 
 
@@ -124,7 +127,7 @@ def test_render_card_image_reversed():
     dc = DrawnCard(card=card, position=pos, is_reversed=True)
     result = render_card_image(dc, size="compact")
     assert isinstance(result, Panel)
-    assert "逆位" in str(result.title)
+    assert "↕" in str(result.title)
 
 
 def test_load_card_image_resizes():
@@ -152,7 +155,6 @@ def test_load_card_image_reversed_rotates():
     )
     img_normal = _load_card_image(card, size="full", upside_down=False)
     img_reversed = _load_card_image(card, size="full", upside_down=True)
-    # Rotated image should have different pixel data
     assert img_normal.tobytes() != img_reversed.tobytes()
 
 
@@ -178,7 +180,7 @@ def test_render_card_image_detail_no_image():
 
 
 def test_render_card_image_detail_reversed():
-    """Detail preview of a reversed card rotates the image 180 degrees."""
+    """Detail preview of a reversed card shows 'reversed' in title."""
     card = Card(
         id="major_02", name="The High Priestess", name_zh="女祭司",
         arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
@@ -193,9 +195,6 @@ def test_render_card_image_detail_reversed():
     result_up = render_card_image_detail(dc_upright)
     result_rev = render_card_image_detail(dc_reversed)
 
-    # Both should produce panels
     assert isinstance(result_up, Panel)
     assert isinstance(result_rev, Panel)
-
-    # Reversed title should contain "逆位"
-    assert "逆位" in result_rev.title
+    assert "reversed" in result_rev.title

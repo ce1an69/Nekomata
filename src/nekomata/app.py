@@ -12,7 +12,7 @@ from nekomata.storage.config import AppConfig
 class NekomataApp(App):
     """Nekomata (猫又) — Pixel-art cat tarot TUI application."""
 
-    TITLE = "Nekomata — 猫又塔罗"
+    TITLE = "Nekomata"
     CSS_PATH = None
 
     DEFAULT_CSS = """
@@ -75,7 +75,6 @@ class NekomataApp(App):
         self.question: str = ""
         self.spread_key: str = ""
         self.spread_name: str = ""
-        self.spread_name_zh: str = ""
         self.render_mode: str = "compact"
         self.config: AppConfig = AppConfig.load()
         self.animation_enabled: bool = self.config.display_animation

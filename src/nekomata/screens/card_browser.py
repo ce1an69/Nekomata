@@ -18,24 +18,24 @@ _ROMAN = [
 ]
 
 SUIT_FILTERS = [
-    ("全部", None),
-    ("大阿卡纳", Arcana.MAJOR),
-    ("圣杯", Arcana.CUPS),
-    ("权杖", Arcana.WANDS),
-    ("宝剑", Arcana.SWORDS),
-    ("星币", Arcana.PENTACLES),
+    ("All", None),
+    ("Major", Arcana.MAJOR),
+    ("Cups", Arcana.CUPS),
+    ("Wands", Arcana.WANDS),
+    ("Swords", Arcana.SWORDS),
+    ("Pentacles", Arcana.PENTACLES),
 ]
 
-# Reusable position for card browser preview (avoids creating one per focus)
-_BROWSER_POS = Position(name="Browser", name_zh="浏览", description="牌库浏览")
+# Reusable position for card browser preview
+_BROWSER_POS = Position(name="Browser", name_zh="Browser", description="Card browser")
 
 
 class CardBrowserScreen(Screen):
     """Browse and filter all 78 tarot cards with detail preview."""
 
     BINDINGS = [
-        ("r", "toggle_reversal", "逆位"),
-        ("escape", "go_back", "返回"),
+        ("r", "toggle_reversal", "Reversal"),
+        ("escape", "go_back", "Back"),
     ]
 
     DEFAULT_CSS = """
@@ -104,15 +104,15 @@ class CardBrowserScreen(Screen):
                 if btn_id == "filter-all":
                     button.add_class("active-filter")
                 yield button
-        yield Static(f"共 {len(self._cards)} 张", id="card-count")
+        yield Static(f"{len(self._cards)} cards", id="card-count")
         with Horizontal(id="browser-area"):
             with VerticalScroll(id="card-list"):
                 pass
             with Vertical(id="card-detail"):
-                yield Static("选择一张牌查看详情", id="detail-placeholder")
+                yield Static("Select a card", id="detail-placeholder")
         with Center(id="back-bar"):
-            yield Button("↩ 返回", id="back")
-        yield Static("↑↓ 浏览 · Tab 切换面板 · R 切换逆位 · Alt+1~6 筛选 · Esc 返回", id="hints")
+            yield Button("Back", id="back")
+        yield Static("Up/Down browse · Tab panels · R reversal · Esc back", id="hints")
 
     def on_mount(self) -> None:
         """Populate card list and focus the first item."""
@@ -166,8 +166,8 @@ class CardBrowserScreen(Screen):
         """Update the card count line to reflect current filter and reversal state."""
         count = self.query_one("#card-count", Static)
         filtered = [c for c in self._cards if self._active_arcana is None or c.arcana == self._active_arcana]
-        rev_label = "  [↕ 逆位预览]" if self._reversed_preview else ""
-        count.update(f"显示 {len(filtered)}/{len(self._cards)} 张{rev_label}")
+        rev_label = "  (reversed preview)" if self._reversed_preview else ""
+        count.update(f"{len(filtered)}/{len(self._cards)} cards{rev_label}")
 
     def key_down(self) -> None:
         if isinstance(self.focused, CardListItem):
@@ -192,12 +192,10 @@ class CardBrowserScreen(Screen):
 
         focused_id = self.focused.id or ""
         if focused_id == "back":
-            # Back button → wrap to first card
             items = list(self.query(CardListItem))
             if items:
                 items[0].focus()
         elif focused_id.startswith("filter-"):
-            # Advance through filter buttons, then to back
             try:
                 idx = filter_buttons.index(self.focused)
             except ValueError:
@@ -219,19 +217,11 @@ class CardBrowserScreen(Screen):
             filter_id = f"filter-{arcana.value}" if arcana else "filter-all"
             filtered = [c for c in self._cards if c.arcana == arcana] if arcana else self._cards
             self._update_filter_highlight(filter_id)
-            # Clear detail panel to avoid stale card from previous filter
             detail = self.query_one("#card-detail")
             detail.remove_children()
-            detail.mount(Static("选择一张牌查看详情"))
+            detail.mount(Static("Select a card"))
             self._show_cards(filtered)
             self.set_timer(0.1, self._focus_first_card)
-
-    def key_alt_1(self) -> None: self._apply_filter_by_index(0)
-    def key_alt_2(self) -> None: self._apply_filter_by_index(1)
-    def key_alt_3(self) -> None: self._apply_filter_by_index(2)
-    def key_alt_4(self) -> None: self._apply_filter_by_index(3)
-    def key_alt_5(self) -> None: self._apply_filter_by_index(4)
-    def key_alt_6(self) -> None: self._apply_filter_by_index(5)
 
 
 class CardListItem(Static):
@@ -267,7 +257,7 @@ class CardListItem(Static):
         self._card = card
         suit = ARCANA_ZH.get(card.arcana, card.arcana.value)
         num = _ROMAN[card.number] if card.arcana == Arcana.MAJOR and card.number < len(_ROMAN) else str(card.number)
-        super().__init__(f"{num:>3s}  {card.name_zh} ({card.name}) [{suit}]")
+        super().__init__(f"{num:>3s}  {card.name} [{suit}]")
 
     def on_click(self) -> None:
         self._show_detail()
