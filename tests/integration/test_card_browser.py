@@ -145,6 +145,28 @@ async def test_card_browser_selected_state():
 
 
 @pytest.mark.asyncio
+async def test_card_browser_card_list_uses_left_right_arrows():
+    """Left/right should move through cards when the list is focused."""
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/browse"
+        await pilot.press("enter")
+        await pilot.pause()
+        items = list(app.screen.query("CardListItem"))
+        assert len(items) >= 2
+
+        items[0].focus()
+        await pilot.pause()
+        await pilot.press("right")
+        await pilot.pause()
+        assert app.screen.focused is items[1]
+        await pilot.press("left")
+        await pilot.pause()
+        assert app.screen.focused is items[0]
+
+
+@pytest.mark.asyncio
 async def test_card_browser_tab_cycles_all_panels():
     """Tab cycles: card list → filter buttons → back button → card list."""
     app = NekomataApp()

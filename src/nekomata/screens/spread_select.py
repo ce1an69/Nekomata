@@ -154,7 +154,7 @@ class SpreadSelectScreen(Screen):
                     yield Static("", id="preview-title")
                     yield Static("", id="preview-desc")
                     yield Static("", id="preview-positions")
-            yield Static("↑/↓ move · Enter confirm · Q back", id="hints")
+            yield Static("↑/↓/←/→ move · Enter confirm · Q back", id="hints")
 
     def on_mount(self) -> None:
         """Auto-focus the first spread button and show its preview."""
@@ -209,15 +209,24 @@ class SpreadSelectScreen(Screen):
 
     def key_down(self) -> None:
         """Move focus to the next spread option."""
-        if isinstance(self.focused, SpreadOption):
-            target = self._next_option(1)
-            if target is not None and target.id:
-                self._update_preview(target.id)
+        self._move_option(1)
+
+    def key_right(self) -> None:
+        """Move focus to the next spread option."""
+        self._move_option(1)
+
+    def key_left(self) -> None:
+        """Move focus to the previous spread option."""
+        self._move_option(-1)
 
     def key_up(self) -> None:
         """Move focus to the previous spread option."""
+        self._move_option(-1)
+
+    def _move_option(self, delta: int) -> None:
+        """Move focus between spread options and refresh the preview."""
         if isinstance(self.focused, SpreadOption):
-            target = self._next_option(-1)
+            target = self._next_option(delta)
             if target is not None and target.id:
                 self._update_preview(target.id)
 

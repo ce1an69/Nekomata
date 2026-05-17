@@ -160,6 +160,22 @@ class InterpretationScreen(Screen):
         self.query_one("#hints", Static).update("Q home")
         self._scroll_to_bottom()
 
+    def key_down(self) -> None:
+        """Scroll interpretation down."""
+        self.query_one("#interp-scroll", VerticalScroll).scroll_down(animate=False)
+
+    def key_up(self) -> None:
+        """Scroll interpretation up."""
+        self.query_one("#interp-scroll", VerticalScroll).scroll_up(animate=False)
+
+    def key_right(self) -> None:
+        """Page interpretation down."""
+        self.query_one("#interp-scroll", VerticalScroll).scroll_page_down(animate=False)
+
+    def key_left(self) -> None:
+        """Page interpretation up."""
+        self.query_one("#interp-scroll", VerticalScroll).scroll_page_up(animate=False)
+
     def action_go_home(self) -> None:
         """Escape binding — pop all screens back to home."""
         go_home(self)

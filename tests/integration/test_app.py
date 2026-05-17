@@ -151,7 +151,7 @@ async def test_spread_select_has_options():
 
 
 @pytest.mark.asyncio
-async def test_reading_screen_shows_cards():
+async def test_draw_screen_shows_deck():
     app = NekomataApp()
     async with app.run_test() as pilot:
         inp = app.screen.query_one("#prompt-input")
@@ -160,18 +160,25 @@ async def test_reading_screen_shows_cards():
         await pilot.pause()
         await pilot.click("#spread-single")
         await pilot.pause()
-        from nekomata.screens.reading import ReadingScreen
-        assert isinstance(app.screen, ReadingScreen)
+        from nekomata.screens.draw import DrawScreen
+        assert isinstance(app.screen, DrawScreen)
+        deck_cards = app.screen.query("DeckCard")
+        assert len(deck_cards) > 0
+        slots = app.screen.query("SpreadSlot")
+        assert len(slots) == 1  # single card spread
 
 
 @pytest.mark.asyncio
-async def test_reading_screen_card_preview():
+async def test_draw_screen_has_spread_slots():
     app = NekomataApp()
     async with app.run_test() as pilot:
         inp = app.screen.query_one("#prompt-input")
         inp.value = "preview test"
         await pilot.press("enter")
         await pilot.pause()
-        await pilot.click("#spread-single")
+        await pilot.click("#spread-past_present_future")
         await pilot.pause()
-        assert app.screen.query_one("#card-preview") is not None
+        from nekomata.screens.draw import DrawScreen
+        assert isinstance(app.screen, DrawScreen)
+        slots = app.screen.query("SpreadSlot")
+        assert len(slots) == 3  # three card spread

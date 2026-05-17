@@ -335,7 +335,7 @@ class HomeScreen(Screen):
         return matches[0] if len(matches) == 1 else None
 
     def _on_spread_selected(self, spread_key: str) -> None:
-        """Callback when the user picks a spread — push the reading screen."""
-        from nekomata.screens.reading import ReadingScreen
+        """Callback when the user picks a spread — push the draw screen."""
+        from nekomata.screens.draw import DrawScreen
         self.app.spread_key = spread_key
-        self.app.push_screen(ReadingScreen(spread_key, self.app.question))
+        self.app.push_screen(DrawScreen(spread_key, self.app.question))

@@ -114,13 +114,16 @@ class TestCelticCross:
 
 
 class TestSpreadRegistry:
-    def test_registry_has_six_entries(self):
-        assert len(SPREAD_REGISTRY) == 6
+    def test_registry_has_five_entries(self):
+        assert len(SPREAD_REGISTRY) == 5
+        assert all(key != "celtic_cross" for key, _, _ in SPREAD_REGISTRY)
 
     def test_get_spread_returns_correct_type(self):
         assert isinstance(get_spread("single"), SingleCardSpread)
         assert isinstance(get_spread("past_present_future"), PastPresentFuture)
-        assert isinstance(get_spread("celtic_cross"), CelticCross)
+        import pytest
+        with pytest.raises(KeyError):
+            get_spread("celtic_cross")
 
     def test_get_spread_raises_for_unknown_key(self):
         import pytest
@@ -145,5 +148,3 @@ def test_get_spread_injects_description():
     """get_spread sets the description from the registry."""
     spread = get_spread("single")
     assert spread.description == "每日灵感"
-    spread = get_spread("celtic_cross")
-    assert spread.description == "深度全面解读（10 牌）"
