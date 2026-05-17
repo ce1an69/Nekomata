@@ -12,6 +12,10 @@ from nekomata.card.types import DrawnCard
 from nekomata.screens.widgets import go_home
 
 
+def _ease_in(widget, attr, target, duration):
+    widget.styles.animate(attr, target, duration=duration, easing="out_cubic")
+
+
 class InterpretationScreen(Screen):
     """Displays AI-generated card interpretation with typewriter animation."""
 
@@ -29,11 +33,13 @@ class InterpretationScreen(Screen):
         color: #cba6f7;
         text-style: bold;
         margin: 0 2 0 2;
+        transition: opacity 350ms out_cubic, offset 350ms out_cubic;
     }
     InterpretationScreen #card-summary {
         text-align: center;
         color: #a6adc8;
         margin: 0 2;
+        transition: opacity 350ms out_cubic, offset 350ms out_cubic;
     }
     InterpretationScreen #interp-divider {
         width: auto;
@@ -41,6 +47,7 @@ class InterpretationScreen(Screen):
         color: #585b70;
         text-align: center;
         margin: 0 2;
+        transition: opacity 400ms out_cubic;
     }
     InterpretationScreen #interp-scroll {
         height: 1fr;
@@ -48,6 +55,7 @@ class InterpretationScreen(Screen):
         background: #181825;
         padding: 1 2;
         margin: 1 0 0 0;
+        transition: opacity 450ms out_cubic, offset 450ms out_cubic;
     }
     InterpretationScreen #interp-content {
         margin: 0;
@@ -56,6 +64,7 @@ class InterpretationScreen(Screen):
         align: center middle;
         height: auto;
         margin-top: 1;
+        transition: opacity 500ms out_cubic;
     }
     InterpretationScreen #hints {
         width: 100%;
@@ -115,16 +124,49 @@ class InterpretationScreen(Screen):
         yield Static(hint_text, id="hints")
 
     def on_mount(self) -> None:
-        """Start typewriter animation if enabled."""
+        """Start entrance animation, then typewriter if enabled."""
+        if self.app.animation_enabled:
+            header = self.query_one("#interp-header")
+            header.styles.opacity = 0
+            header.styles.offset = (0, -1)
+            _ease_in(header, "opacity", 1.0, 0.3)
+            _ease_in(header, "offset", (0, 0), 0.3)
+
+            summary = self.query_one("#card-summary")
+            summary.styles.opacity = 0
+            summary.styles.offset = (0, -1)
+            self.set_timer(0.08, lambda: (
+                _ease_in(summary, "opacity", 1.0, 0.28),
+                _ease_in(summary, "offset", (0, 0), 0.28),
+            ))
+
+            scroll = self.query_one("#interp-scroll")
+            scroll.styles.opacity = 0
+            scroll.styles.offset = (0, 1)
+            self.set_timer(0.18, lambda: (
+                _ease_in(scroll, "opacity", 1.0, 0.35),
+                _ease_in(scroll, "offset", (0, 0), 0.35),
+            ))
+
+            typewriter_delay = 0.4
+        else:
+            typewriter_delay = 0.0
+
         if self._typewriter and self._full_text:
             self._revealed_lines = 0
-            self._tw_timer = self.set_interval(0.05, self._typewriter_tick)
+            self.set_timer(typewriter_delay, self._start_typewriter)
 
     def on_unmount(self) -> None:
         """Stop typewriter timer when screen is removed."""
         if self._tw_timer is not None:
             self._tw_timer.stop()
             self._tw_timer = None
+
+    def _start_typewriter(self) -> None:
+        """Begin the typewriter reveal interval."""
+        if not self.is_mounted:
+            return
+        self._tw_timer = self.set_interval(0.05, self._typewriter_tick)
 
     def _typewriter_tick(self) -> None:
         """Advance the typewriter reveal by one step (line-based)."""

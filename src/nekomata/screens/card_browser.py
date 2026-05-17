@@ -8,6 +8,7 @@ from textual.widgets import Button, Static
 
 from nekomata.card.data import load_all_cards
 from nekomata.card.types import Arcana, ARCANA_ZH, Card, DrawnCard, Position
+from nekomata.render.animations import animate_fade_in
 from nekomata.render.card_renderer import render_card_detail, render_card_image_detail
 from nekomata.screens.widgets import focus_sibling
 
@@ -50,11 +51,13 @@ class CardBrowserScreen(Screen):
         border: round #313244;
         background: #181825;
         padding: 0 1;
+        transition: opacity 300ms out_cubic, offset 300ms out_cubic;
     }
     CardBrowserScreen #filter-bar Button {
         width: auto;
         min-width: 10;
         margin: 0 1;
+        transition: background 180ms, border 180ms, color 180ms;
     }
     CardBrowserScreen #filter-bar Button.active-filter {
         border: round #cba6f7;
@@ -69,6 +72,7 @@ class CardBrowserScreen(Screen):
     }
     CardBrowserScreen #browser-area {
         height: 1fr;
+        transition: opacity 300ms out_cubic, offset 300ms out_cubic;
     }
     CardBrowserScreen #card-list {
         width: 1fr;
@@ -84,6 +88,7 @@ class CardBrowserScreen(Screen):
         background: #181825;
         padding: 1 2;
         margin-left: 1;
+        transition: opacity 250ms out_cubic;
     }
     CardBrowserScreen #back-bar {
         align: center middle;
@@ -124,8 +129,19 @@ class CardBrowserScreen(Screen):
         yield Static("↑/↓ move · Enter inspect · R reversal · Q back", id="hints")
 
     def on_mount(self) -> None:
-        """Populate card list and focus the first item."""
+        """Populate card list, focus the first item, and animate entrance."""
         self._show_cards(self._cards)
+        if self.app.animation_enabled:
+            filter_bar = self.query_one("#filter-bar")
+            filter_bar.styles.opacity = 0
+            filter_bar.styles.offset = (0, -1)
+            filter_bar.styles.animate("opacity", 1.0, duration=0.3, easing="out_cubic")
+            filter_bar.styles.animate("offset", (0, 0), duration=0.3, easing="out_cubic")
+            browser_area = self.query_one("#browser-area")
+            browser_area.styles.opacity = 0
+            browser_area.styles.offset = (0, 1)
+            browser_area.styles.animate("opacity", 1.0, duration=0.35, easing="out_cubic")
+            browser_area.styles.animate("offset", (0, 0), duration=0.35, easing="out_cubic")
         self.set_timer(0.1, self._focus_first_card)
 
     def _focus_first_card(self) -> None:
@@ -257,6 +273,7 @@ class CardListItem(Static):
         padding: 0 1;
         height: auto;
         border: round #11111b;
+        transition: background 180ms, border 180ms, color 180ms, opacity 250ms out_cubic;
     }
     CardListItem:focus {
         background: #1e1e2e;
@@ -305,6 +322,12 @@ class CardListItem(Static):
         if self.app.render_mode != "text":
             img_detail = render_card_image_detail(drawn)
             if img_detail:
-                detail_panel.mount(Static(img_detail))
+                widget = Static(img_detail)
+                detail_panel.mount(widget)
+                if self.app.animation_enabled:
+                    animate_fade_in(widget)
                 return
-        detail_panel.mount(Static(render_card_detail(drawn)))
+        widget = Static(render_card_detail(drawn))
+        detail_panel.mount(widget)
+        if self.app.animation_enabled:
+            animate_fade_in(widget)

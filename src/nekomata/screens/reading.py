@@ -46,6 +46,7 @@ class CardWidget(Static):
         border: round #313244;
         background: #181825;
         content-align: center middle;
+        transition: background 180ms, border 180ms;
     }
     CardWidget:focus {
         border: round #cba6f7;
@@ -140,15 +141,18 @@ class ReadingScreen(Screen):
         text-align: center;
         color: #a6adc8;
         margin: 0 0 0 0;
+        transition: opacity 300ms out_cubic, offset 300ms out_cubic;
     }
     ReadingScreen #spread-label {
         text-align: center;
         color: #6c7086;
         margin: 0 0 1 0;
+        transition: opacity 350ms out_cubic, offset 350ms out_cubic;
     }
     ReadingScreen #main-area {
         height: 1fr;
         margin-top: 1;
+        transition: opacity 400ms out_cubic, offset 400ms out_cubic;
     }
     ReadingScreen #cards-container {
         width: 2fr;
@@ -188,6 +192,7 @@ class ReadingScreen(Screen):
         background: #181825;
         padding: 1 1;
         margin-left: 1;
+        transition: opacity 250ms out_cubic;
     }
     ReadingScreen #status {
         width: 100%;
@@ -232,6 +237,28 @@ class ReadingScreen(Screen):
 
     def on_mount(self) -> None:
         """Draw cards from the deck and mount animated CardWidgets."""
+        if self.app.animation_enabled:
+            q = self.query_one("#question-display")
+            q.styles.opacity = 0
+            q.styles.offset = (0, -1)
+            q.styles.animate("opacity", 1.0, duration=0.3, easing="out_cubic")
+            q.styles.animate("offset", (0, 0), duration=0.3, easing="out_cubic")
+
+            label = self.query_one("#spread-label")
+            label.styles.opacity = 0
+            label.styles.offset = (0, -1)
+            self.set_timer(0.08, lambda: (
+                label.styles.animate("opacity", 1.0, duration=0.28, easing="out_cubic"),
+                label.styles.animate("offset", (0, 0), duration=0.28, easing="out_cubic"),
+            ))
+
+            main = self.query_one("#main-area")
+            main.styles.opacity = 0
+            main.styles.offset = (0, 1)
+            self.set_timer(0.16, lambda: (
+                main.styles.animate("opacity", 1.0, duration=0.35, easing="out_cubic"),
+                main.styles.animate("offset", (0, 0), duration=0.35, easing="out_cubic"),
+            ))
         self._draw_and_mount(animation_enabled=self.app.animation_enabled)
 
     def on_unmount(self) -> None:
@@ -351,13 +378,21 @@ class ReadingScreen(Screen):
             w.remove_class("selected")
         event.widget.add_class("selected")
         preview = self.query_one("#card-preview")
+        if self.app.animation_enabled:
+            preview.styles.opacity = 0.2
         preview.remove_children()
         if self.app.render_mode != "text":
             img_detail = render_card_image_detail(dc)
             if img_detail:
-                preview.mount(Static(img_detail))
+                w = Static(img_detail)
+                preview.mount(w)
+                if self.app.animation_enabled:
+                    self.set_timer(0.05, lambda: preview.styles.animate("opacity", 1.0, duration=0.2, easing="out_cubic"))
                 return
-        preview.mount(Static(render_card_detail(dc)))
+        w = Static(render_card_detail(dc))
+        preview.mount(w)
+        if self.app.animation_enabled:
+            self.set_timer(0.05, lambda: preview.styles.animate("opacity", 1.0, duration=0.2, easing="out_cubic"))
 
     @property
     def _is_waiting(self) -> bool:
