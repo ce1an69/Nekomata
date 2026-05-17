@@ -1,4 +1,4 @@
-"""AI interpretation backends: OpenAI-compatible API and template fallback."""
+"""AI interpretation via OpenAI-compatible API."""
 
 import json
 import logging
@@ -36,8 +36,8 @@ def _cards_info(drawn_cards: list[DrawnCard]) -> str:
     for dc in drawn_cards:
         desc = f"（{dc.position.description}）" if dc.position.description else ""
         lines.append(
-            f"【{dc.position.name_zh}】{desc}{dc.card.name_zh}（{dc.status_label}）"
-            f" — 关键词：{', '.join(dc.keywords)}，释义：{dc.meaning}"
+            f"【{dc.position.name}】{desc}{dc.card.name}（{dc.status_label}）"
+            f" — keywords: {', '.join(dc.keywords)}, meaning: {dc.meaning}"
         )
     return "\n".join(lines)
 
@@ -48,39 +48,6 @@ def _build_messages(style: str, question: str, drawn_cards: list[DrawnCard]) -> 
         {"role": "system", "content": SYSTEM_PROMPT.format(style=style)},
         {"role": "user", "content": build_interpretation_prompt(question, _cards_info(drawn_cards))},
     ]
-
-
-def template_interpret(drawn_cards: list[DrawnCard], question: str) -> str:
-    """Generate a structured Markdown interpretation from card keywords and meanings."""
-    parts = [f"**问题：{question}**\n"]
-    for dc in drawn_cards:
-        parts.append(f"### 【{dc.position.name_zh}】{dc.card.name_zh}（{dc.status_label}）")
-        if dc.position.description:
-            parts.append(f"*{dc.position.description}*")
-        parts.append(f"**关键词：** {', '.join(dc.keywords)}")
-        parts.append(f"\n{dc.meaning}\n")
-
-    # Add a brief overall summary
-    reversed_cards = [dc for dc in drawn_cards if dc.is_reversed]
-    n_reversed = len(reversed_cards)
-    if len(drawn_cards) > 1:
-        parts.append("---\n")
-        parts.append("### 综合概述\n")
-        all_keywords = []
-        for dc in drawn_cards:
-            all_keywords.extend(dc.keywords)
-        # Pick up to 6 unique keywords for a thematic summary
-        unique_kw = list(dict.fromkeys(all_keywords))[:6]
-        parts.append(f"本次占卜的主题关键词：{'、'.join(unique_kw)}。\n")
-        if n_reversed == 0:
-            parts.append("全部正位，整体能量流畅，各方面发展较为顺利。")
-        elif n_reversed == len(drawn_cards):
-            parts.append("全部逆位，提示当前可能面临较多挑战，需要内省和调整。")
-        else:
-            parts.append(f"正位 {len(drawn_cards) - n_reversed} 张、逆位 {n_reversed} 张，"
-                         "能量有进有退，提醒你在顺境中保持警觉，在逆境中寻找转机。")
-
-    return "\n".join(parts)
 
 
 class OpenAIInterpreter:
@@ -122,12 +89,27 @@ class OpenAIInterpreter:
 
 
 def get_interpreter(config: AppConfig) -> AIInterpreter:
-    """Factory: return the configured interpreter, with optional template fallback."""
+    """Factory: return the configured interpreter.
+
+    Raises InterpretationError if the API is not properly configured.
+    """
     backend = config.ai_backend
     if backend == "openai_compatible":
         backend = "openai"
 
     if backend == "openai":
+        if not config.ai_api_key:
+            raise InterpretationError(
+                "API key not configured. "
+                "Set ai.api_key in config.toml to enable interpretation.",
+                retryable=False,
+            )
+        if not config.ai_model:
+            raise InterpretationError(
+                "AI model not configured. "
+                "Set ai.model in config.toml to enable interpretation.",
+                retryable=False,
+            )
         return OpenAIInterpreter(
             model=config.ai_model,
             base_url=config.ai_base_url,
@@ -136,11 +118,7 @@ def get_interpreter(config: AppConfig) -> AIInterpreter:
             style=config.ai_style,
         )
 
-    return TemplateFallback()
-
-
-class TemplateFallback:
-    """Wraps template_interpret to satisfy AIInterpreter protocol."""
-
-    def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str:
-        return template_interpret(drawn_cards, question)
+    raise InterpretationError(
+        f"Unknown AI backend: {backend}. Set ai.backend to 'openai' in config.toml.",
+        retryable=False,
+    )

@@ -1,10 +1,8 @@
 """Core data types for tarot cards, positions, and readings."""
 
-from dataclasses import dataclass, field
-from datetime import datetime
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from uuid import UUID, uuid4
 
 
 class Arcana(str, Enum):
@@ -15,7 +13,7 @@ class Arcana(str, Enum):
     PENTACLES = "pentacles"
 
 
-# Chinese display names for each arcana suit
+# Display names for each arcana suit
 ARCANA_ZH = {
     Arcana.MAJOR: "大阿卡纳",
     Arcana.CUPS: "圣杯",
@@ -56,8 +54,8 @@ class DrawnCard:
 
     @property
     def status_label(self) -> str:
-        """Chinese label for upright/reversed state."""
-        return "逆位" if self.is_reversed else "正位"
+        """Label for upright/reversed state."""
+        return "reversed" if self.is_reversed else "upright"
 
     @property
     def keywords(self) -> tuple[str, ...]:
@@ -68,15 +66,3 @@ class DrawnCard:
     def meaning(self) -> str:
         """Meaning based on upright/reversed state."""
         return self.card.meaning_reversed if self.is_reversed else self.card.meaning_upright
-
-
-@dataclass
-class Reading:
-    """A completed tarot reading session, persisted to the journal."""
-    id: UUID = field(default_factory=uuid4)
-    timestamp: datetime = field(default_factory=datetime.now)
-    question: str = ""
-    spread_name: str = ""
-    spread_name_zh: str = ""
-    drawn_cards: list[DrawnCard] = field(default_factory=list)
-    interpretation: str | None = None

@@ -11,7 +11,7 @@ from nekomata.spread import SPREAD_REGISTRY
 class SpreadSelectScreen(Screen):
     """Choose a card spread layout before drawing cards."""
 
-    BINDINGS = [("escape", "go_back", "返回")]
+    BINDINGS = [("escape", "go_back", "Back")]
 
     DEFAULT_CSS = """
     SpreadSelectScreen {
@@ -61,18 +61,18 @@ class SpreadSelectScreen(Screen):
         with Center():
             question = self.app.question
             if question:
-                yield Static(f"🔮 {question}", id="question")
-            yield Static("请选择牌阵：", id="prompt")
+                yield Static(question, id="question")
+            yield Static("Choose a spread:", id="prompt")
             with Vertical():
                 for i, (key, desc, cls) in enumerate(SPREAD_REGISTRY, 1):
                     n_pos = len(cls().positions)
                     yield Button(
-                        f"{i}  {cls.name_zh}（{n_pos}牌）— {desc}",
+                        f"{i}  {cls.name}（{n_pos} cards）— {desc}",
                         id=f"spread-{key}",
                     )
-                yield Button("↩ 返回", id="back")
+                yield Button("Back", id="back")
             yield Static("", id="spread-preview")
-            yield Static("数字键快速选择 · ↑↓ 导航 · Enter 确认 · Esc 返回", id="hints")
+            yield Static("1-6 quick select · Up/Down navigate · Enter confirm · Esc back", id="hints")
 
     def on_mount(self) -> None:
         """Auto-focus the first spread button and show its preview."""
@@ -87,8 +87,8 @@ class SpreadSelectScreen(Screen):
         preview = self.query_one("#spread-preview", Static)
         for key, _, cls in SPREAD_REGISTRY:
             if btn_id == f"spread-{key}":
-                positions = " → ".join(p.name_zh for p in cls().positions)
-                preview.update(f"位置：{positions}")
+                positions = " → ".join(p.name for p in cls().positions)
+                preview.update(f"Positions: {positions}")
                 return
         preview.update("")
 
@@ -114,7 +114,6 @@ class SpreadSelectScreen(Screen):
         if 0 <= index < len(SPREAD_REGISTRY):
             self.dismiss(SPREAD_REGISTRY[index][0])
 
-    # Digit key handlers for quick spread selection
     def key_1(self) -> None: self._select_by_index(0)
     def key_2(self) -> None: self._select_by_index(1)
     def key_3(self) -> None: self._select_by_index(2)

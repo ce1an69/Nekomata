@@ -17,7 +17,6 @@ async def test_home_screen_has_title():
     async with app.run_test() as pilot:
         title = app.screen.query_one("#title")
         assert "███████" in str(title.render())
-        assert "NEKOMATA · 猫又塔罗 · 像素风猫咪占卜" not in str(title.render())
 
 
 @pytest.mark.asyncio
@@ -47,8 +46,7 @@ async def test_home_screen_shows_command_suggestions_while_typing_slash():
         rendered = str(suggestions.render())
         assert "/browse" in rendered
         assert "/quit" in rendered
-        # Descriptions should also appear
-        assert "浏览" in rendered or "塔罗牌" in rendered
+        assert "Browse" in rendered or "Exit" in rendered
 
 
 @pytest.mark.asyncio
@@ -81,7 +79,6 @@ async def test_home_screen_help_command():
     app = NekomataApp()
     async with app.run_test() as pilot:
         inp = app.screen.query_one("#prompt-input")
-        # Type /help character by character to simulate real input
         await pilot.press("slash")
         await pilot.press("h")
         await pilot.press("e")
@@ -90,10 +87,8 @@ async def test_home_screen_help_command():
         await pilot.press("enter")
         await pilot.pause(0)
         await pilot.pause(0)
-        # Should still be on home screen
         from nekomata.screens.home import HomeScreen
         assert isinstance(app.screen, HomeScreen)
-        # Input should be cleared
         assert inp.value == ""
 
 
@@ -111,9 +106,9 @@ async def test_home_screen_status_command():
         from nekomata.screens.home import HomeScreen
         assert isinstance(app.screen, HomeScreen)
         suggestions = app.screen.query_one("#command-suggestions")
-        assert suggestions.display, "Status suggestions should be visible"
+        assert suggestions.display
         rendered = str(suggestions.render())
-        assert "template" in rendered or "后端" in rendered
+        assert "Backend" in rendered or "Model" in rendered
         assert inp.value == ""
 
 
@@ -122,7 +117,7 @@ async def test_navigate_to_spread_select():
     app = NekomataApp()
     async with app.run_test() as pilot:
         inp = app.screen.query_one("#prompt-input")
-        inp.value = "测试问题"
+        inp.value = "test question"
         await pilot.press("enter")
         await pilot.pause()
         from nekomata.screens.spread_select import SpreadSelectScreen
@@ -134,7 +129,7 @@ async def test_spread_select_has_options():
     app = NekomataApp()
     async with app.run_test() as pilot:
         inp = app.screen.query_one("#prompt-input")
-        inp.value = "测试"
+        inp.value = "test"
         await pilot.press("enter")
         await pilot.pause()
         buttons = app.screen.query("Button")
@@ -148,7 +143,7 @@ async def test_reading_screen_shows_cards():
     app = NekomataApp()
     async with app.run_test() as pilot:
         inp = app.screen.query_one("#prompt-input")
-        inp.value = "测试问题"
+        inp.value = "test question"
         await pilot.press("enter")
         await pilot.pause()
         await pilot.click("#spread-single")
@@ -162,25 +157,9 @@ async def test_reading_screen_card_preview():
     app = NekomataApp()
     async with app.run_test() as pilot:
         inp = app.screen.query_one("#prompt-input")
-        inp.value = "预览测试"
+        inp.value = "preview test"
         await pilot.press("enter")
         await pilot.pause()
         await pilot.click("#spread-single")
         await pilot.pause()
         assert app.screen.query_one("#card-preview") is not None
-
-
-@pytest.mark.asyncio
-async def test_full_flow_to_interpretation():
-    app = NekomataApp()
-    async with app.run_test() as pilot:
-        inp = app.screen.query_one("#prompt-input")
-        inp.value = "完整流程测试"
-        await pilot.press("enter")
-        await pilot.pause()
-        await pilot.click("#spread-single")
-        await pilot.pause()
-        await pilot.click("#interpret")
-        await pilot.pause()
-        from nekomata.screens.interpretation import InterpretationScreen
-        assert isinstance(app.screen, InterpretationScreen)

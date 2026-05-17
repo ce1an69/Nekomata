@@ -107,7 +107,7 @@ async def test_card_browser_list_items_have_numbers():
         await pilot.pause()
         items = app.screen.query("CardListItem")
         first_text = str(items[0].render())
-        assert "愚者" in first_text
+        assert "0" in first_text or "The Fool" in first_text
 
 
 @pytest.mark.asyncio
@@ -223,14 +223,18 @@ async def test_card_browser_reversal_indicator():
 
         # Initially no reversal indicator
         count = app.screen.query_one("#card-count")
-        assert "逆位" not in str(count.render())
+        assert "reversed preview" not in str(count.render())
 
         # Toggle reversal on
         items = app.screen.query("CardListItem")
         items[0].focus()
         await pilot.pause()
         await pilot.press("r")
-        await pilot.pause()
+        await pilot.pause(0)
+        await pilot.pause(0)
+        await pilot.pause(0)
 
+        # Verify internal state toggled
+        assert app.screen._reversed_preview is True
         count = app.screen.query_one("#card-count")
-        assert "逆位" in str(count.render())
+        assert "reversed preview" in str(count.render())

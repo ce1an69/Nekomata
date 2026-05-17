@@ -19,11 +19,10 @@ BANNER_WIDTH = max(len(line) for line in BANNER_LINES)
 BANNER_SCAN_FRAMES = BANNER_WIDTH + 10
 
 SLASH_COMMANDS = {
-    "/browse": ("card_browser", "浏览 78 张塔罗牌"),
-    "/help": ("help", "显示帮助"),
-    "/history": ("history", "查看占卜日记"),
-    "/status": ("status", "查看当前配置"),
-    "/quit": ("quit", "退出应用"),
+    "/browse": ("card_browser", "Browse all 78 cards"),
+    "/help": ("help", "Show available commands"),
+    "/status": ("status", "Show current configuration"),
+    "/quit": ("quit", "Exit application"),
 }
 
 
@@ -131,43 +130,42 @@ class HomeScreen(Screen):
         with Vertical(id="home-stack"):
             with Center(id="title-row"):
                 yield Static("", id="title")
-            yield Static("猫又塔罗 · Pixel Cat Tarot", id="subtitle")
-            yield Static("──── ✦ ────", id="ornament")
+            yield Static("Nekomata · Cat Tarot", id="subtitle")
+            yield Static("─── ✦ ───", id="ornament")
             with Vertical(id="input-area"):
                 yield Input(
-                    placeholder="> 向猫咪提出你的问题…",
+                    placeholder="> ask your question...",
                     id="prompt-input",
                 )
                 yield Static("", id="command-suggestions")
-            yield Static("──── ✦ ────", id="ornament-bottom")
-            yield Static("Enter 提交 · Tab 补全 · /help 帮助 · /status 配置 · /browse 牌库 · /history 日记 · /quit 退出", id="hints")
+            yield Static("─── ✦ ───", id="ornament-bottom")
+            yield Static("Enter submit · Tab complete · /help commands · /quit exit", id="hints")
 
     def resume(self) -> None:
-        """Clear and refocus the input — called by go_home when returning."""
+        """Clear and refocus the input — called when returning to this screen."""
         prompt = self.query_one("#prompt-input", Input)
         prompt.value = ""
         prompt.focus()
 
     def _show_help(self) -> None:
         """Display help text in the command suggestions area."""
-        lines = ["[command-highlight]可用命令[/]\n"]
+        lines = ["[command-highlight]Commands[/]\n"]
         for cmd, (_, desc) in SLASH_COMMANDS.items():
             lines.append(f"  {cmd:<10s} {desc}")
-        lines.append("\n输入问题即可开始占卜")
-        # Delay display to avoid being hidden by the Input.Changed callback
+        lines.append("\nType a question to start a reading")
         self.set_timer(0.05, lambda: self._show_suggestions("\n".join(lines)))
 
     def _show_status(self) -> None:
         """Display current configuration in the command suggestions area."""
         cfg = self.app.config
-        lines = ["[command-highlight]当前配置[/]\n"]
-        lines.append(f"  AI 后端　{cfg.ai_backend}")
-        lines.append(f"  模型　　{cfg.ai_model or '（未设置）'}")
-        lines.append(f"  风格　　{cfg.ai_style}")
-        lines.append(f"  动画　　{'开启' if cfg.display_animation else '关闭'}")
-        lines.append(f"  主题　　{cfg.display_theme}")
-        lines.append(f"  逆位概率 {cfg.reversal_prob:.0%}")
-        lines.append(f"  渲染　　{self.app.render_mode}")
+        lines = ["[command-highlight]Configuration[/]\n"]
+        lines.append(f"  Backend    {cfg.ai_backend}")
+        lines.append(f"  Model      {cfg.ai_model or '(not set)'}")
+        lines.append(f"  Style      {cfg.ai_style}")
+        lines.append(f"  Animation  {'on' if cfg.display_animation else 'off'}")
+        lines.append(f"  Theme      {cfg.display_theme}")
+        lines.append(f"  Reversal   {cfg.reversal_prob:.0%}")
+        lines.append(f"  Render     {self.app.render_mode}")
         self.set_timer(0.05, lambda: self._show_suggestions("\n".join(lines)))
 
     def _show_suggestions(self, text: str) -> None:
@@ -181,8 +179,7 @@ class HomeScreen(Screen):
         """Hide command suggestions, focus input, start banner animation."""
         self.query_one("#command-suggestions", Static).display = False
         self.query_one("#prompt-input", Input).focus()
-        animation_enabled = self.app.animation_enabled
-        if animation_enabled:
+        if self.app.animation_enabled:
             self._banner_frame = 0
             self._banner_timer = self.set_interval(0.035, self._animate_banner)
         else:
@@ -197,7 +194,6 @@ class HomeScreen(Screen):
     def _animate_banner(self) -> None:
         """Advance the banner animation: scan-wave first, then shimmer."""
         if self._banner_frame >= BANNER_SCAN_FRAMES:
-            # Scan complete — start column-by-column shimmer
             self._shimmer_idx = (self._shimmer_idx + 1) % len(BANNER_LINES[0])
             self._update_banner(len(BANNER_LINES), self._shimmer_idx)
             return
@@ -217,12 +213,7 @@ class HomeScreen(Screen):
         self.query_one("#title", Static).update("\n".join(rendered))
 
     def _etch_line(self, line: str, frame: int) -> str:
-        """Render a banner line with a left-to-right scan-wave effect.
-
-        Each character's appearance depends on its distance from the scan
-        cursor (frame): blank far ahead, faint dots approaching, pink edge
-        at the front, purple "lit" behind.
-        """
+        """Render a banner line with a left-to-right scan-wave effect."""
         cells: list[str] = []
         for idx, char in enumerate(line):
             if char == " ":
@@ -230,15 +221,15 @@ class HomeScreen(Screen):
                 continue
             distance = frame - idx
             if distance < -8:
-                cells.append(" ")                       # Not yet reached
+                cells.append(" ")
             elif distance < -4:
-                cells.append("[banner-ghost]░[/]")      # Faint preview
+                cells.append("[banner-ghost]░[/]")
             elif distance < -1:
-                cells.append("[banner-ghost]▒[/]")      # Brighter preview
+                cells.append("[banner-ghost]▒[/]")
             elif distance < 3:
-                cells.append(f"[banner-edge]{char}[/]") # Pink leading edge
+                cells.append(f"[banner-edge]{char}[/]")
             else:
-                cells.append(f"[banner-lit]{char}[/]")  # Settled purple
+                cells.append(f"[banner-lit]{char}[/]")
         return "".join(cells)
 
     def _highlight_banner_column(self, line: str, idx: int) -> str:
@@ -275,7 +266,6 @@ class HomeScreen(Screen):
         if not value:
             return
 
-        # Check for slash commands first (help/status handle their own input clearing)
         cmd_entry = SLASH_COMMANDS.get(value.lower())
         if cmd_entry is not None:
             cmd = cmd_entry[0]
@@ -287,11 +277,6 @@ class HomeScreen(Screen):
             if cmd == "help":
                 self.query_one("#prompt-input", Input).value = ""
                 self._show_help()
-                return
-            if cmd == "history":
-                self.query_one("#prompt-input", Input).value = ""
-                from nekomata.screens.journal import JournalScreen
-                self.app.push_screen(JournalScreen())
                 return
             if cmd == "status":
                 self.query_one("#prompt-input", Input).value = ""
@@ -319,7 +304,6 @@ class HomeScreen(Screen):
         prefix_len = len(value)
         lines = []
         for cmd in matches:
-            # Highlight the typed prefix in a different color
             typed = cmd[:prefix_len]
             rest = cmd[prefix_len:]
             lines.append(f"[command-highlight]{typed}[/]{rest}  {SLASH_COMMANDS[cmd][1]}")
