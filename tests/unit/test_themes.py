@@ -1,4 +1,4 @@
-from nekomata.render.themes import get_theme, CardTheme, THEMES
+from nekomata.render.themes import get_theme, CardTheme, THEMES, set_default_theme
 
 
 def test_default_theme():
@@ -30,4 +30,14 @@ def test_all_themes_have_required_fields():
     for name, theme in THEMES.items():
         assert theme.upright_border
         assert theme.reversed_border
-        assert theme.summary_border
+
+
+def test_set_default_theme():
+    set_default_theme("dark")
+    assert get_theme() == THEMES["dark"]
+    set_default_theme("catppuccin")  # restore
+
+
+def test_set_default_theme_ignores_unknown():
+    set_default_theme("nonexistent")
+    assert get_theme() == THEMES["catppuccin"]

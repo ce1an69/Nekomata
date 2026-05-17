@@ -1,4 +1,5 @@
-from __future__ import annotations
+"""Five-card cross spread with challenge and guidance positions."""
+
 
 from nekomata.card.types import Position
 from nekomata.spread.base import Spread

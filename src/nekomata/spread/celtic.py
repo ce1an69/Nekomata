@@ -1,4 +1,5 @@
-from __future__ import annotations
+"""Celtic Cross spread — 10-card comprehensive reading."""
+
 
 from nekomata.card.types import Position
 from nekomata.spread.base import Spread

@@ -26,3 +26,13 @@ def test_text_mode():
 def test_medium_mode_borderline():
     with patch("nekomata.render.terminal.shutil.get_terminal_size", return_value=(130, 45)):
         assert get_render_mode() == "medium"
+
+
+def test_full_mode_exact_threshold():
+    with patch("nekomata.render.terminal.shutil.get_terminal_size", return_value=(159, 49)):
+        assert get_render_mode() == "medium"
+
+
+def test_compact_mode_exact_threshold():
+    with patch("nekomata.render.terminal.shutil.get_terminal_size", return_value=(79, 23)):
+        assert get_render_mode() == "text"

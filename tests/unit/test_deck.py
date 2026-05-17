@@ -82,3 +82,17 @@ def test_deck_reset():
     assert deck.remaining == 3
     deck.reset()
     assert deck.remaining == 5
+
+
+def test_deck_draw_reversal_zero():
+    """reversal_prob=0.0 should never produce reversed cards."""
+    deck = Deck(make_test_cards(100))
+    results = [deck.draw(reversal_prob=0.0)[1] for _ in range(100)]
+    assert not any(results)
+
+
+def test_deck_draw_reversal_one():
+    """reversal_prob=1.0 should always produce reversed cards."""
+    deck = Deck(make_test_cards(100))
+    results = [deck.draw(reversal_prob=1.0)[1] for _ in range(100)]
+    assert all(results)

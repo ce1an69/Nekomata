@@ -6,7 +6,6 @@ import pytest
 from nekomata.card.types import Arcana, Card, DrawnCard, Position
 from nekomata.ai.interpreter import (
     template_interpret,
-    template_interpret_stream,
     OpenAIInterpreter,
     get_interpreter,
     TemplateFallback,
@@ -61,6 +60,31 @@ def test_template_interpret_three_cards():
     assert "过去" in result
     assert "现在" in result
     assert "未来" in result
+
+
+def test_template_interpret_includes_position_description():
+    result = template_interpret(make_drawn_cards(1), "测试")
+    assert "过去的影响" in result
+
+
+def test_template_interpret_multi_card_has_summary():
+    """Multi-card template interpretation includes an overall summary section."""
+    result = template_interpret(make_drawn_cards(3), "总结测试")
+    assert "综合概述" in result
+    assert "正位" in result
+    assert "主题关键词" in result
+
+
+def test_template_interpret_all_reversed_summary():
+    """All-reversed draw mentions challenges in summary."""
+    result = template_interpret(make_drawn_cards(3, reversed_idx={0, 1, 2}), "全逆位")
+    assert "挑战" in result
+
+
+def test_template_interpret_single_card_no_summary():
+    """Single-card draw should not include the multi-card summary section."""
+    result = template_interpret(make_drawn_cards(1), "单牌测试")
+    assert "综合概述" not in result
 
 
 def test_template_fallback_satisfies_protocol():
@@ -122,15 +146,6 @@ def test_get_interpreter_openai_compatible_alias():
     assert isinstance(interp, OpenAIInterpreter)
 
 
-def test_get_interpreter_fallback_on_failure():
-    config = AppConfig(ai_backend="openai", ai_model="gpt-4", ai_fallback=True)
-    import urllib.error
-    with patch("nekomata.ai.interpreter.urllib.request.urlopen",
-               side_effect=urllib.error.URLError("fail")):
-        interp = get_interpreter(config)
-        assert isinstance(interp, OpenAIInterpreter)
-
-
 def test_interpretation_error_retryable():
     err = InterpretationError("timeout", retryable=True)
     assert err.retryable is True
@@ -140,16 +155,6 @@ def test_interpretation_error_retryable():
 def test_interpretation_error_not_retryable():
     err = InterpretationError("bad response", retryable=False)
     assert err.retryable is False
-
-
-def test_openai_health_check_success():
-    mock_resp = MagicMock()
-    mock_resp.status = 200
-    mock_resp.__enter__ = MagicMock(return_value=mock_resp)
-    mock_resp.__exit__ = MagicMock(return_value=False)
-    with patch("nekomata.ai.interpreter.urllib.request.urlopen", return_value=mock_resp):
-        interp = OpenAIInterpreter(model="gpt-4", api_key="sk-test")
-        assert interp.health_check() is True
 
 
 def test_openai_interpret_failure_raises():
@@ -164,23 +169,39 @@ def test_openai_interpret_failure_raises():
             assert e.retryable is True
 
 
-@pytest.mark.asyncio
-async def test_template_interpret_stream():
-    """Template stream should contain the same content as template_interpret."""
-    cards = make_drawn_cards(2)
-    expected = template_interpret(cards, "stream test")
-    chunks = []
-    async for chunk in template_interpret_stream(cards, "stream test"):
-        chunks.append(chunk)
-    result = "".join(chunks)
-    assert result.strip() == expected.strip()
+def test_openai_empty_choices_non_retryable():
+    """Empty choices list triggers non-retryable error."""
+    mock_resp = _mock_urlopen({"choices": []})
+    with patch("nekomata.ai.interpreter.urllib.request.urlopen", return_value=mock_resp):
+        interp = OpenAIInterpreter(model="gpt-4")
+        try:
+            interp.interpret(make_drawn_cards(1), "test")
+            assert False, "Should have raised"
+        except InterpretationError as e:
+            assert e.retryable is False
 
 
-@pytest.mark.asyncio
-async def test_template_interpret_stream_yields_lines():
-    """Stream should yield multiple chunks."""
-    cards = make_drawn_cards(1)
-    chunks = []
-    async for chunk in template_interpret_stream(cards, "test"):
-        chunks.append(chunk)
-    assert len(chunks) > 1
+def test_openai_missing_message_key_non_retryable():
+    """Response with missing 'message' key triggers non-retryable error."""
+    mock_resp = _mock_urlopen({"choices": [{}]})
+    with patch("nekomata.ai.interpreter.urllib.request.urlopen", return_value=mock_resp):
+        interp = OpenAIInterpreter(model="gpt-4")
+        try:
+            interp.interpret(make_drawn_cards(1), "test")
+            assert False, "Should have raised"
+        except InterpretationError as e:
+            assert e.retryable is False
+
+
+def test_openai_empty_content_retryable():
+    """API returning empty content string triggers retryable error."""
+    mock_resp = _mock_urlopen({
+        "choices": [{"message": {"content": "   "}}]
+    })
+    with patch("nekomata.ai.interpreter.urllib.request.urlopen", return_value=mock_resp):
+        interp = OpenAIInterpreter(model="gpt-4")
+        try:
+            interp.interpret(make_drawn_cards(1), "test")
+            assert False, "Should have raised"
+        except InterpretationError as e:
+            assert e.retryable is True

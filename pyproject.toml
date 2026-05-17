@@ -22,9 +22,6 @@ dev = [
     "pytest-asyncio>=0.23",
     "pytest-mock>=3.12",
 ]
-pixel = [
-    "rich-pixels>=1.0",
-]
 
 [project.scripts]
 nekomata = "nekomata.app:main"
@@ -32,3 +29,6 @@ nekomata = "nekomata.app:main"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

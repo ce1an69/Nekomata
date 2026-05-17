@@ -1,4 +1,5 @@
-from __future__ import annotations
+"""Single-card daily guidance spread."""
+
 
 from nekomata.card.types import Position
 from nekomata.spread.base import Spread
