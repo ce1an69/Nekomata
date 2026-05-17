@@ -10,6 +10,7 @@ from nekomata.render.card_renderer import (
     render_card_image,
     render_card_image_detail,
     _load_card_image,
+    _load_card_detail_image,
 )
 
 
@@ -171,6 +172,20 @@ def test_render_card_image_detail_with_png():
     dc = DrawnCard(card=card, position=pos, is_reversed=False)
     result = render_card_image_detail(dc)
     assert isinstance(result, Panel)
+
+
+def test_load_card_detail_image_resizes_to_preview_size():
+    """Detail preview should be resized before rich-pixels renders it."""
+    card = Card(
+        id="major_02", name="The High Priestess", name_zh="女祭司",
+        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
+        keywords_upright=("a",), keywords_reversed=("b",),
+        meaning_upright="up", meaning_reversed="down",
+        image_path=Path("assets/cards/major/major_02.png"),
+    )
+    img = _load_card_detail_image(card)
+    assert img is not None
+    assert img.size == (56, 84)
 
 
 def test_render_card_image_detail_no_image():
