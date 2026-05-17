@@ -6,6 +6,7 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import Static
 
+from nekomata.render.animations import animate_fade_in, animate_slide_in
 from nekomata.spread import SPREAD_REGISTRY
 
 
@@ -22,6 +23,8 @@ class SpreadOption(Static):
         border: round #181825;
         background: #181825;
         color: #a6adc8;
+        transition: offset 300ms out_cubic, opacity 300ms out_cubic,
+                    background 200ms, border 200ms, color 200ms;
     }
     SpreadOption:hover {
         background: #1e1e2e;
@@ -111,6 +114,7 @@ class SpreadSelectScreen(Screen):
         border: round #313244;
         background: #11111b;
         padding: 1 2;
+        transition: opacity 250ms out_cubic;
     }
     SpreadSelectScreen #preview-title {
         color: #cba6f7;
@@ -157,15 +161,34 @@ class SpreadSelectScreen(Screen):
             yield Static("↑/↓/←/→ move · Enter confirm · Q back", id="hints")
 
     def on_mount(self) -> None:
-        """Auto-focus the first spread button and show its preview."""
+        """Auto-focus the first spread button, show preview, and animate entrance."""
         options = list(self.query(SpreadOption))
         if options:
             options[0].focus()
             if options[0].id:
                 self._update_preview(options[0].id)
+        if self.app.animation_enabled:
+            shell = self.query_one("#spread-shell")
+            shell.styles.opacity = 0
+            shell.styles.offset = (0, 1)
+            shell.styles.animate("opacity", 1.0, duration=0.35, easing="out_cubic")
+            shell.styles.animate("offset", (0, 0), duration=0.35, easing="out_cubic")
+            for i, opt in enumerate(options):
+                opt.styles.opacity = 0
+                opt.styles.offset = (0, 1)
+                self.set_timer(
+                    i * 0.05,
+                    lambda w=opt: (
+                        w.styles.animate("opacity", 1.0, duration=0.28, easing="out_cubic"),
+                        w.styles.animate("offset", (0, 0), duration=0.28, easing="out_cubic"),
+                    ),
+                )
 
     def _update_preview(self, btn_id: str) -> None:
         """Show position breakdown for the focused spread button."""
+        preview = self.query_one("#spread-preview")
+        if self.app.animation_enabled:
+            preview.styles.opacity = 0.3
         title = self.query_one("#preview-title", Static)
         desc_text = self.query_one("#preview-desc", Static)
         positions_text = self.query_one("#preview-positions", Static)
@@ -179,6 +202,11 @@ class SpreadSelectScreen(Screen):
                 title.update(spread.name)
                 desc_text.update(desc)
                 positions_text.update(positions)
+                if self.app.animation_enabled:
+                    self.set_timer(
+                        0.06,
+                        lambda: preview.styles.animate("opacity", 1.0, duration=0.2, easing="out_cubic"),
+                    )
                 return
         title.update("Back")
         desc_text.update("Return to the question prompt.")

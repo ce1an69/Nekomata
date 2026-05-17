@@ -51,6 +51,7 @@ class HomeScreen(Screen):
         border: round #313244;
         background: #181825;
         padding: 1 2;
+        transition: opacity 300ms out_cubic;
     }
     HomeScreen #title {
         margin-bottom: 0;
@@ -104,6 +105,7 @@ class HomeScreen(Screen):
         border: round #313244;
         color: #a6adc8;
         background: #11111b;
+        transition: opacity 250ms out_cubic, offset 250ms out_cubic;
     }
     HomeScreen .command-highlight {
         color: #cba6f7;
@@ -159,6 +161,10 @@ class HomeScreen(Screen):
         prompt = self.query_one("#prompt-input", Input)
         prompt.value = ""
         prompt.focus()
+        if self.app.animation_enabled:
+            stack = self.query_one("#home-stack")
+            stack.styles.opacity = 0.5
+            stack.styles.animate("opacity", 1.0, duration=0.25, easing="out_cubic")
 
     def _show_help(self) -> None:
         """Display help text in the command suggestions area."""
@@ -186,6 +192,11 @@ class HomeScreen(Screen):
         suggestions = self.query_one("#command-suggestions", Static)
         suggestions.display = True
         suggestions.update(text)
+        if self.app.animation_enabled:
+            suggestions.styles.opacity = 0
+            suggestions.styles.offset = (0, -1)
+            suggestions.styles.animate("opacity", 1.0, duration=0.2, easing="out_cubic")
+            suggestions.styles.animate("offset", (0, 0), duration=0.2, easing="out_cubic")
         self.query_one("#prompt-input", Input).focus()
 
     def on_mount(self) -> None:

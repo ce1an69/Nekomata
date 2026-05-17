@@ -27,6 +27,7 @@ class NekomataApp(App):
         border: round #313244;
         padding: 0 2;
         min-width: 12;
+        transition: background 180ms, border 180ms, color 180ms;
     }
     Button:hover {
         background: #1e1e2e;
@@ -66,6 +67,7 @@ class NekomataApp(App):
         background: #1e1e2e;
         color: #cdd6f4;
         border: round #45475a;
+        transition: background 180ms, border 180ms;
     }
     Input:focus {
         border: round #cba6f7;
