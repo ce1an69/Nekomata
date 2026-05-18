@@ -204,8 +204,7 @@ def test_interpretation_exit_confirm_uses_catppuccin_modal():
     assert "callback=self._on_exit_interpretation_confirmed" in source
     assert "border: round #cba6f7" in css
     assert "background: #181825" in css
-    assert "ConfirmExitInterpretation Button" in css
-    assert "border: round #f5c2e7" in css
+    assert "#confirm-hint" in css
     assert "transition: opacity 220ms" in css
 
 
