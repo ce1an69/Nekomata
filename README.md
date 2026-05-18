@@ -17,12 +17,13 @@
 
 ## 安装
 
-需要 Python 3.12+。
+需要 [uv](https://docs.astral.sh/uv/) 和 Python 3.12+。
 
 ```bash
 git clone https://github.com/celan/Nekomata.git
 cd Nekomata
-uv sync
+uv python pin 3.12    # 首次：固定 Python 版本
+uv sync               # 安装运行时依赖
 ```
 
 ## 使用
@@ -80,8 +81,8 @@ config.toml           # 用户配置
 ## 开发
 
 ```bash
-uv sync --group dev
-pytest
+uv sync --extra dev   # 安装开发依赖（pytest 等）
+uv run pytest         # 运行测试
 ```
 
 ## 许可证
