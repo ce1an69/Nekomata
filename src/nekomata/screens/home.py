@@ -55,7 +55,6 @@ class HomeScreen(Screen):
         color: #cba6f7;
         text-align: center;
         text-style: bold;
-        text-size: 2 2;
     }
     HomeScreen #ornament, HomeScreen #ornament-bottom {
         display: none;

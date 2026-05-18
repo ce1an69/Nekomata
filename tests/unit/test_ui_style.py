@@ -182,9 +182,9 @@ def test_draw_interpretation_panel_uses_arrow_scroll():
     up_source = inspect.getsource(DrawScreen.key_up)
     down_source = inspect.getsource(DrawScreen.key_down)
 
-    assert "_interp_is_visible" in up_source
+    assert "interp" in up_source
     assert "scroll_up(animate=True)" in up_source
-    assert "_interp_is_visible" in down_source
+    assert "interp" in down_source
     assert "scroll_down(animate=True)" in down_source
 
 

@@ -15,7 +15,7 @@ from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.css.scalar import ScalarOffset
 from textual.css.query import NoMatches
-from textual.events import Key
+from textual.events import DescendantFocus, Key
 from textual.geometry import Offset
 from textual.message import Message
 from textual.screen import ModalScreen
@@ -238,7 +238,8 @@ class SpreadSlot(Static):
         transition: opacity 280ms {_EASE}, offset 220ms {_EASE}, border 260ms {_EASE}, background 260ms {_EASE};
     }}
     SpreadSlot:focus {{
-        border: round {C_MAUVE};
+        border: round {C_PINK};
+        background: {C_SURFACE1};
     }}
     SpreadSlot.empty {{
         border: round {C_SURFACE1};
@@ -253,13 +254,22 @@ class SpreadSlot(Static):
     }}
     SpreadSlot.face-down:focus {{
         border: round {C_PINK};
+        background: {C_SURFACE1};
     }}
     SpreadSlot.revealed {{
         background: {C_MANTLE};
         border: round {C_LAVENDER};
     }}
     SpreadSlot.revealed:focus {{
-        border: round {C_MAUVE};
+        border: round {C_PINK};
+        background: {C_SURFACE1};
+    }}
+    SpreadSlot.selected {{
+        border: round {C_LAVENDER};
+    }}
+    SpreadSlot.selected:focus {{
+        border: round {C_PINK};
+        background: {C_SURFACE1};
     }}
     SpreadSlot.glow {{
         border: round {C_PINK};
@@ -407,7 +417,10 @@ class DrawScreen(Screen):
         margin: 0 0;
         border-bottom: solid {C_SURFACE0};
         background: {C_CRUST};
-        transition: opacity 420ms {_EASE}, offset 420ms {_EASE};
+        transition: opacity 420ms {_EASE}, offset 420ms {_EASE}, border 180ms {_EASE};
+    }}
+    #deck-section.box-active {{
+        border-bottom: tall {C_MAUVE};
     }}
     #deck-label {{
         background: {C_CRUST};
@@ -436,6 +449,11 @@ class DrawScreen(Screen):
         height: 1fr;
         padding: 1 0;
         align: center middle;
+        border: round transparent;
+        transition: border 180ms {_EASE};
+    }}
+    #spread-area.box-active {{
+        border: round {C_MAUVE};
     }}
     #spread-label {{
         color: {C_LAVENDER};
@@ -477,11 +495,13 @@ class DrawScreen(Screen):
         border: round {C_SURFACE0};
         background: {C_MANTLE};
         padding: 1 1;
-        overflow: hidden;
         opacity: 0;
         display: none;
         offset: 4 0;
-        transition: opacity 240ms {_EASE}, offset 320ms {_EASE};
+        transition: opacity 240ms {_EASE}, offset 320ms {_EASE}, border 180ms {_EASE};
+    }}
+    #card-preview.box-active {{
+        border: round {C_MAUVE};
     }}
     #preview-content {{
         background: {C_MANTLE};
@@ -505,13 +525,16 @@ class DrawScreen(Screen):
         min-height: {INTERP_MIN_HEIGHT};
         max-height: {INTERP_MAX_HEIGHT};
         display: none;
-        border: round {C_MAUVE};
+        border: round {C_SURFACE1};
         background: {C_MANTLE};
         padding: 0 1;
         margin: 0 1 1 1;
         opacity: 0;
         offset: 0 2;
-        transition: opacity 240ms {_EASE}, offset 320ms {_EASE}, width 220ms {_EASE};
+        transition: opacity 240ms {_EASE}, offset 320ms {_EASE}, width 220ms {_EASE}, border 180ms {_EASE};
+    }}
+    #interp-dialog.box-active {{
+        border: round {C_MAUVE};
     }}
     #interp-dialog.visible {{
         display: block;
@@ -566,6 +589,8 @@ class DrawScreen(Screen):
         self._stream_has_content = False
         self._loading_timer: Timer | None = None
         self._loading_frame = 0
+        self._active_box: str | None = None
+        self._last_card_widget: DeckCard | SpreadSlot | None = None
 
     def compose(self) -> ComposeResult:
         # Header
@@ -601,7 +626,7 @@ class DrawScreen(Screen):
                     for i, pos in enumerate(self._ordered_positions()):
                         yield SpreadSlot(i, pos.name_zh)
 
-        with Vertical(id="card-preview"):
+        with VerticalScroll(id="card-preview"):
             yield Static("", id="preview-content")
 
         # Status + footer
@@ -649,6 +674,8 @@ class DrawScreen(Screen):
         deck_cards = list(self.query(DeckCard))
         if deck_cards:
             deck_cards[0].focus()
+        self._active_box = "deck"
+        self._update_box_highlights()
 
     def _prepare_drawn_cards(self) -> None:
         if self._planned_cards:
@@ -804,6 +831,8 @@ class DrawScreen(Screen):
         if self._pick_index >= self._n_positions:
             await asyncio.sleep(PICK_COMPLETE_DELAY)
             self._phase = Phase.FLIP
+            self._active_box = "spread"
+            self._update_box_highlights()
             self._update_phase_ui()
             unrevealed = [s for s in self.query(SpreadSlot) if not s.is_revealed]
             if unrevealed:
@@ -823,15 +852,27 @@ class DrawScreen(Screen):
             if self.app.animation_enabled:
                 self.run_worker(self._completion_shimmer(slots), exclusive=False)
             self._phase = Phase.DONE
+            self._active_box = "spread"
+            self._update_box_highlights()
             self._show_detail_panel(slots[0] if slots else None)
             self._update_phase_ui()
+            for s in slots:
+                s.remove_class("selected")
+            slots[0].add_class("selected")
             slots[0].focus()
+        else:
+            unrevealed = [s for s in slots if not s.is_revealed]
+            if unrevealed:
+                unrevealed[0].focus()
 
     async def on_spread_slot_selected(self, event: SpreadSlot.Selected) -> None:
         """Update detail panel when a revealed card is focused."""
         if self._phase != Phase.DONE:
             return
         event.stop()
+        for s in self.query(SpreadSlot):
+            s.remove_class("selected")
+        event.slot.add_class("selected")
         self._update_detail(event.slot)
 
     async def _completion_shimmer(self, slots: list[SpreadSlot]) -> None:
@@ -896,6 +937,10 @@ class DrawScreen(Screen):
         if self._phase != Phase.DONE:
             return
         if self._detail_visible:
+            if self._active_box == "detail":
+                self._active_box = "spread"
+                self._update_box_highlights()
+                self._focus_box_widget()
             self._hide_detail_panel()
         else:
             self._show_detail_panel()
@@ -987,6 +1032,8 @@ class DrawScreen(Screen):
     def _show_interp_dialog(self) -> None:
         self._interp_streaming = True
         dialog = self.query_one("#interp-dialog")
+        self._active_box = "interp"
+        self._update_box_highlights()
         self._sync_interp_layout()
         dialog.display = True
         if self.app.animation_enabled:
@@ -1010,6 +1057,8 @@ class DrawScreen(Screen):
     def _hide_interp_dialog(self) -> None:
         self._interp_streaming = False
         self._stop_stream_timer()
+        self._active_box = "spread"
+        self._update_box_highlights()
         dialog = self.query_one("#interp-dialog")
         if self.app.animation_enabled:
             dialog.styles.animate("opacity", 0.0, duration=0.18, easing=_EASE)
@@ -1176,27 +1225,117 @@ class DrawScreen(Screen):
 
     # ── Focus navigation ──────────────────────────────────────────────
 
-    def key_left(self) -> None:
-        self._focus_neighbor("left")
-
-    def key_right(self) -> None:
-        self._focus_neighbor("right")
-
-    def key_up(self) -> None:
-        if self._interp_is_visible():
-            self.query_one("#interp-dialog", VerticalScroll).scroll_up(animate=True)
-            return
-        self._focus_neighbor("up")
-
-    def key_down(self) -> None:
-        if self._interp_is_visible():
-            self.query_one("#interp-dialog", VerticalScroll).scroll_down(animate=True)
-            return
-        self._focus_neighbor("down")
+    def on_key(self, event: Key) -> None:
+        if event.key == "shift+tab":
+            event.stop()
+            self._cycle_box(-1)
 
     def key_tab(self, event: Key) -> None:
         event.stop()
+        self._cycle_box(1)
+
+    def key_left(self) -> None:
+        if self._active_box in ("detail", "interp"):
+            return
+        self._focus_neighbor("left")
+
+    def key_right(self) -> None:
+        if self._active_box in ("detail", "interp"):
+            return
         self._focus_neighbor("right")
+
+    def key_up(self) -> None:
+        if self._active_box == "interp":
+            self.query_one("#interp-dialog", VerticalScroll).scroll_up(animate=True)
+        elif self._active_box == "detail":
+            self.query_one("#card-preview", VerticalScroll).scroll_up(animate=True)
+        else:
+            self._focus_neighbor("up")
+
+    def key_down(self) -> None:
+        if self._active_box == "interp":
+            self.query_one("#interp-dialog", VerticalScroll).scroll_down(animate=True)
+        elif self._active_box == "detail":
+            self.query_one("#card-preview", VerticalScroll).scroll_down(animate=True)
+        else:
+            self._focus_neighbor("down")
+
+    def on_descendant_focus(self, event: DescendantFocus) -> None:
+        widget = event.widget
+        if isinstance(widget, DeckCard):
+            new_box = "deck"
+        elif isinstance(widget, SpreadSlot):
+            new_box = "spread"
+        else:
+            return
+        if new_box != self._active_box:
+            self._active_box = new_box
+            self._update_box_highlights()
+
+    # ── Box management ────────────────────────────────────────────────
+
+    _BOX_SELECTORS = {
+        "deck": "#deck-section",
+        "spread": "#spread-area",
+        "detail": "#card-preview",
+        "interp": "#interp-dialog",
+    }
+
+    def _available_boxes(self) -> list[str]:
+        if self._phase == Phase.PICK:
+            return ["deck"]
+        if self._phase == Phase.FLIP:
+            return ["spread"]
+        boxes = ["spread"]
+        if self._detail_visible:
+            boxes.append("detail")
+        if self._interp_is_visible():
+            boxes.append("interp")
+        return boxes
+
+    def _update_box_highlights(self) -> None:
+        for box_id, selector in self._BOX_SELECTORS.items():
+            try:
+                el = self.query_one(selector)
+                el.set_class(box_id == self._active_box, "box-active")
+            except NoMatches:
+                pass
+
+    def _save_last_card(self) -> None:
+        if isinstance(self.focused, (DeckCard, SpreadSlot)):
+            self._last_card_widget = self.focused
+
+    def _focus_box_widget(self) -> None:
+        box = self._active_box
+        if box == "deck":
+            cards = list(self.query(DeckCard))
+            if cards:
+                cards[0].focus()
+        elif box == "spread":
+            if self._last_card_widget and self._last_card_widget.is_mounted:
+                self._last_card_widget.focus()
+            else:
+                slots = list(self.query(SpreadSlot))
+                if slots:
+                    slots[0].focus()
+        elif box == "detail":
+            self.query_one("#card-preview").focus()
+        elif box == "interp":
+            self.query_one("#interp-dialog").focus()
+
+    def _cycle_box(self, delta: int) -> None:
+        boxes = self._available_boxes()
+        if len(boxes) <= 1:
+            return
+        self._save_last_card()
+        current = self._active_box or boxes[0]
+        try:
+            idx = boxes.index(current)
+        except ValueError:
+            idx = 0
+        self._active_box = boxes[(idx + delta) % len(boxes)]
+        self._update_box_highlights()
+        self._focus_box_widget()
 
     def _interp_is_visible(self) -> bool:
         return self.query_one("#interp-dialog").has_class("visible")
