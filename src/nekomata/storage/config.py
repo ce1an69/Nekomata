@@ -25,9 +25,17 @@ class AppConfig:
         return local.exists() or user.exists()
 
     @classmethod
+    def _resolve_save_path(cls) -> Path:
+        """Decide where to write config: local if it exists, else home."""
+        local = Path.cwd() / _SETTINGS_DIR / _SETTINGS_FILE
+        if local.exists():
+            return local
+        return Path.home() / _SETTINGS_DIR / _SETTINGS_FILE
+
+    @classmethod
     def save(cls, api_url: str, api_key: str, model: str) -> AppConfig:
-        """Write settings to ./.neko/settings.json and return the new config."""
-        path = Path.cwd() / _SETTINGS_DIR / _SETTINGS_FILE
+        """Write settings and return the new config."""
+        path = cls._resolve_save_path()
         path.parent.mkdir(parents=True, exist_ok=True)
         data: dict[str, str] = {"api_url": api_url, "model": model}
         if api_key:

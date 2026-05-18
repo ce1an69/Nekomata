@@ -139,3 +139,43 @@ def test_non_dict_json_uses_defaults(tmp_path: Path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     config = AppConfig.load()
     assert config.api_url == ""
+
+
+def test_save_creates_in_home_when_no_local(tmp_path: Path, monkeypatch):
+    home_dir = tmp_path / "home"
+    home_dir.mkdir()
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(Path, "home", lambda: home_dir)
+
+    config = AppConfig.save("http://test/v1", "sk-new", "model-a")
+    assert config.api_url == "http://test/v1"
+    assert config.api_key == "sk-new"
+    assert config.model == "model-a"
+
+    saved = home_dir / ".neko" / "settings.json"
+    assert saved.exists()
+    data = json.loads(saved.read_text(encoding="utf-8"))
+    assert data["api_url"] == "http://test/v1"
+
+
+def test_save_writes_to_local_when_exists(tmp_path: Path, monkeypatch):
+    local_dir = tmp_path / "project"
+    local_dir.mkdir()
+    local_settings = local_dir / ".neko" / "settings.json"
+    local_settings.parent.mkdir(parents=True)
+    local_settings.write_text(json.dumps({"api_url": "http://old/v1"}), encoding="utf-8")
+
+    home_dir = tmp_path / "home"
+    home_dir.mkdir()
+
+    monkeypatch.chdir(local_dir)
+    monkeypatch.setattr(Path, "home", lambda: home_dir)
+
+    AppConfig.save("http://new/v1", "sk-key", "model-b")
+
+    assert local_settings.exists()
+    data = json.loads(local_settings.read_text(encoding="utf-8"))
+    assert data["api_url"] == "http://new/v1"
+
+    home_settings = home_dir / ".neko" / "settings.json"
+    assert not home_settings.exists()

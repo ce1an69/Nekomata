@@ -12,7 +12,7 @@ from rich.text import Text
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Center, Horizontal, Vertical, VerticalScroll
+from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.css.scalar import ScalarOffset
 from textual.css.query import NoMatches
 from textual.events import Key
@@ -21,7 +21,7 @@ from textual.message import Message
 from textual.screen import ModalScreen
 from textual.screen import Screen
 from textual.timer import Timer
-from textual.widgets import Button, Static
+from textual.widgets import Static
 
 from nekomata.ai.interpreter import InterpretationError, StreamChunk, get_interpreter
 from nekomata.card.deck import Deck
@@ -69,6 +69,8 @@ SLOT_FLIP_FADE_IN = 0.18
 SLOT_FLIP_GLOW_HOLD = 0.08
 STREAM_TYPE_INTERVAL = 0.025
 STREAM_CHARS_PER_TICK = 3
+_LOADING_FRAMES = ("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏")
+_LOADING_INTERVAL = 0.08
 DETAIL_PANEL_WIDTH = 66
 INTERP_PANEL_HEIGHT = "46%"
 INTERP_MIN_HEIGHT = 14
@@ -89,6 +91,7 @@ class ConfirmExitInterpretation(ModalScreen[bool]):
     """Confirm leaving an active interpretation."""
 
     BINDINGS = [
+        Binding("enter", "confirm", "确认退出"),
         Binding("escape", "cancel", "取消"),
         Binding("q", "cancel", "取消"),
     ]
@@ -120,34 +123,6 @@ class ConfirmExitInterpretation(ModalScreen[bool]):
     ConfirmExitInterpretation #confirm-hint {{
         color: {C_OVERLAY0};
         text-align: center;
-        margin: 0 0 1 0;
-    }}
-    ConfirmExitInterpretation #confirm-actions {{
-        height: auto;
-        align: center middle;
-    }}
-    ConfirmExitInterpretation Button {{
-        background: {C_BASE};
-        color: {C_MAUVE};
-        border: round {C_MAUVE};
-        transition: background 160ms {_EASE}, border 160ms {_EASE}, color 160ms {_EASE}, offset 160ms {_EASE};
-    }}
-    ConfirmExitInterpretation Button:hover {{
-        background: {C_SURFACE0};
-        color: {C_TEXT};
-        border: round {C_MAUVE};
-    }}
-    ConfirmExitInterpretation Button:focus {{
-        background: {C_SURFACE0};
-        color: {C_MAUVE};
-        border: round {C_PINK};
-        text-style: bold;
-        offset: 0 -1;
-    }}
-    ConfirmExitInterpretation Button.-primary {{
-        background: {C_BASE};
-        color: {C_PINK};
-        border: round {C_PINK};
     }}
     """
 
@@ -155,10 +130,7 @@ class ConfirmExitInterpretation(ModalScreen[bool]):
         with Vertical(id="confirm-card"):
             yield Static("退出解读？", id="confirm-title")
             yield Static("当前解读将停止，并直接返回首页。", id="confirm-message")
-            yield Static("Esc / Q 取消", id="confirm-hint")
-            with Center(id="confirm-actions"):
-                yield Button("取消", id="cancel-exit")
-                yield Button("确认退出", id="confirm-exit", classes="-primary")
+            yield Static("Enter 确认退出 · Esc 取消", id="confirm-hint")
 
     def on_mount(self) -> None:
         card = self.query_one("#confirm-card")
@@ -172,10 +144,9 @@ class ConfirmExitInterpretation(ModalScreen[bool]):
                 duration=0.26,
                 easing=_EASE,
             )
-        self.query_one("#confirm-exit", Button).focus()
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        self.dismiss(event.button.id == "confirm-exit")
+    def action_confirm(self) -> None:
+        self.dismiss(True)
 
     def action_cancel(self) -> None:
         self.dismiss(False)
@@ -593,6 +564,8 @@ class DrawScreen(Screen):
         self._stream_source_done = False
         self._stream_has_thinking = False
         self._stream_has_content = False
+        self._loading_timer: Timer | None = None
+        self._loading_frame = 0
 
     def compose(self) -> ComposeResult:
         # Header
@@ -639,7 +612,7 @@ class DrawScreen(Screen):
         with VerticalScroll(id="interp-dialog"):
             yield Static("解读", id="interp-dialog-title")
             yield Static("", id="interp-dialog-content")
-            yield Static("↑↓ 滚动  Q 关闭", id="interp-dialog-hints")
+            yield Static("Q 关闭", id="interp-dialog-hints")
 
     def _ordered_positions(self) -> list:
         positions = self._spread._positions
@@ -1030,9 +1003,6 @@ class DrawScreen(Screen):
             )
         self._reset_stream_display()
         self.query_one("#status", Static).update("")
-        self.query_one("#draw-footer", Static).update(
-            Text("Q 取消", style=C_OVERLAY0)
-        )
 
     def on_resize(self) -> None:
         self._sync_interp_layout()
@@ -1066,11 +1036,29 @@ class DrawScreen(Screen):
         self._stream_has_thinking = False
         self._stream_has_content = False
         self._render_stream_content()
+        self._start_loading_animation()
+
+    def _start_loading_animation(self) -> None:
+        self._loading_frame = 0
+        self._tick_loading_frame()
+        self._loading_timer = self.set_interval(
+            _LOADING_INTERVAL, self._tick_loading_frame
+        )
+
+    def _stop_loading_animation(self) -> None:
+        if self._loading_timer is not None:
+            self._loading_timer.stop()
+            self._loading_timer = None
+
+    def _tick_loading_frame(self) -> None:
+        frame = _LOADING_FRAMES[self._loading_frame % len(_LOADING_FRAMES)]
+        self._loading_frame += 1
         self.query_one("#interp-dialog-hints", Static).update(
-            Text("模型正在解读...  ↑↓ 滚动", style=C_OVERLAY0)
+            Text(f"{frame} 模型正在解读...", style=C_OVERLAY0)
         )
 
     def _stop_stream_timer(self) -> None:
+        self._stop_loading_animation()
         if self._stream_timer is not None:
             self._stream_timer.stop()
             self._stream_timer = None
@@ -1150,7 +1138,7 @@ class DrawScreen(Screen):
         self._stop_stream_timer()
         self._interp_streaming = False
         self.query_one("#interp-dialog-hints", Static).update(
-            Text("── 完成 ──  ↑↓ 滚动  Q 关闭", style=C_OVERLAY0)
+            Text("── 完成 ──  Q 关闭", style=C_OVERLAY0)
         )
 
     async def _run_interpretation(self) -> None:
