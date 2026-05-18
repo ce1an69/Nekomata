@@ -63,6 +63,7 @@ class InterpretationScreen(Screen):
     }
     InterpretationScreen #interp-content {
         margin: 0;
+        background: #181825;
     }
     InterpretationScreen #actions {
         align: center middle;

@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from nekomata.storage.config import AppConfig
@@ -5,91 +6,136 @@ from nekomata.storage.config import AppConfig
 
 def test_default_config():
     config = AppConfig()
-    assert config.ai_backend == "template"
-    assert config.display_animation is True
-    assert config.display_theme == "catppuccin"
-    assert config.reversal_prob == 0.5
+    assert config.api_url == ""
+    assert config.api_key is None
+    assert config.model == ""
 
 
-def test_load_from_file(tmp_path: Path):
-    config_file = tmp_path / "config.toml"
-    config_file.write_text(
-        '[ai]\nbackend = "openai_compatible"\nmodel = "gpt-4"\n\n'
-        '[display]\nanimation = false\n'
-        "[reversal]\nprobability = 0.3\n",
+def test_load_from_local_file(tmp_path: Path, monkeypatch):
+    settings = tmp_path / ".neko" / "settings.json"
+    settings.parent.mkdir(parents=True)
+    settings.write_text(
+        json.dumps({"api_url": "http://localhost:11434/v1", "api_key": "sk-test"}),
         encoding="utf-8",
     )
-    config = AppConfig.load(config_file)
-    assert config.ai_backend == "openai_compatible"
-    assert config.ai_model == "gpt-4"
-    assert config.display_animation is False
-    assert config.reversal_prob == 0.3
+    monkeypatch.chdir(tmp_path)
+    config = AppConfig.load()
+    assert config.api_url == "http://localhost:11434/v1"
+    assert config.api_key == "sk-test"
 
 
-def test_load_missing_file_uses_defaults(tmp_path: Path):
-    config = AppConfig.load(tmp_path / "nonexistent.toml")
-    assert config.ai_backend == "template"
-    assert config.display_theme == "catppuccin"
-
-
-def test_load_partial_config(tmp_path: Path):
-    config_file = tmp_path / "config.toml"
-    config_file.write_text('[ai]\nbackend = "openai_compatible"\n', encoding="utf-8")
-    config = AppConfig.load(config_file)
-    assert config.ai_backend == "openai_compatible"
-    assert config.display_animation is True
-    assert config.display_theme == "catppuccin"
-
-
-def test_reversal_prob_clamped_high(tmp_path: Path):
-    config_file = tmp_path / "config.toml"
-    config_file.write_text("[reversal]\nprobability = 2.0\n", encoding="utf-8")
-    config = AppConfig.load(config_file)
-    assert config.reversal_prob == 1.0
-
-
-def test_reversal_prob_clamped_low(tmp_path: Path):
-    config_file = tmp_path / "config.toml"
-    config_file.write_text("[reversal]\nprobability = -0.5\n", encoding="utf-8")
-    config = AppConfig.load(config_file)
-    assert config.reversal_prob == 0.0
-
-
-def test_load_ignores_unknown_keys(tmp_path: Path):
-    config_file = tmp_path / "config.toml"
-    config_file.write_text(
-        '[ai]\nbackend = "template"\nunknown_key = "value"\n',
+def test_load_from_user_home(tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    home_dir = tmp_path / "home"
+    home_dir.mkdir()
+    settings = home_dir / ".neko" / "settings.json"
+    settings.parent.mkdir(parents=True)
+    settings.write_text(
+        json.dumps({"api_url": "http://home:11434/v1", "api_key": "sk-home"}),
         encoding="utf-8",
     )
-    config = AppConfig.load(config_file)
-    assert config.ai_backend == "template"
+    monkeypatch.setattr(Path, "home", lambda: home_dir)
+    config = AppConfig.load()
+    assert config.api_url == "http://home:11434/v1"
+    assert config.api_key == "sk-home"
 
 
-def test_load_malformed_toml_uses_defaults(tmp_path: Path):
-    """Malformed TOML falls back to defaults instead of crashing."""
-    config_file = tmp_path / "config.toml"
-    config_file.write_text("[ai\nbackend = invalid", encoding="utf-8")
-    config = AppConfig.load(config_file)
-    assert config.ai_backend == "template"
-    assert config.display_animation is True
+def test_local_takes_priority_over_home(tmp_path: Path, monkeypatch):
+    local_dir = tmp_path / "project"
+    local_dir.mkdir()
+    local_settings = local_dir / ".neko" / "settings.json"
+    local_settings.parent.mkdir(parents=True)
+    local_settings.write_text(
+        json.dumps({"api_url": "http://local:11434/v1", "api_key": "sk-local"}),
+        encoding="utf-8",
+    )
+
+    home_dir = tmp_path / "home"
+    home_dir.mkdir()
+    home_settings = home_dir / ".neko" / "settings.json"
+    home_settings.parent.mkdir(parents=True)
+    home_settings.write_text(
+        json.dumps({"api_url": "http://home:11434/v1", "api_key": "sk-home"}),
+        encoding="utf-8",
+    )
+
+    monkeypatch.chdir(local_dir)
+    monkeypatch.setattr(Path, "home", lambda: home_dir)
+    config = AppConfig.load()
+    assert config.api_url == "http://local:11434/v1"
+    assert config.api_key == "sk-local"
 
 
-def test_empty_api_key_normalized_to_none(tmp_path: Path):
-    config_file = tmp_path / "config.toml"
-    config_file.write_text('[ai]\napi_key = ""\n', encoding="utf-8")
-    config = AppConfig.load(config_file)
-    assert config.ai_api_key is None
+def test_missing_file_uses_defaults(tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path / "nonexistent")
+    config = AppConfig.load()
+    assert config.api_url == ""
+    assert config.api_key is None
 
 
-def test_whitespace_api_key_normalized_to_none(tmp_path: Path):
-    config_file = tmp_path / "config.toml"
-    config_file.write_text('[ai]\napi_key = "   "\n', encoding="utf-8")
-    config = AppConfig.load(config_file)
-    assert config.ai_api_key is None
+def test_partial_config(tmp_path: Path, monkeypatch):
+    settings = tmp_path / ".neko" / "settings.json"
+    settings.parent.mkdir(parents=True)
+    settings.write_text(json.dumps({"api_key": "sk-test"}), encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    config = AppConfig.load()
+    assert config.api_url == ""
+    assert config.api_key == "sk-test"
 
 
-def test_real_api_key_preserved(tmp_path: Path):
-    config_file = tmp_path / "config.toml"
-    config_file.write_text('[ai]\napi_key = "sk-test-real"\n', encoding="utf-8")
-    config = AppConfig.load(config_file)
-    assert config.ai_api_key == "sk-test-real"
+def test_load_ignores_unknown_keys(tmp_path: Path, monkeypatch):
+    settings = tmp_path / ".neko" / "settings.json"
+    settings.parent.mkdir(parents=True)
+    settings.write_text(
+        json.dumps({"api_url": "http://test/v1", "unknown": "value"}),
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+    config = AppConfig.load()
+    assert config.api_url == "http://test/v1"
+
+
+def test_malformed_json_uses_defaults(tmp_path: Path, monkeypatch):
+    settings = tmp_path / ".neko" / "settings.json"
+    settings.parent.mkdir(parents=True)
+    settings.write_text("{invalid json", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    config = AppConfig.load()
+    assert config.api_url == ""
+
+
+def test_empty_api_key_normalized_to_none(tmp_path: Path, monkeypatch):
+    settings = tmp_path / ".neko" / "settings.json"
+    settings.parent.mkdir(parents=True)
+    settings.write_text(json.dumps({"api_key": ""}), encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    config = AppConfig.load()
+    assert config.api_key is None
+
+
+def test_whitespace_api_key_normalized_to_none(tmp_path: Path, monkeypatch):
+    settings = tmp_path / ".neko" / "settings.json"
+    settings.parent.mkdir(parents=True)
+    settings.write_text(json.dumps({"api_key": "   "}), encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    config = AppConfig.load()
+    assert config.api_key is None
+
+
+def test_real_api_key_preserved(tmp_path: Path, monkeypatch):
+    settings = tmp_path / ".neko" / "settings.json"
+    settings.parent.mkdir(parents=True)
+    settings.write_text(json.dumps({"api_key": "sk-test-real"}), encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    config = AppConfig.load()
+    assert config.api_key == "sk-test-real"
+
+
+def test_non_dict_json_uses_defaults(tmp_path: Path, monkeypatch):
+    settings = tmp_path / ".neko" / "settings.json"
+    settings.parent.mkdir(parents=True)
+    settings.write_text('["not", "a", "dict"]', encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    config = AppConfig.load()
+    assert config.api_url == ""

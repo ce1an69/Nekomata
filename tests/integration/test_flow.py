@@ -437,3 +437,36 @@ async def test_detail_panel_has_content_after_first_flip():
         content = app.screen.query_one("#preview-content")
         assert preview.has_class("visible")
         assert str(content.render()).strip()
+
+
+@pytest.mark.asyncio
+async def test_q_during_interpretation_confirms_then_returns_home():
+    """Q during interpretation should confirm before going home."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "confirm exit interpretation"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+
+        from nekomata.screens.draw import ConfirmExitInterpretation, DrawScreen
+        from nekomata.screens.home import HomeScreen
+
+        assert isinstance(app.screen, DrawScreen)
+        app.screen._show_interp_dialog()
+        await pilot.pause()
+
+        await pilot.press("q")
+        await pilot.pause()
+        assert isinstance(app.screen, ConfirmExitInterpretation)
+
+        await pilot.press("enter")
+        await pilot.pause()
+        assert isinstance(app.screen, HomeScreen)

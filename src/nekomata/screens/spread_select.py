@@ -120,15 +120,18 @@ class SpreadSelectScreen(Screen):
         transition: opacity 250ms out_cubic;
     }
     SpreadSelectScreen #preview-title {
+        background: #11111b;
         color: #cba6f7;
         text-style: bold;
         margin-bottom: 1;
     }
     SpreadSelectScreen #preview-desc {
+        background: #11111b;
         color: #a6adc8;
         margin-bottom: 1;
     }
     SpreadSelectScreen #preview-positions {
+        background: #11111b;
         color: #6c7086;
         padding: 0 2;
     }
