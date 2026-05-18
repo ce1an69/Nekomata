@@ -110,7 +110,7 @@ async def test_home_screen_status_command():
         suggestions = app.screen.query_one("#command-suggestions")
         assert suggestions.display
         rendered = str(suggestions.render())
-        assert "Backend" in rendered or "Model" in rendered
+        assert "API URL" in rendered or "API Key" in rendered
         assert inp.value == ""
 
 

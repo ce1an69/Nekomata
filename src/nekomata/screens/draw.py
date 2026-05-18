@@ -1,25 +1,29 @@
 """Draw screen — pick cards from a face-down deck, then flip to reveal."""
 
 import asyncio
+from collections import deque
 from enum import Enum, auto
 
 from rich.align import Align
 from rich.console import Group
+from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.text import Text
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal, Vertical
+from textual.containers import Center, Horizontal, Vertical, VerticalScroll
 from textual.css.scalar import ScalarOffset
+from textual.css.query import NoMatches
 from textual.events import Key
 from textual.geometry import Offset
 from textual.message import Message
+from textual.screen import ModalScreen
 from textual.screen import Screen
 from textual.timer import Timer
-from textual.widgets import Static
+from textual.widgets import Button, Static
 
-from nekomata.ai.interpreter import InterpretationError, get_interpreter
+from nekomata.ai.interpreter import InterpretationError, StreamChunk, get_interpreter
 from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
 from nekomata.render.card_renderer import (
@@ -28,14 +32,11 @@ from nekomata.render.card_renderer import (
     render_card_image_detail,
 )
 from nekomata.render.themes import get_theme
-from nekomata.screens.interpretation import InterpretationScreen
 from nekomata.screens.widgets import go_home
 from nekomata.spread import get_spread
 
-_WAITING_DOTS = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
-
 # Catppuccin Mocha palette
-C_CRUST = "#0e0e16"
+C_CRUST = "#11111b"
 C_BASE = "#11111b"
 C_MANTLE = "#181825"
 C_SURFACE0 = "#313244"
@@ -66,12 +67,118 @@ SLOT_FLIP_FADE_OUT = 0.10
 SLOT_FLIP_SWAP_PAUSE = 0.015
 SLOT_FLIP_FADE_IN = 0.18
 SLOT_FLIP_GLOW_HOLD = 0.08
+STREAM_TYPE_INTERVAL = 0.025
+STREAM_CHARS_PER_TICK = 3
+DETAIL_PANEL_WIDTH = 66
+INTERP_PANEL_HEIGHT = "46%"
+INTERP_MIN_HEIGHT = 14
+INTERP_MAX_HEIGHT = 30
+INTERP_SIDE_MARGIN = 1
+INTERP_DETAIL_GAP = 0
+INTERP_FULL_SIDE_MARGIN = 5
+INTERP_FULL_WIDTH_CORRECTION = 4
 
 
 class Phase(Enum):
     PICK = auto()
     FLIP = auto()
     DONE = auto()
+
+
+class ConfirmExitInterpretation(ModalScreen[bool]):
+    """Confirm leaving an active interpretation."""
+
+    BINDINGS = [
+        Binding("escape", "cancel", "取消"),
+        Binding("q", "cancel", "取消"),
+    ]
+
+    DEFAULT_CSS = f"""
+    ConfirmExitInterpretation {{
+        align: center middle;
+        background: {C_CRUST} 70%;
+    }}
+    ConfirmExitInterpretation #confirm-card {{
+        width: 54;
+        height: auto;
+        border: round {C_MAUVE};
+        background: {C_MANTLE};
+        padding: 1 2;
+        transition: opacity 220ms {_EASE}, offset 260ms {_EASE};
+    }}
+    ConfirmExitInterpretation #confirm-title {{
+        color: {C_MAUVE};
+        text-style: bold;
+        text-align: center;
+        margin: 0 0 1 0;
+    }}
+    ConfirmExitInterpretation #confirm-message {{
+        color: {C_TEXT};
+        text-align: center;
+        margin: 0 0 1 0;
+    }}
+    ConfirmExitInterpretation #confirm-hint {{
+        color: {C_OVERLAY0};
+        text-align: center;
+        margin: 0 0 1 0;
+    }}
+    ConfirmExitInterpretation #confirm-actions {{
+        height: auto;
+        align: center middle;
+    }}
+    ConfirmExitInterpretation Button {{
+        background: {C_BASE};
+        color: {C_MAUVE};
+        border: round {C_MAUVE};
+        transition: background 160ms {_EASE}, border 160ms {_EASE}, color 160ms {_EASE}, offset 160ms {_EASE};
+    }}
+    ConfirmExitInterpretation Button:hover {{
+        background: {C_SURFACE0};
+        color: {C_TEXT};
+        border: round {C_MAUVE};
+    }}
+    ConfirmExitInterpretation Button:focus {{
+        background: {C_SURFACE0};
+        color: {C_MAUVE};
+        border: round {C_PINK};
+        text-style: bold;
+        offset: 0 -1;
+    }}
+    ConfirmExitInterpretation Button.-primary {{
+        background: {C_BASE};
+        color: {C_PINK};
+        border: round {C_PINK};
+    }}
+    """
+
+    def compose(self) -> ComposeResult:
+        with Vertical(id="confirm-card"):
+            yield Static("退出解读？", id="confirm-title")
+            yield Static("当前解读将停止，并直接返回首页。", id="confirm-message")
+            yield Static("Esc / Q 取消", id="confirm-hint")
+            with Center(id="confirm-actions"):
+                yield Button("取消", id="cancel-exit")
+                yield Button("确认退出", id="confirm-exit", classes="-primary")
+
+    def on_mount(self) -> None:
+        card = self.query_one("#confirm-card")
+        if self.app.animation_enabled:
+            card.styles.opacity = 0
+            card.styles.offset = (0, 1)
+            card.styles.animate("opacity", 1.0, duration=0.22, easing=_EASE)
+            card.styles.animate(
+                "offset",
+                ScalarOffset.from_offset(Offset(0, 0)),
+                duration=0.26,
+                easing=_EASE,
+            )
+        self.query_one("#confirm-exit", Button).focus()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        self.dismiss(event.button.id == "confirm-exit")
+
+    def action_cancel(self) -> None:
+        self.dismiss(False)
 
 
 class DeckCard(Static):
@@ -332,6 +439,7 @@ class DrawScreen(Screen):
         transition: opacity 420ms {_EASE}, offset 420ms {_EASE};
     }}
     #deck-label {{
+        background: {C_CRUST};
         color: {C_LAVENDER};
         text-style: bold;
         text-align: center;
@@ -391,20 +499,26 @@ class DrawScreen(Screen):
         grid-rows: 1fr 1fr;
     }}
     #card-preview {{
-        width: 0;
-        height: 1fr;
-        min-width: 0;
+        dock: right;
+        width: {DETAIL_PANEL_WIDTH};
+        min-width: {DETAIL_PANEL_WIDTH};
+        height: 100%;
         border: round {C_SURFACE0};
         background: {C_MANTLE};
         padding: 1 1;
         overflow: hidden;
         opacity: 0;
-        transition: width 320ms {_EASE}, opacity 220ms {_EASE};
+        display: none;
+        offset: 4 0;
+        transition: opacity 240ms {_EASE}, offset 320ms {_EASE};
+    }}
+    #preview-content {{
+        background: {C_MANTLE};
     }}
     #card-preview.visible {{
-        width: 56;
-        min-width: 56;
+        display: block;
         opacity: 1;
+        offset: 0 0;
     }}
     #draw-footer {{
         dock: bottom;
@@ -412,6 +526,41 @@ class DrawScreen(Screen):
         color: {C_OVERLAY0};
         text-align: center;
         padding: 0 2;
+    }}
+    #interp-dialog {{
+        dock: bottom;
+        width: 1fr;
+        height: {INTERP_PANEL_HEIGHT};
+        min-height: {INTERP_MIN_HEIGHT};
+        max-height: {INTERP_MAX_HEIGHT};
+        display: none;
+        border: round {C_MAUVE};
+        background: {C_MANTLE};
+        padding: 0 1;
+        margin: 0 1 1 1;
+        opacity: 0;
+        offset: 0 2;
+        transition: opacity 240ms {_EASE}, offset 320ms {_EASE}, width 220ms {_EASE};
+    }}
+    #interp-dialog.visible {{
+        display: block;
+        opacity: 1;
+        offset: 0 0;
+    }}
+    #interp-dialog-title {{
+        color: {C_MAUVE};
+        text-style: bold;
+        height: 1;
+        margin: 0;
+    }}
+    #interp-dialog-content {{
+        color: {C_TEXT};
+        margin: 0;
+    }}
+    #interp-dialog-hints {{
+        color: {C_OVERLAY0};
+        height: 1;
+        margin: 0;
     }}
     #status {{
         text-align: center;
@@ -431,13 +580,19 @@ class DrawScreen(Screen):
         self._drawn_cards: list[DrawnCard] = []
         self._pick_index = 0
         self._phase = Phase.PICK
-        self._dot_timer: Timer | None = None
-        self._dot_idx = 0
         self._cancelled = False
+        self._interp_streaming = False
         self._n_positions = len(self._spread._positions)
         self._detail_visible = False
         self._last_preview_id: str | None = None
         self._deck_exit_started = False
+        self._stream_thinking_text = ""
+        self._stream_content_text = ""
+        self._stream_queue: deque[StreamChunk] = deque()
+        self._stream_timer: Timer | None = None
+        self._stream_source_done = False
+        self._stream_has_thinking = False
+        self._stream_has_content = False
 
     def compose(self) -> ComposeResult:
         # Header
@@ -472,12 +627,19 @@ class DrawScreen(Screen):
                 with Horizontal(id="spread-grid"):
                     for i, pos in enumerate(self._ordered_positions()):
                         yield SpreadSlot(i, pos.name_zh)
-            with Vertical(id="card-preview"):
-                yield Static("", id="preview-content")
+
+        with Vertical(id="card-preview"):
+            yield Static("", id="preview-content")
 
         # Status + footer
         yield Static("", id="status")
         yield Static("", id="draw-footer")
+
+        # Interpretation dialog (hidden until streaming starts)
+        with VerticalScroll(id="interp-dialog"):
+            yield Static("解读", id="interp-dialog-title")
+            yield Static("", id="interp-dialog-content")
+            yield Static("↑↓ 滚动  Q 关闭", id="interp-dialog-hints")
 
     def _ordered_positions(self) -> list:
         positions = self._spread._positions
@@ -532,8 +694,8 @@ class DrawScreen(Screen):
             slot.add_class("waiting")
 
     def on_unmount(self) -> None:
-        if self._dot_timer is not None:
-            self._dot_timer.stop()
+        self._cancelled = True
+        self._stop_stream_timer()
 
     def _hide_deck(self) -> None:
         try:
@@ -715,16 +877,47 @@ class DrawScreen(Screen):
 
     def _show_detail_panel(self, slot: SpreadSlot | None = None) -> None:
         self._detail_visible = True
+        self._sync_interp_layout()
         preview = self.query_one("#card-preview")
+        preview.display = True
+        if self.app.animation_enabled:
+            preview.styles.opacity = 0
+            preview.styles.offset = (4, 0)
         preview.add_class("visible")
+        if self.app.animation_enabled:
+            preview.styles.animate("opacity", 1.0, duration=0.24, easing=_EASE)
+            preview.styles.animate(
+                "offset",
+                ScalarOffset.from_offset(Offset(0, 0)),
+                duration=0.32,
+                easing=_EASE,
+            )
         self._last_preview_id = None
         if slot is not None:
             self._update_detail(slot)
 
     def _hide_detail_panel(self) -> None:
         self._detail_visible = False
+        self._sync_interp_layout()
+        self._center_spread_area()
+        preview = self.query_one("#card-preview")
+        if self.app.animation_enabled:
+            preview.styles.animate("opacity", 0.0, duration=0.18, easing=_EASE)
+            preview.styles.animate(
+                "offset",
+                ScalarOffset.from_offset(Offset(4, 0)),
+                duration=0.24,
+                easing=_EASE,
+            )
+            self.set_timer(0.24, self._finish_hide_detail_panel)
+        else:
+            self._finish_hide_detail_panel()
+
+    def _finish_hide_detail_panel(self) -> None:
         preview = self.query_one("#card-preview")
         preview.remove_class("visible")
+        preview.display = False
+        self._center_spread_area()
 
     def action_toggle_detail(self) -> None:
         if self._phase != Phase.DONE:
@@ -758,54 +951,223 @@ class DrawScreen(Screen):
 
     # ── Interpretation ────────────────────────────────────────────────
 
+    def _sync_interp_layout(self) -> None:
+        try:
+            dialog = self.query_one("#interp-dialog")
+        except NoMatches:
+            return
+        if self._detail_visible:
+            dialog.add_class("detail-visible")
+            dialog.styles.width = max(
+                40,
+                self.size.width
+                - DETAIL_PANEL_WIDTH
+                - INTERP_SIDE_MARGIN
+                - INTERP_DETAIL_GAP,
+            )
+        else:
+            dialog.remove_class("detail-visible")
+            dialog.styles.width = max(
+                40,
+                self.size.width
+                - INTERP_FULL_SIDE_MARGIN * 2
+                + INTERP_FULL_WIDTH_CORRECTION,
+            )
+
+    def _center_spread_area(self) -> None:
+        main_area = self.query_one("#main-area")
+        if self.app.animation_enabled:
+            main_area.styles.animate(
+                "offset",
+                ScalarOffset.from_offset(Offset(0, 0)),
+                duration=0.22,
+                easing=_EASE,
+            )
+        else:
+            main_area.styles.offset = (0, 0)
+
     def action_interpret(self) -> None:
-        if self._phase == Phase.DONE and self._dot_timer is None:
+        if self._phase == Phase.DONE and not self._interp_streaming:
             self._do_interpret()
 
     def action_handle_back(self) -> None:
-        if self._dot_timer is not None:
-            self._cancelled = True
-            self._hide_waiting()
+        if self.query_one("#interp-dialog").has_class("visible"):
+            self.app.push_screen(
+                ConfirmExitInterpretation(),
+                callback=self._on_exit_interpretation_confirmed,
+            )
         else:
             go_home(self)
 
+    def _on_exit_interpretation_confirmed(self, confirmed: bool) -> None:
+        if not confirmed:
+            return
+        self._cancelled = True
+        self._stop_stream_timer()
+        go_home(self)
+
     def _do_interpret(self) -> None:
         self._cancelled = False
-        self._show_waiting()
+        self._show_interp_dialog()
         self.run_worker(self._run_interpretation(), exclusive=True)
 
-    def _show_waiting(self) -> None:
-        self._dot_idx = 0
-        status = self.query_one("#status", Static)
-        status.update(f"{_WAITING_DOTS[0]}  占卜中...")
-        self._dot_timer = self.set_interval(0.08, self._tick_dots)
+    def _show_interp_dialog(self) -> None:
+        self._interp_streaming = True
+        dialog = self.query_one("#interp-dialog")
+        self._sync_interp_layout()
+        dialog.display = True
+        if self.app.animation_enabled:
+            dialog.styles.opacity = 0
+            dialog.styles.offset = (0, 2)
+        dialog.add_class("visible")
+        if self.app.animation_enabled:
+            dialog.styles.animate("opacity", 1.0, duration=0.24, easing=_EASE)
+            dialog.styles.animate(
+                "offset",
+                ScalarOffset.from_offset(Offset(0, 0)),
+                duration=0.32,
+                easing=_EASE,
+            )
+        self._reset_stream_display()
+        self.query_one("#status", Static).update("")
         self.query_one("#draw-footer", Static).update(
-            Text("占卜中... · Q 取消", style=C_OVERLAY0)
+            Text("Q 取消", style=C_OVERLAY0)
         )
 
-    def _tick_dots(self) -> None:
-        self._dot_idx = (self._dot_idx + 1) % len(_WAITING_DOTS)
-        self.query_one("#status", Static).update(f"{_WAITING_DOTS[self._dot_idx]}  占卜中...")
+    def on_resize(self) -> None:
+        self._sync_interp_layout()
 
-    def _hide_waiting(self) -> None:
-        if self._dot_timer is not None:
-            self._dot_timer.stop()
-            self._dot_timer = None
-        self.query_one("#status", Static).update("")
+    def _hide_interp_dialog(self) -> None:
+        self._interp_streaming = False
+        self._stop_stream_timer()
+        dialog = self.query_one("#interp-dialog")
+        if self.app.animation_enabled:
+            dialog.styles.animate("opacity", 0.0, duration=0.18, easing=_EASE)
+            dialog.styles.animate(
+                "offset",
+                ScalarOffset.from_offset(Offset(0, 2)),
+                duration=0.24,
+                easing=_EASE,
+            )
+            self.set_timer(0.24, lambda: dialog.remove_class("visible"))
+        else:
+            dialog.remove_class("visible")
         self._update_phase_ui()
 
     def _show_error(self, message: str) -> None:
-        self._hide_waiting()
+        self._hide_interp_dialog()
         self.query_one("#status", Static).update(Text(message, style=C_RED))
+
+    def _reset_stream_display(self) -> None:
+        self._stream_thinking_text = ""
+        self._stream_content_text = ""
+        self._stream_queue.clear()
+        self._stream_source_done = False
+        self._stream_has_thinking = False
+        self._stream_has_content = False
+        self._render_stream_content()
+        self.query_one("#interp-dialog-hints", Static).update(
+            Text("模型正在解读...  ↑↓ 滚动", style=C_OVERLAY0)
+        )
+
+    def _stop_stream_timer(self) -> None:
+        if self._stream_timer is not None:
+            self._stream_timer.stop()
+            self._stream_timer = None
+        self._stream_queue.clear()
+
+    def _append_stream_chunk(self, chunk: StreamChunk) -> None:
+        if not chunk.text:
+            return
+        self._stream_queue.append(chunk)
+        if self._stream_timer is None:
+            self._stream_timer = self.set_interval(
+                STREAM_TYPE_INTERVAL, self._type_stream_tick
+            )
+
+    def _type_stream_tick(self) -> None:
+        if not self._stream_queue:
+            if self._stream_source_done:
+                self._finish_stream_display()
+                return
+            self._stop_stream_timer()
+            return
+
+        for _ in range(STREAM_CHARS_PER_TICK):
+            if not self._stream_queue:
+                break
+            chunk = self._stream_queue[0]
+            if not chunk.text:
+                self._stream_queue.popleft()
+                continue
+            self._append_stream_text(chunk.kind, chunk.text[0])
+            rest = chunk.text[1:]
+            if rest:
+                self._stream_queue[0] = StreamChunk(rest, chunk.kind)
+            else:
+                self._stream_queue.popleft()
+
+        self._render_stream_content()
+        self._scroll_interp_to_bottom()
+
+    def _append_stream_text(self, kind: str, text: str) -> None:
+        if kind == "thinking":
+            self._stream_thinking_text += text
+            self._stream_has_thinking = True
+        else:
+            self._stream_content_text += text
+            self._stream_has_content = True
+
+    def _render_stream_content(self) -> None:
+        parts = []
+        if self._stream_thinking_text:
+            parts.append(Text("思考", style=f"bold {C_SUBTEXT0}"))
+            parts.append(Markdown(self._stream_thinking_text, style=C_SUBTEXT0))
+        if self._stream_content_text:
+            if parts:
+                parts.append(Text(""))
+            parts.append(Text("解读", style=f"bold {C_MAUVE}"))
+            parts.append(Markdown(self._stream_content_text, style=C_TEXT))
+        self.query_one("#interp-dialog-content", Static).update(Group(*parts))
+
+    def _scroll_interp_to_bottom(self) -> None:
+        try:
+            self.query_one("#interp-dialog", VerticalScroll).scroll_end(animate=False)
+        except NoMatches:
+            pass
+
+    def _stream_done(self) -> None:
+        self._stream_source_done = True
+        if self._stream_queue and self._stream_timer is None:
+            self._stream_timer = self.set_interval(
+                STREAM_TYPE_INTERVAL, self._type_stream_tick
+            )
+            return
+        if not self._stream_queue:
+            self._finish_stream_display()
+
+    def _finish_stream_display(self) -> None:
+        self._stop_stream_timer()
+        self._interp_streaming = False
+        self.query_one("#interp-dialog-hints", Static).update(
+            Text("── 完成 ──  ↑↓ 滚动  Q 关闭", style=C_OVERLAY0)
+        )
 
     async def _run_interpretation(self) -> None:
         try:
             config = self.app.config
             interp = get_interpreter(config)
             loop = asyncio.get_running_loop()
-            result = await loop.run_in_executor(
-                None, interp.interpret, self._drawn_cards, self._question
-            )
+
+            def _consume_stream():
+                for chunk in interp.interpret_stream(self._drawn_cards, self._question):
+                    if self._cancelled:
+                        return
+                    if isinstance(chunk, str):
+                        chunk = StreamChunk(chunk, "content")
+                    self.app.call_from_thread(self._append_stream_chunk, chunk)
+
+            await loop.run_in_executor(None, _consume_stream)
         except InterpretationError as exc:
             if not self.is_mounted or self._cancelled:
                 return
@@ -816,20 +1178,13 @@ class DrawScreen(Screen):
                 return
             msg = str(exc)
             if "api_key" in msg.lower() or "unauthorized" in msg.lower():
-                self._show_error("API key 未配置，请在 config.toml 中设置 ai.api_key")
+                self._show_error("API key 未配置，请在 .neko/settings.json 中设置 api_key")
             else:
                 self._show_error(f"解读失败: {exc}")
             return
         if not self.is_mounted or self._cancelled:
             return
-        self._hide_waiting()
-        self.app.spread_name = self._spread.name
-        self.app.push_screen(
-            InterpretationScreen(
-                result, self._drawn_cards, self._question,
-                spread_name=self._spread.name,
-            )
-        )
+        self._stream_done()
 
     # ── Focus navigation ──────────────────────────────────────────────
 
@@ -840,14 +1195,23 @@ class DrawScreen(Screen):
         self._focus_neighbor("right")
 
     def key_up(self) -> None:
+        if self._interp_is_visible():
+            self.query_one("#interp-dialog", VerticalScroll).scroll_up(animate=True)
+            return
         self._focus_neighbor("up")
 
     def key_down(self) -> None:
+        if self._interp_is_visible():
+            self.query_one("#interp-dialog", VerticalScroll).scroll_down(animate=True)
+            return
         self._focus_neighbor("down")
 
     def key_tab(self, event: Key) -> None:
         event.stop()
         self._focus_neighbor("right")
+
+    def _interp_is_visible(self) -> bool:
+        return self.query_one("#interp-dialog").has_class("visible")
 
     def _focus_neighbor(self, direction: str) -> None:
         if self._phase == Phase.PICK:

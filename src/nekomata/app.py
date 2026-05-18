@@ -85,15 +85,24 @@ class NekomataApp(App):
         self.spread_name: str = ""
         self.render_mode: str = "compact"
         self.config: AppConfig = AppConfig.load()
-        self.animation_enabled: bool = self.config.display_animation
-        self.reversal_prob: float = self.config.reversal_prob
-        self.theme_name: str = self.config.display_theme
+        self.animation_enabled: bool = True
+        self.reversal_prob: float = 0.5
+        self.theme_name: str = "catppuccin"
 
     def on_mount(self) -> None:
         """Detect terminal capabilities and push the home screen."""
         self.render_mode = get_render_mode()
         set_default_theme(self.theme_name)
         self.push_screen(HomeScreen())
+        if not AppConfig.config_exists():
+            from nekomata.screens.setup import SetupScreen
+            self.push_screen(SetupScreen(), callback=self._on_setup_done)
+
+    def _on_setup_done(self, _result: None) -> None:
+        """Transition from setup screen to home screen."""
+        from nekomata.screens.home import HomeScreen
+        if isinstance(self.screen, HomeScreen):
+            self.screen.resume()
 
     def on_resize(self, event: Resize) -> None:
         """Re-detect render mode when terminal is resized."""

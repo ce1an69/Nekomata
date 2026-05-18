@@ -196,6 +196,9 @@ class ReadingScreen(Screen):
         margin-left: 1;
         transition: opacity 250ms out_cubic;
     }
+    ReadingScreen #card-preview Static {
+        background: #181825;
+    }
     ReadingScreen #status {
         width: 100%;
         height: auto;
@@ -345,7 +348,7 @@ class ReadingScreen(Screen):
         self._dot_idx = 0
         self.query_one("#status", Static).update(f"{_WAITING_DOTS[0]}  Interpreting...")
         self._dot_timer = self.set_interval(0.08, self._tick_dots)
-        self.query_one("#hints", Static).update("Interpreting... · Q cancel")
+        self.query_one("#hints", Static).update("Q cancel")
 
     def _tick_dots(self) -> None:
         """Cycle the spinner dot."""
@@ -486,7 +489,7 @@ class ReadingScreen(Screen):
             if "api_key" in msg.lower() or "api key" in msg.lower() or "unauthorized" in msg.lower():
                 self._show_error(
                     "API key not configured. "
-                    "Set ai.api_key in config.toml to enable interpretation."
+                    "Set api_key in .neko/settings.json to enable interpretation."
                 )
             else:
                 self._show_error(f"Interpretation failed: {exc}")

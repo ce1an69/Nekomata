@@ -4,7 +4,8 @@ import json
 import logging
 import urllib.request
 import urllib.error
-from typing import Protocol, runtime_checkable
+from dataclasses import dataclass
+from typing import Generator, Protocol, runtime_checkable
 
 from nekomata.card.types import DrawnCard
 from nekomata.ai.prompts import SYSTEM_PROMPT, build_interpretation_prompt
@@ -21,12 +22,26 @@ class InterpretationError(Exception):
         self.retryable = retryable
 
 
+@dataclass(frozen=True)
+class StreamChunk:
+    """A typed streaming fragment from the model."""
+
+    text: str
+    kind: str = "content"
+
+
 @runtime_checkable
 class AIInterpreter(Protocol):
     """Protocol for AI interpretation backends."""
 
     def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str:
         """Return a textual interpretation for the given cards and question."""
+        ...
+
+    def interpret_stream(
+        self, drawn_cards: list[DrawnCard], question: str
+    ) -> Generator[StreamChunk, None, None]:
+        """Yield typed text chunks for the given cards and question."""
         ...
 
 
@@ -50,23 +65,24 @@ def _build_messages(style: str, question: str, drawn_cards: list[DrawnCard]) -> 
     ]
 
 
+_DEFAULT_TIMEOUT = 60.0
+_DEFAULT_STYLE = "mystical"
+
+
 class OpenAIInterpreter:
     """Interpret via OpenAI-compatible remote API."""
 
     def __init__(self, model: str, base_url: str = "https://api.openai.com/v1",
-                 api_key: str | None = None, timeout: float = 60.0,
-                 style: str = "mystical") -> None:
+                 api_key: str | None = None) -> None:
         self._model = model
         self._url = f"{base_url.rstrip('/')}/chat/completions"
         self._api_key = api_key
-        self._timeout = timeout
-        self._style = style
 
     def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str:
         """Send cards and question to the API and return the interpretation."""
         payload = json.dumps({
             "model": self._model,
-            "messages": _build_messages(self._style, question, drawn_cards),
+            "messages": _build_messages(_DEFAULT_STYLE, question, drawn_cards),
             "stream": False,
         }).encode()
 
@@ -76,7 +92,7 @@ class OpenAIInterpreter:
 
         req = urllib.request.Request(self._url, data=payload, headers=headers)
         try:
-            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
+            with urllib.request.urlopen(req, timeout=_DEFAULT_TIMEOUT) as resp:
                 data = json.loads(resp.read())
                 content = data["choices"][0]["message"]["content"]
                 if not content or not content.strip():
@@ -87,38 +103,63 @@ class OpenAIInterpreter:
         except (KeyError, IndexError) as e:
             raise InterpretationError(str(e), retryable=False) from e
 
+    def interpret_stream(
+        self, drawn_cards: list[DrawnCard], question: str
+    ) -> Generator[StreamChunk, None, None]:
+        """Yield text chunks from the streaming API (SSE)."""
+        payload = json.dumps({
+            "model": self._model,
+            "messages": _build_messages(_DEFAULT_STYLE, question, drawn_cards),
+            "stream": True,
+        }).encode()
+
+        headers = {"Content-Type": "application/json"}
+        if self._api_key:
+            headers["Authorization"] = f"Bearer {self._api_key}"
+
+        req = urllib.request.Request(self._url, data=payload, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=_DEFAULT_TIMEOUT) as resp:
+                for raw_line in resp:
+                    line = raw_line.decode("utf-8").strip()
+                    if not line:
+                        continue
+                    if line == "data: [DONE]":
+                        return
+                    if line.startswith("data: "):
+                        data = json.loads(line[6:])
+                        delta = data["choices"][0].get("delta", {})
+                        reasoning = (
+                            delta.get("reasoning_content")
+                            or delta.get("reasoning")
+                            or delta.get("thinking")
+                            or delta.get("think")
+                            or ""
+                        )
+                        if reasoning:
+                            yield StreamChunk(str(reasoning), "thinking")
+                        content = delta.get("content", "")
+                        if content:
+                            yield StreamChunk(str(content), "content")
+        except urllib.error.URLError as e:
+            raise InterpretationError(str(e), retryable=True) from e
+        except (KeyError, IndexError, json.JSONDecodeError) as e:
+            raise InterpretationError(str(e), retryable=False) from e
+
 
 def get_interpreter(config: AppConfig) -> AIInterpreter:
-    """Factory: return the configured interpreter.
+    """Factory: return an OpenAI-compatible interpreter.
 
-    Raises InterpretationError if the API is not properly configured.
+    Raises InterpretationError if the API key is not configured.
     """
-    backend = config.ai_backend
-    if backend == "openai_compatible":
-        backend = "openai"
-
-    if backend == "openai":
-        if not config.ai_api_key:
-            raise InterpretationError(
-                "API key not configured. "
-                "Set ai.api_key in config.toml to enable interpretation.",
-                retryable=False,
-            )
-        if not config.ai_model:
-            raise InterpretationError(
-                "AI model not configured. "
-                "Set ai.model in config.toml to enable interpretation.",
-                retryable=False,
-            )
-        return OpenAIInterpreter(
-            model=config.ai_model,
-            base_url=config.ai_base_url,
-            api_key=config.ai_api_key,
-            timeout=config.ai_timeout,
-            style=config.ai_style,
+    if not config.api_key:
+        raise InterpretationError(
+            "API key not configured. "
+            "Set api_key in .neko/settings.json to enable interpretation.",
+            retryable=False,
         )
-
-    raise InterpretationError(
-        f"Unknown AI backend: {backend}. Set ai.backend to 'openai' in config.toml.",
-        retryable=False,
+    return OpenAIInterpreter(
+        model=config.model,
+        base_url=config.api_url,
+        api_key=config.api_key,
     )

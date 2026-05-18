@@ -1,63 +1,68 @@
-"""Application configuration loaded from TOML (config.toml)."""
+"""Application configuration loaded from JSON (.neko/settings.json)."""
 
-
+import json
 import logging
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
 log = logging.getLogger(__name__)
 
+_SETTINGS_DIR = ".neko"
+_SETTINGS_FILE = "settings.json"
+
 
 @dataclass
 class AppConfig:
-    ai_backend: str = "template"
-    ai_model: str = ""
-    ai_base_url: str = "https://api.openai.com/v1"
-    ai_api_key: str | None = None
-    ai_timeout: float = 60.0
-    ai_style: str = "mystical"
-    ai_fallback: bool = True
-    display_animation: bool = True
-    display_theme: str = "catppuccin"
-    reversal_prob: float = 0.5
-
-    # Project root directory (where config.toml and assets/ live)
-    _PROJECT_ROOT = Path(__file__).resolve().parents[3]
+    api_url: str = ""
+    api_key: str | None = None
+    model: str = ""
 
     @classmethod
-    def load(cls, path: Path | None = None) -> AppConfig:
-        """Load config from a TOML file, falling back to defaults for missing keys."""
-        defaults = cls()
-        if path is None:
-            path = cls._PROJECT_ROOT / "config.toml"
-        if not path.exists():
-            return defaults
+    def config_exists(cls) -> bool:
+        """Check whether a settings file exists (local or user home)."""
+        local = Path.cwd() / _SETTINGS_DIR / _SETTINGS_FILE
+        user = Path.home() / _SETTINGS_DIR / _SETTINGS_FILE
+        return local.exists() or user.exists()
+
+    @classmethod
+    def save(cls, api_url: str, api_key: str, model: str) -> AppConfig:
+        """Write settings to ./.neko/settings.json and return the new config."""
+        path = Path.cwd() / _SETTINGS_DIR / _SETTINGS_FILE
+        path.parent.mkdir(parents=True, exist_ok=True)
+        data: dict[str, str] = {"api_url": api_url, "model": model}
+        if api_key:
+            data["api_key"] = api_key
+        path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+        normalized_key = api_key if api_key and api_key.strip() else None
+        return cls(api_url=api_url, api_key=normalized_key, model=model)
+
+    @classmethod
+    def load(cls) -> AppConfig:
+        """Load config from ./.neko/settings.json, falling back to ~/.neko/settings.json."""
+        local = Path.cwd() / _SETTINGS_DIR / _SETTINGS_FILE
+        user = Path.home() / _SETTINGS_DIR / _SETTINGS_FILE
+        for path in (local, user):
+            if path.exists():
+                return cls._load_from(path)
+        return cls()
+
+    @classmethod
+    def _load_from(cls, path: Path) -> AppConfig:
         try:
-            with open(path, "rb") as f:
-                data = tomllib.load(f)
-        except tomllib.TOMLDecodeError:
-            log.warning("Failed to parse %s, using defaults", path)
-            return defaults
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as exc:
+            log.warning("Failed to parse %s: %s", path, exc)
+            return cls()
+        if not isinstance(data, dict):
+            log.warning("Unexpected JSON structure in %s", path)
+            return cls()
 
-        ai = data.get("ai", {})
-        display = data.get("display", {})
-        reversal = data.get("reversal", {})
-
-        raw_key = ai.get("api_key", defaults.ai_api_key)
-        # Normalize empty-string API keys to None so the interpreter skips the header
+        raw_key = data.get("api_key")
         if raw_key is not None and not raw_key.strip():
             raw_key = None
 
         return cls(
-            ai_backend=ai.get("backend", defaults.ai_backend),
-            ai_model=ai.get("model", defaults.ai_model),
-            ai_base_url=ai.get("base_url", defaults.ai_base_url),
-            ai_api_key=raw_key,
-            ai_timeout=ai.get("timeout", defaults.ai_timeout),
-            ai_style=ai.get("style", defaults.ai_style),
-            ai_fallback=ai.get("fallback_to_template", defaults.ai_fallback),
-            display_animation=display.get("animation", defaults.display_animation),
-            display_theme=display.get("theme", defaults.display_theme),
-            reversal_prob=max(0.0, min(1.0, reversal.get("probability", defaults.reversal_prob))),
+            api_url=data.get("api_url", ""),
+            api_key=raw_key,
+            model=data.get("model", ""),
         )

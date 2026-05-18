@@ -58,6 +58,7 @@ class HomeScreen(Screen):
     HomeScreen #title {
         margin-bottom: 0;
         width: 100%;
+        background: #181825;
         color: #cba6f7;
         text-align: center;
         text-style: bold;
@@ -65,10 +66,12 @@ class HomeScreen(Screen):
     HomeScreen #title-row {
         width: 100%;
         height: auto;
+        background: #181825;
     }
     HomeScreen #subtitle {
         width: 100%;
         height: auto;
+        background: #181825;
         color: #a6adc8;
         text-align: center;
         margin-bottom: 1;
@@ -86,6 +89,7 @@ class HomeScreen(Screen):
         width: 100%;
         height: auto;
         align: center top;
+        background: #181825;
     }
     HomeScreen #prompt-input {
         width: 100%;
@@ -131,6 +135,7 @@ class HomeScreen(Screen):
     HomeScreen #hints {
         width: 100%;
         height: auto;
+        background: #181825;
         color: #6c7086;
         text-align: center;
         margin-top: 1;
@@ -181,12 +186,9 @@ class HomeScreen(Screen):
         """Display current configuration in the command suggestions area."""
         cfg = self.app.config
         lines = ["[command-highlight]Configuration[/]\n"]
-        lines.append(f"  Backend    {cfg.ai_backend}")
-        lines.append(f"  Model      {cfg.ai_model or '(not set)'}")
-        lines.append(f"  Style      {cfg.ai_style}")
-        lines.append(f"  Animation  {'on' if cfg.display_animation else 'off'}")
-        lines.append(f"  Theme      {cfg.display_theme}")
-        lines.append(f"  Reversal   {cfg.reversal_prob:.0%}")
+        lines.append(f"  API URL    {cfg.api_url}")
+        lines.append(f"  API Key    {'(set)' if cfg.api_key else '(not set)'}")
+        lines.append(f"  Model      {cfg.model}")
         lines.append(f"  Render     {self.app.render_mode}")
         self.set_timer(0.05, lambda: self._show_suggestions("\n".join(lines)))
 

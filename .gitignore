@@ -31,6 +31,9 @@ htmlcov/
 # Environments
 .env
 
+# User settings (contains API keys)
+.neko/settings.json
+
 # IDE
 .idea/
 .vscode/

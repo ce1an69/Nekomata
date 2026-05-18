@@ -93,6 +93,9 @@ class CardBrowserScreen(Screen):
         margin-left: 1;
         transition: opacity 250ms out_cubic;
     }
+    CardBrowserScreen #card-detail Static {
+        background: #181825;
+    }
     CardBrowserScreen #back-bar {
         align: center middle;
         height: auto;
@@ -288,6 +291,7 @@ class CardListItem(Static):
         padding: 0 1;
         height: auto;
         border: round #11111b;
+        background: #11111b;
         transition: background 180ms, border 180ms, color 180ms, opacity 250ms out_cubic;
     }
     CardListItem:focus {
