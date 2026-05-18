@@ -64,3 +64,36 @@ def test_card_rendering_catppuccin_theme_uses_purple_accents():
     assert theme.reversed_border == "#b4befe"
     assert theme.title_style == "bold #b4befe"
     assert theme.keyword_style == "bold #cba6f7"
+
+
+def test_home_suggestion_panel_can_animate_out():
+    names = HomeScreen._hide_suggestions.__code__.co_names
+
+    assert "animate" in names
+    assert "_finish_hide_suggestions" in names
+
+
+def test_card_browser_list_and_detail_have_swap_transitions():
+    css = CardBrowserScreen.DEFAULT_CSS
+
+    card_list_css = css.split("CardBrowserScreen #card-list {")[1].split("}")[0]
+    detail_css = css.split("CardBrowserScreen #card-detail {")[1].split("}")[0]
+    assert "transition: opacity 220ms" in card_list_css
+    assert "transition: opacity 250ms" in detail_css
+
+
+def test_interpretation_manual_scroll_uses_animation():
+    for method in (
+        InterpretationScreen.key_down,
+        InterpretationScreen.key_up,
+        InterpretationScreen.key_right,
+        InterpretationScreen.key_left,
+    ):
+        assert True in method.__code__.co_consts
+
+
+def test_interpretation_offset_animation_uses_scalar_offset():
+    from nekomata.screens import interpretation
+
+    assert "ScalarOffset" in interpretation._ease_in.__code__.co_names
+    assert "Offset" in interpretation._ease_in.__code__.co_names

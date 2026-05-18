@@ -134,6 +134,88 @@ async def test_draw_screen_candidate_grid_uses_all_arrow_keys():
 
 
 @pytest.mark.asyncio
+async def test_draw_screen_prepares_spread_cards_on_entry():
+    """Draw screen pre-draws exactly the cards needed for the spread."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "prepared cards test"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-past_present_future")
+        await pilot.pause()
+        from nekomata.screens.draw import DrawScreen
+        assert isinstance(app.screen, DrawScreen)
+
+        planned_ids = [dc.card.id for dc in app.screen._planned_cards]
+        assert len(planned_ids) == 3
+        assert len(set(planned_ids)) == 3
+        assert app.screen._drawn_cards == []
+
+
+@pytest.mark.asyncio
+async def test_draw_screen_ignores_repeated_pick_on_same_card():
+    """A picked deck card stays highlighted and cannot fill another spread slot."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "duplicate pick test"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-past_present_future")
+        await pilot.pause()
+        from nekomata.screens.draw import DeckCard, DrawScreen, SpreadSlot
+        assert isinstance(app.screen, DrawScreen)
+
+        cards = list(app.screen.query(DeckCard))
+        await pilot.press("enter")
+        await pilot.pause()
+
+        cards[0].focus()
+        await pilot.press("enter")
+        await pilot.pause()
+
+        slots = list(app.screen.query(SpreadSlot))
+        assert cards[0].has_class("picked")
+        assert app.screen._pick_index == 1
+        assert len(app.screen._drawn_cards) == 1
+        assert sum(slot.drawn_card is not None for slot in slots) == 1
+
+
+@pytest.mark.asyncio
+async def test_draw_screen_keeps_focus_on_picked_card():
+    """Picking a card should not move focus to another deck card."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "focus stays test"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-past_present_future")
+        await pilot.pause()
+        from nekomata.screens.draw import DeckCard, DrawScreen
+        assert isinstance(app.screen, DrawScreen)
+
+        cards = list(app.screen.query(DeckCard))
+        await pilot.press("right")
+        await pilot.press("right")
+        await pilot.pause()
+        assert app.screen.focused is cards[2]
+
+        await pilot.press("enter")
+        await pilot.pause()
+        assert cards[2].has_class("picked")
+        assert app.screen.focused is cards[2]
+
+        await pilot.press("right")
+        await pilot.pause()
+        assert app.screen.focused is cards[3]
+
+
+@pytest.mark.asyncio
 async def test_draw_screen_spread_slots_use_all_arrow_keys_after_pick():
     """Once cards are picked, spread slots also respond to all arrow keys."""
     app = NekomataApp()
@@ -145,9 +227,12 @@ async def test_draw_screen_spread_slots_use_all_arrow_keys_after_pick():
         await pilot.pause()
         await pilot.click("#spread-past_present_future")
         await pilot.pause()
-        for _ in range(3):
+        for i in range(3):
             await pilot.press("enter")
             await pilot.pause(0.1)
+            if i < 2:
+                await pilot.press("right")
+                await pilot.pause(0.1)
         await pilot.pause(1.0)
 
         from nekomata.screens.draw import DrawScreen, SpreadSlot

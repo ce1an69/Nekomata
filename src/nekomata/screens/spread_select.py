@@ -180,7 +180,7 @@ class SpreadSelectScreen(Screen):
                 opt.styles.opacity = 0
                 opt.styles.offset = (0, 1)
                 self.set_timer(
-                    i * 0.05,
+                    max(i * 0.05, 0.001),
                     lambda w=opt: (
                         w.styles.animate("opacity", 1.0, duration=0.28, easing="out_cubic"),
                         w.styles.animate("offset", ScalarOffset.from_offset(Offset(0, 0)), duration=0.28, easing="out_cubic"),

@@ -154,7 +154,7 @@ class ReadingScreen(Screen):
     ReadingScreen #main-area {
         height: 1fr;
         margin-top: 1;
-        transition: opacity 400ms out_cubic, offset 400ms out_cubic;
+        transition: opacity 320ms out_cubic, offset 320ms out_cubic;
     }
     ReadingScreen #cards-container {
         width: 2fr;
@@ -308,13 +308,13 @@ class ReadingScreen(Screen):
             widgets.append(widget)
             if animation_enabled:
                 self.set_timer(
-                    max(i * 0.15, 0.01),
+                    max(i * 0.10, 0.01),
                     lambda w=widget: self._reveal_card(w),
                 )
         container.mount(*self._ordered_spread_widgets(widgets))
 
         if animation_enabled:
-            self.set_timer(len(self._drawn_cards) * 0.15 + 0.5, self._focus_first_card)
+            self.set_timer(len(self._drawn_cards) * 0.10 + 0.25, self._focus_first_card)
         else:
             self._focus_first_card()
 
