@@ -8,7 +8,9 @@ from rich.panel import Panel
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
+from textual.css.scalar import ScalarOffset
 from textual.events import Key
+from textual.geometry import Offset
 from textual.message import Message
 from textual.screen import Screen
 from textual.timer import Timer
@@ -242,14 +244,14 @@ class ReadingScreen(Screen):
             q.styles.opacity = 0
             q.styles.offset = (0, -1)
             q.styles.animate("opacity", 1.0, duration=0.3, easing="out_cubic")
-            q.styles.animate("offset", (0, 0), duration=0.3, easing="out_cubic")
+            q.styles.animate("offset", ScalarOffset.from_offset(Offset(0, 0)), duration=0.3, easing="out_cubic")
 
             label = self.query_one("#spread-label")
             label.styles.opacity = 0
             label.styles.offset = (0, -1)
             self.set_timer(0.08, lambda: (
                 label.styles.animate("opacity", 1.0, duration=0.28, easing="out_cubic"),
-                label.styles.animate("offset", (0, 0), duration=0.28, easing="out_cubic"),
+                label.styles.animate("offset", ScalarOffset.from_offset(Offset(0, 0)), duration=0.28, easing="out_cubic"),
             ))
 
             main = self.query_one("#main-area")
@@ -257,7 +259,7 @@ class ReadingScreen(Screen):
             main.styles.offset = (0, 1)
             self.set_timer(0.16, lambda: (
                 main.styles.animate("opacity", 1.0, duration=0.35, easing="out_cubic"),
-                main.styles.animate("offset", (0, 0), duration=0.35, easing="out_cubic"),
+                main.styles.animate("offset", ScalarOffset.from_offset(Offset(0, 0)), duration=0.35, easing="out_cubic"),
             ))
         self._draw_and_mount(animation_enabled=self.app.animation_enabled)
 

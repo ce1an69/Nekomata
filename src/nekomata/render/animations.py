@@ -1,8 +1,11 @@
 """Textual widget animation helpers."""
 
+from textual.css.scalar import ScalarOffset
 from textual.dom import DOMNode
-from textual.screen import Screen
+from textual.geometry import Offset
 from textual.widgets import Static
+
+_OFFSET_ZERO = ScalarOffset.from_offset(Offset(0, 0))
 
 
 async def animate_reveal(widget: Static, duration: float = 0.3) -> None:
@@ -29,7 +32,7 @@ def animate_slide_in(
     widget.styles.offset = (0, direction)
     easing = "out_cubic"
     widget.styles.animate("opacity", 1.0, duration=duration, easing=easing)
-    widget.styles.animate("offset", (0, 0), duration=duration, easing=easing)
+    widget.styles.animate("offset", _OFFSET_ZERO, duration=duration, easing=easing)
 
 
 def animate_fade_in(widget: DOMNode, duration: float = 0.25) -> None:
