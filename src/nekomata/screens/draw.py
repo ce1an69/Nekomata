@@ -11,7 +11,9 @@ from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
+from textual.css.scalar import ScalarOffset
 from textual.events import Key
+from textual.geometry import Offset
 from textual.message import Message
 from textual.screen import Screen
 from textual.timer import Timer
@@ -54,8 +56,16 @@ DECK_ROW_COUNT = 3
 _EASE = "out_cubic"
 DECK_CARD_WIDTH = 10
 DECK_CARD_HEIGHT = 8
-DECK_HIDE_DELAY = 0.9
-PICK_COMPLETE_DELAY = 0.85
+DECK_HIDE_DELAY = 0.42
+PICK_COMPLETE_DELAY = 0.35
+SPREAD_RECENTER_OFFSET = 4
+SPREAD_RECENTER_DURATION = 0.28
+SLOT_PLACE_OFFSET = 2
+SLOT_PLACE_DURATION = 0.22
+SLOT_FLIP_FADE_OUT = 0.10
+SLOT_FLIP_SWAP_PAUSE = 0.015
+SLOT_FLIP_FADE_IN = 0.18
+SLOT_FLIP_GLOW_HOLD = 0.08
 
 
 class Phase(Enum):
@@ -85,7 +95,7 @@ class DeckCard(Static):
         content-align: center middle;
         padding: 0 0;
         margin: 0 1;
-        transition: offset 500ms {_EASE}, border 420ms {_EASE}, background 420ms {_EASE}, opacity 520ms {_EASE};
+        transition: offset 300ms {_EASE}, border 260ms {_EASE}, background 260ms {_EASE}, opacity 320ms {_EASE};
     }}
     DeckCard:focus {{
         border: round {C_MAUVE};
@@ -93,8 +103,10 @@ class DeckCard(Static):
         offset: 0 -1;
     }}
     DeckCard.picked {{
-        opacity: 0;
-        offset: 0 -3;
+        border: round {C_PINK};
+        background: {C_SURFACE1};
+        opacity: 1;
+        offset: 0 -1;
     }}
     DeckCard.exiting {{
         opacity: 0;
@@ -107,9 +119,13 @@ class DeckCard(Static):
         super().__init__()
 
     def on_click(self) -> None:
+        if self.has_class("picked"):
+            return
         self.post_message(self.Picked(self))
 
     def key_enter(self) -> None:
+        if self.has_class("picked"):
+            return
         self.post_message(self.Picked(self))
 
 
@@ -141,7 +157,7 @@ class SpreadSlot(Static):
         content-align: center middle;
         padding: 0 0;
         margin: 0 1;
-        transition: opacity 620ms {_EASE}, offset 420ms {_EASE}, border 420ms {_EASE}, background 420ms {_EASE};
+        transition: opacity 280ms {_EASE}, offset 220ms {_EASE}, border 260ms {_EASE}, background 260ms {_EASE};
     }}
     SpreadSlot:focus {{
         border: round {C_MAUVE};
@@ -227,23 +243,33 @@ class SpreadSlot(Static):
     async def flip(self) -> None:
         """Animate a card flip: soften → swap → settle with glow."""
         self.styles.offset = (0, -1)
-        self.styles.animate("opacity", 0.18, duration=0.22, easing=_EASE)
-        await asyncio.sleep(0.22)
+        self.styles.animate("opacity", 0.12, duration=SLOT_FLIP_FADE_OUT, easing=_EASE)
+        self.styles.animate(
+            "offset",
+            ScalarOffset.from_offset(Offset(0, -1)),
+            duration=SLOT_FLIP_FADE_OUT,
+            easing=_EASE,
+        )
+        await asyncio.sleep(SLOT_FLIP_FADE_OUT)
 
         self.is_revealed = True
         self.remove_class("face-down")
         self.add_class("revealed")
         self._render_revealed()
-        self.styles.opacity = 0.18
+        self.styles.opacity = 0.12
         self.styles.offset = (0, 1)
 
-        await asyncio.sleep(0.04)
-        self.styles.offset = (0, 0)
-        self.styles.animate("opacity", 1.0, duration=0.46, easing=_EASE)
+        await asyncio.sleep(SLOT_FLIP_SWAP_PAUSE)
+        self.styles.animate("opacity", 1.0, duration=SLOT_FLIP_FADE_IN, easing=_EASE)
+        self.styles.animate(
+            "offset",
+            ScalarOffset.from_offset(Offset(0, 0)),
+            duration=SLOT_FLIP_FADE_IN,
+            easing=_EASE,
+        )
         self.add_class("glow")
 
-        await asyncio.sleep(0.46)
-        await asyncio.sleep(0.28)
+        await asyncio.sleep(SLOT_FLIP_FADE_IN + SLOT_FLIP_GLOW_HOLD)
         self.remove_class("glow")
 
     def on_click(self) -> None:
@@ -303,7 +329,7 @@ class DrawScreen(Screen):
         margin: 0 0;
         border-bottom: solid {C_SURFACE0};
         background: {C_CRUST};
-        transition: opacity 900ms {_EASE}, offset 900ms {_EASE};
+        transition: opacity 420ms {_EASE}, offset 420ms {_EASE};
     }}
     #deck-label {{
         color: {C_LAVENDER};
@@ -324,6 +350,7 @@ class DrawScreen(Screen):
     #main-area {{
         height: 1fr;
         margin-top: 0;
+        transition: offset 280ms {_EASE};
     }}
     #spread-area {{
         width: 1fr;
@@ -344,23 +371,23 @@ class DrawScreen(Screen):
     #spread-grid.layout-1 {{
         layout: grid;
         grid-size: 1;
-        grid-columns: 1fr;
+        grid-columns: 12;
     }}
     #spread-grid.layout-3 {{
         layout: grid;
         grid-size: 3 1;
-        grid-columns: 1fr 1fr 1fr;
+        grid-columns: 12 12 12;
     }}
     #spread-grid.layout-5 {{
         layout: grid;
         grid-size: 3 2;
-        grid-columns: 1fr 1fr 1fr;
+        grid-columns: 12 12 12;
         grid-rows: 1fr 1fr;
     }}
     #spread-grid.layout-10 {{
         layout: grid;
         grid-size: 5 2;
-        grid-columns: 1fr 1fr 1fr 1fr 1fr;
+        grid-columns: 12 12 12 12 12;
         grid-rows: 1fr 1fr;
     }}
     #card-preview {{
@@ -372,7 +399,7 @@ class DrawScreen(Screen):
         padding: 1 1;
         overflow: hidden;
         opacity: 0;
-        transition: width 450ms {_EASE}, opacity 350ms {_EASE};
+        transition: width 320ms {_EASE}, opacity 220ms {_EASE};
     }}
     #card-preview.visible {{
         width: 56;
@@ -400,6 +427,7 @@ class DrawScreen(Screen):
         self._spread = get_spread(spread_key)
         self._deck = Deck()
         self._deck.shuffle()
+        self._planned_cards: list[DrawnCard] = []
         self._drawn_cards: list[DrawnCard] = []
         self._pick_index = 0
         self._phase = Phase.PICK
@@ -474,6 +502,7 @@ class DrawScreen(Screen):
         return slots[position_index]
 
     def on_mount(self) -> None:
+        self._prepare_drawn_cards()
         grid = self.query_one("#spread-grid")
         for cls in ("layout-1", "layout-3", "layout-5", "layout-10"):
             grid.remove_class(cls)
@@ -485,6 +514,15 @@ class DrawScreen(Screen):
         deck_cards = list(self.query(DeckCard))
         if deck_cards:
             deck_cards[0].focus()
+
+    def _prepare_drawn_cards(self) -> None:
+        if self._planned_cards:
+            return
+        for position in self._spread._positions:
+            card, is_reversed = self._deck.draw(self.app.reversal_prob)
+            self._planned_cards.append(
+                DrawnCard(card=card, position=position, is_reversed=is_reversed)
+            )
 
     def _mark_waiting_slot(self) -> None:
         for slot in self.query(SpreadSlot):
@@ -500,15 +538,29 @@ class DrawScreen(Screen):
     def _hide_deck(self) -> None:
         try:
             self.query_one("#deck-section").display = False
+            self._animate_spread_recenter()
         except Exception:
             pass
+
+    def _animate_spread_recenter(self) -> None:
+        main_area = self.query_one("#main-area")
+        main_area.styles.offset = (0, SPREAD_RECENTER_OFFSET)
+        if not self.app.animation_enabled:
+            main_area.styles.offset = (0, 0)
+            return
+        main_area.styles.animate(
+            "offset",
+            ScalarOffset.from_offset(Offset(0, 0)),
+            duration=SPREAD_RECENTER_DURATION,
+            easing=_EASE,
+        )
 
     def _animate_deck_exit(self) -> None:
         deck_section = self.query_one("#deck-section")
         deck_section.styles.opacity = 0
         deck_section.styles.offset = (0, -2)
         for i, card in enumerate(c for c in self.query(DeckCard) if not c.has_class("picked")):
-            self.set_timer(0.01 + i * 0.015, lambda c=card: c.add_class("exiting"))
+            self.set_timer(0.01 + i * 0.008, lambda c=card: c.add_class("exiting"))
         self.set_timer(DECK_HIDE_DELAY, self._hide_deck)
 
     # ── Phase UI ──────────────────────────────────────────────────────
@@ -563,11 +615,11 @@ class DrawScreen(Screen):
         for i, card in enumerate(self.query(DeckCard)):
             card.styles.opacity = 0
             card.styles.offset = (0, 1)
-            self.set_timer(0.01 + i * 0.045, lambda c=card: self._reveal_deck_card(c))
+            self.set_timer(0.01 + i * 0.025, lambda c=card: self._reveal_deck_card(c))
 
     @staticmethod
     def _reveal_deck_card(card: DeckCard) -> None:
-        card.styles.animate("opacity", 1.0, duration=0.55, easing=_EASE)
+        card.styles.animate("opacity", 1.0, duration=0.32, easing=_EASE)
         card.styles.offset = (0, 0)
 
     # ── Spread slot entrance animation ────────────────────────────────
@@ -576,11 +628,18 @@ class DrawScreen(Screen):
         if not self.app.animation_enabled:
             return
         slot.styles.opacity = 0
+        slot.styles.offset = (0, -SLOT_PLACE_OFFSET)
         self.set_timer(delay, lambda: self._reveal_slot(slot))
 
     @staticmethod
     def _reveal_slot(slot: SpreadSlot) -> None:
-        slot.styles.animate("opacity", 1.0, duration=0.58, easing=_EASE)
+        slot.styles.animate("opacity", 1.0, duration=SLOT_PLACE_DURATION, easing=_EASE)
+        slot.styles.animate(
+            "offset",
+            ScalarOffset.from_offset(Offset(0, 0)),
+            duration=SLOT_PLACE_DURATION,
+            easing=_EASE,
+        )
 
     # ── Pick phase ────────────────────────────────────────────────────
 
@@ -590,24 +649,22 @@ class DrawScreen(Screen):
         event.stop()
 
         card_widget = event.card
-        drawn_card, is_reversed = self._deck.draw(self.app.reversal_prob)
-        position = self._spread._positions[self._pick_index]
-        dc = DrawnCard(card=drawn_card, position=position, is_reversed=is_reversed)
+        if card_widget.has_class("picked"):
+            return
+        if self._pick_index >= len(self._planned_cards):
+            return
+        dc = self._planned_cards[self._pick_index]
         self._drawn_cards.append(dc)
 
         card_widget.add_class("picked")
 
         slot = self._slot_for_position(self._pick_index)
         slot.place_card(dc)
-        self._animate_slot_entrance(slot, delay=0.2)
+        self._animate_slot_entrance(slot, delay=0.08)
 
         self._pick_index += 1
         self._mark_waiting_slot()
         self._update_phase_ui()
-
-        remaining_deck = [c for c in self.query(DeckCard) if not c.has_class("picked")]
-        if remaining_deck:
-            remaining_deck[0].focus()
 
         if self._pick_index >= self._n_positions:
             await asyncio.sleep(PICK_COMPLETE_DELAY)
@@ -628,8 +685,8 @@ class DrawScreen(Screen):
 
         slots = list(self.query(SpreadSlot))
         if all(s.is_revealed for s in slots):
-            await asyncio.sleep(0.2)
-            await self._completion_shimmer(slots)
+            if self.app.animation_enabled:
+                self.run_worker(self._completion_shimmer(slots), exclusive=False)
             self._phase = Phase.DONE
             self._show_detail_panel(slots[0] if slots else None)
             self._update_phase_ui()
@@ -646,13 +703,13 @@ class DrawScreen(Screen):
         if not self.app.animation_enabled:
             return
         for i, slot in enumerate(slots):
-            self.set_timer(i * 0.12, lambda s=slot: self._pulse_slot(s))
-        await asyncio.sleep(len(slots) * 0.12 + 0.4)
+            self.set_timer(0.01 + i * 0.08, lambda s=slot: self._pulse_slot(s))
+        await asyncio.sleep(len(slots) * 0.08 + 0.22)
 
     @staticmethod
     def _pulse_slot(slot: SpreadSlot) -> None:
         slot.add_class("glow")
-        slot.set_timer(0.4, lambda: slot.remove_class("glow"))
+        slot.set_timer(0.22, lambda: slot.remove_class("glow"))
 
     # ── Detail panel ──────────────────────────────────────────────────
 
@@ -794,7 +851,7 @@ class DrawScreen(Screen):
 
     def _focus_neighbor(self, direction: str) -> None:
         if self._phase == Phase.PICK:
-            widgets = [c for c in self.query(DeckCard) if not c.has_class("picked")]
+            widgets = list(self.query(DeckCard))
             row_width = NUM_DECK_CARDS // DECK_ROW_COUNT
         elif self._phase == Phase.FLIP:
             widgets = [s for s in self.query(SpreadSlot) if not s.is_revealed]

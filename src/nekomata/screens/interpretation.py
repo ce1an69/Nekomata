@@ -3,7 +3,9 @@
 from rich.markdown import Markdown
 from textual.app import ComposeResult
 from textual.containers import Center, VerticalScroll
+from textual.css.scalar import ScalarOffset
 from textual.css.query import NoMatches
+from textual.geometry import Offset
 from textual.screen import Screen
 from textual.timer import Timer
 from textual.widgets import Button, Static
@@ -13,6 +15,8 @@ from nekomata.screens.widgets import go_home
 
 
 def _ease_in(widget, attr, target, duration):
+    if attr == "offset" and isinstance(target, tuple):
+        target = ScalarOffset.from_offset(Offset(*target))
     widget.styles.animate(attr, target, duration=duration, easing="out_cubic")
 
 
@@ -64,7 +68,7 @@ class InterpretationScreen(Screen):
         align: center middle;
         height: auto;
         margin-top: 1;
-        transition: opacity 500ms out_cubic;
+        transition: opacity 320ms out_cubic;
     }
     InterpretationScreen #hints {
         width: 100%;
@@ -204,19 +208,19 @@ class InterpretationScreen(Screen):
 
     def key_down(self) -> None:
         """Scroll interpretation down."""
-        self.query_one("#interp-scroll", VerticalScroll).scroll_down(animate=False)
+        self.query_one("#interp-scroll", VerticalScroll).scroll_down(animate=True)
 
     def key_up(self) -> None:
         """Scroll interpretation up."""
-        self.query_one("#interp-scroll", VerticalScroll).scroll_up(animate=False)
+        self.query_one("#interp-scroll", VerticalScroll).scroll_up(animate=True)
 
     def key_right(self) -> None:
         """Page interpretation down."""
-        self.query_one("#interp-scroll", VerticalScroll).scroll_page_down(animate=False)
+        self.query_one("#interp-scroll", VerticalScroll).scroll_page_down(animate=True)
 
     def key_left(self) -> None:
         """Page interpretation up."""
-        self.query_one("#interp-scroll", VerticalScroll).scroll_page_up(animate=False)
+        self.query_one("#interp-scroll", VerticalScroll).scroll_page_up(animate=True)
 
     def action_go_home(self) -> None:
         """Escape binding — pop all screens back to home."""

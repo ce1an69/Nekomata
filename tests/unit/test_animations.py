@@ -7,6 +7,14 @@ from nekomata.screens.draw import (
     DeckCard,
     DrawScreen,
     NUM_DECK_CARDS,
+    SLOT_FLIP_FADE_IN,
+    SLOT_FLIP_FADE_OUT,
+    SLOT_FLIP_GLOW_HOLD,
+    SLOT_FLIP_SWAP_PAUSE,
+    SLOT_PLACE_DURATION,
+    SLOT_PLACE_OFFSET,
+    SPREAD_RECENTER_DURATION,
+    SPREAD_RECENTER_OFFSET,
     SpreadSlot,
 )
 
@@ -67,14 +75,17 @@ def test_deck_card_back_uses_card_like_terminal_ratio():
 
 
 def test_deck_card_motion_stays_subtle():
-    """Pick/focus movement should feel like a glide, not a jump."""
+    """Pick/focus movement should feel like a glide, and picked cards stay visible."""
     css = DeckCard.DEFAULT_CSS
 
-    assert "offset 500ms" in css
+    assert "offset 300ms" in css
     assert "DeckCard:focus" in css
     assert "offset: 0 -1;" in css
     assert "DeckCard.picked" in css
-    assert "offset: 0 -3;" in css
+    picked_css = css.split("DeckCard.picked {")[1].split("}")[0]
+    assert "opacity: 1;" in picked_css
+    assert "offset: 0 -1;" in picked_css
+    assert "border: round" in picked_css
 
 
 def test_spread_slot_matches_deck_card_ratio_and_rounding():
@@ -91,6 +102,15 @@ def test_spread_slot_matches_deck_card_ratio_and_rounding():
     assert "border: round" in deck_css
     assert "border: round" in slot_css
     assert "border: dashed" not in slot_css
+
+
+def test_spread_grid_uses_compact_columns():
+    """Spread cards should sit close together instead of stretching across the row."""
+    css = DrawScreen.DEFAULT_CSS
+
+    assert "grid-columns: 1fr 1fr 1fr;" not in css
+    assert "grid-columns: 12 12 12;" in css
+    assert "grid-columns: 12 12 12 12 12;" in css
 
 
 def test_deck_cards_have_light_spacing():
@@ -116,24 +136,62 @@ def test_draw_screen_offers_more_candidate_cards():
 
 
 def test_pick_complete_transition_is_gentler():
-    """Finishing selection should linger briefly before the flip phase."""
+    """Finishing selection should move briskly into the flip phase."""
     css = DrawScreen.DEFAULT_CSS
 
-    assert "transition: opacity 900ms" in css
-    assert "offset 900ms" in css
-    assert DECK_HIDE_DELAY == pytest.approx(0.9)
-    assert PICK_COMPLETE_DELAY == pytest.approx(0.85)
+    assert "transition: opacity 420ms" in css
+    assert "offset 420ms" in css
+    assert DECK_HIDE_DELAY == pytest.approx(0.42)
+    assert PICK_COMPLETE_DELAY == pytest.approx(0.35)
+
+
+def test_spread_recenters_with_motion_after_deck_exit():
+    """When the deck disappears, the spread should glide into its centered layout."""
+    css = DrawScreen.DEFAULT_CSS
+
+    main_area_css = css.split("#main-area {")[1].split("}")[0]
+    assert "transition: offset 280ms" in main_area_css
+    assert SPREAD_RECENTER_OFFSET == 4
+    assert SPREAD_RECENTER_DURATION == pytest.approx(0.28)
+
+
+def test_spread_slot_place_uses_short_slide_in():
+    """Placed cards should slide into their slot quickly instead of just fading in."""
+    constants = DrawScreen._animate_slot_entrance.__code__.co_names
+    reveal_constants = DrawScreen._reveal_slot.__code__.co_names
+
+    assert "SLOT_PLACE_OFFSET" in constants
+    assert "SLOT_PLACE_DURATION" in reveal_constants
+    assert SLOT_PLACE_OFFSET == 2
+    assert SLOT_PLACE_DURATION == pytest.approx(0.22)
 
 
 def test_spread_slot_flip_uses_smooth_two_phase_motion():
-    """Flipping should dip and reveal, not hard-swap at full opacity."""
+    """Flipping should be compact and animated through the face swap."""
     constants = SpreadSlot.flip.__code__.co_consts
     css = SpreadSlot.DEFAULT_CSS
 
-    assert "offset 420ms" in css
-    assert 0.18 in constants
-    assert 0.22 in constants
-    assert 0.46 in constants
+    assert "offset 220ms" in css
+    assert 0.12 in constants
+    assert SLOT_FLIP_FADE_OUT == pytest.approx(0.10)
+    assert SLOT_FLIP_SWAP_PAUSE == pytest.approx(0.015)
+    assert SLOT_FLIP_FADE_IN == pytest.approx(0.18)
+    assert SLOT_FLIP_GLOW_HOLD == pytest.approx(0.08)
+
+
+def test_done_phase_does_not_wait_for_completion_shimmer():
+    """The detail panel should appear immediately after the final flip."""
+    names = DrawScreen.on_spread_slot_flipped.__code__.co_names
+
+    assert "run_worker" in names
+    assert "_completion_shimmer" in names
+
+
+def test_completion_shimmer_avoids_zero_delay_timer():
+    """The first completion pulse should not use Textual's zero-second timer path."""
+    constants = DrawScreen._completion_shimmer.__code__.co_consts
+
+    assert 0.01 in constants
 
 
 @pytest.mark.asyncio

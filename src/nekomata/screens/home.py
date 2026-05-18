@@ -141,6 +141,7 @@ class HomeScreen(Screen):
         super().__init__()
         self._banner_frame = 0
         self._banner_timer: Timer | None = None
+        self._suggestions_hide_timer: Timer | None = None
         self._shimmer_idx = 0
 
     def compose(self) -> ComposeResult:
@@ -192,6 +193,9 @@ class HomeScreen(Screen):
     def _show_suggestions(self, text: str) -> None:
         """Update and show the command suggestions panel."""
         suggestions = self.query_one("#command-suggestions", Static)
+        if self._suggestions_hide_timer is not None:
+            self._suggestions_hide_timer.stop()
+            self._suggestions_hide_timer = None
         suggestions.display = True
         suggestions.update(text)
         if self.app.animation_enabled:
@@ -216,6 +220,9 @@ class HomeScreen(Screen):
         if self._banner_timer is not None:
             self._banner_timer.stop()
             self._banner_timer = None
+        if self._suggestions_hide_timer is not None:
+            self._suggestions_hide_timer.stop()
+            self._suggestions_hide_timer = None
 
     def _animate_banner(self) -> None:
         """Advance the banner animation: scan-wave first, then shimmer."""
@@ -328,9 +335,12 @@ class HomeScreen(Screen):
         suggestions = self.query_one("#command-suggestions", Static)
         matches = [cmd for cmd in SLASH_COMMANDS if cmd.startswith(value.lower())]
         if not value.startswith("/") or not matches or value.lower() in SLASH_COMMANDS:
-            suggestions.display = False
-            suggestions.update("")
+            self._hide_suggestions()
             return
+        if self._suggestions_hide_timer is not None:
+            self._suggestions_hide_timer.stop()
+            self._suggestions_hide_timer = None
+        was_hidden = not suggestions.display
         suggestions.display = True
         prefix_len = len(value)
         lines = []
@@ -339,6 +349,49 @@ class HomeScreen(Screen):
             rest = cmd[prefix_len:]
             lines.append(f"[command-highlight]{typed}[/]{rest}  {SLASH_COMMANDS[cmd][1]}")
         suggestions.update("\n".join(lines))
+        if self.app.animation_enabled:
+            if was_hidden:
+                suggestions.styles.opacity = 0
+                suggestions.styles.offset = (0, -1)
+                suggestions.styles.animate("opacity", 1.0, duration=0.16, easing="out_cubic")
+                suggestions.styles.animate(
+                    "offset",
+                    ScalarOffset.from_offset(Offset(0, 0)),
+                    duration=0.16,
+                    easing="out_cubic",
+                )
+            else:
+                suggestions.styles.opacity = 1.0
+                suggestions.styles.offset = (0, 0)
+
+    def _hide_suggestions(self) -> None:
+        suggestions = self.query_one("#command-suggestions", Static)
+        if self._suggestions_hide_timer is not None:
+            self._suggestions_hide_timer.stop()
+            self._suggestions_hide_timer = None
+        if not suggestions.display:
+            suggestions.update("")
+            return
+        if not self.app.animation_enabled:
+            suggestions.display = False
+            suggestions.update("")
+            return
+        suggestions.styles.animate("opacity", 0.0, duration=0.12, easing="out_cubic")
+        suggestions.styles.animate(
+            "offset",
+            ScalarOffset.from_offset(Offset(0, -1)),
+            duration=0.12,
+            easing="out_cubic",
+        )
+        self._suggestions_hide_timer = self.set_timer(0.13, self._finish_hide_suggestions)
+
+    def _finish_hide_suggestions(self) -> None:
+        suggestions = self.query_one("#command-suggestions", Static)
+        suggestions.display = False
+        suggestions.update("")
+        suggestions.styles.opacity = 1.0
+        suggestions.styles.offset = (0, 0)
+        self._suggestions_hide_timer = None
 
     def _matching_command(self, value: str) -> str | None:
         """Return the unique slash command matching the input, or None."""

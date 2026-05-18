@@ -82,6 +82,7 @@ class CardBrowserScreen(Screen):
         border: round #313244;
         background: #11111b;
         padding: 1 1;
+        transition: opacity 220ms out_cubic;
     }
     CardBrowserScreen #card-detail {
         width: 1fr;
@@ -151,13 +152,17 @@ class CardBrowserScreen(Screen):
         if items:
             items[0].focus()
 
-    def _show_cards(self, cards: list[Card]) -> None:
+    def _show_cards(self, cards: list[Card], *, animate: bool = False) -> None:
         """Replace the card list with the given cards."""
         self._update_card_count_display()
         container = self.query_one("#card-list")
+        if animate and self.app.animation_enabled:
+            container.styles.opacity = 0.2
         container.remove_children()
-        for card in cards:
-            container.mount(CardListItem(card))
+        items = [CardListItem(card) for card in cards]
+        container.mount(*items)
+        if animate and self.app.animation_enabled:
+            container.styles.animate("opacity", 1.0, duration=0.18, easing="out_cubic")
 
     def _update_filter_highlight(self, active_btn_id: str) -> None:
         """Highlight the active filter button and dim all others."""
@@ -258,11 +263,19 @@ class CardBrowserScreen(Screen):
             filter_id = f"filter-{arcana.value}" if arcana else "filter-all"
             filtered = [c for c in self._cards if c.arcana == arcana] if arcana else self._cards
             self._update_filter_highlight(filter_id)
-            detail = self.query_one("#card-detail")
-            detail.remove_children()
-            detail.mount(Static("Select a card"))
-            self._show_cards(filtered)
+            self._show_placeholder_detail()
+            self._show_cards(filtered, animate=True)
             self.set_timer(0.1, self._focus_first_card)
+
+    def _show_placeholder_detail(self) -> None:
+        """Reset the detail panel with the same soft swap used for card previews."""
+        detail = self.query_one("#card-detail")
+        if self.app.animation_enabled:
+            detail.styles.opacity = 0.2
+        detail.remove_children()
+        detail.mount(Static("Select a card"))
+        if self.app.animation_enabled:
+            detail.styles.animate("opacity", 1.0, duration=0.18, easing="out_cubic")
 
 
 class CardListItem(Static):
@@ -320,6 +333,8 @@ class CardListItem(Static):
         is_reversed = self.screen._reversed_preview
         drawn = DrawnCard(card=self._card, position=_BROWSER_POS, is_reversed=is_reversed)
         detail_panel = self.screen.query_one("#card-detail")
+        if self.app.animation_enabled:
+            detail_panel.styles.opacity = 0.2
         detail_panel.remove_children()
         if self.app.render_mode != "text":
             img_detail = render_card_image_detail(drawn)
@@ -328,8 +343,10 @@ class CardListItem(Static):
                 detail_panel.mount(widget)
                 if self.app.animation_enabled:
                     animate_fade_in(widget)
+                    detail_panel.styles.animate("opacity", 1.0, duration=0.18, easing="out_cubic")
                 return
         widget = Static(render_card_detail(drawn))
         detail_panel.mount(widget)
         if self.app.animation_enabled:
             animate_fade_in(widget)
+            detail_panel.styles.animate("opacity", 1.0, duration=0.18, easing="out_cubic")
