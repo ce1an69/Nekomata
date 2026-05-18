@@ -7,9 +7,9 @@ from rich.console import Group
 from rich.panel import Panel
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.css.scalar import ScalarOffset
-from textual.events import Key
+from textual.events import DescendantFocus, Key
 from textual.geometry import Offset
 from textual.message import Message
 from textual.screen import Screen
@@ -165,6 +165,10 @@ class ReadingScreen(Screen):
         background: #11111b;
         padding: 1 1;
         align: center middle;
+        transition: border 180ms out_cubic;
+    }
+    ReadingScreen #cards-container.box-active {
+        border: round #cba6f7;
     }
     ReadingScreen #cards-container.spread-1 {
         grid-size: 1;
@@ -194,7 +198,10 @@ class ReadingScreen(Screen):
         background: #181825;
         padding: 1 1;
         margin-left: 1;
-        transition: opacity 250ms out_cubic;
+        transition: opacity 250ms out_cubic, border 180ms out_cubic;
+    }
+    ReadingScreen #card-preview.box-active {
+        border: round #cba6f7;
     }
     ReadingScreen #card-preview Static {
         background: #181825;
@@ -228,6 +235,8 @@ class ReadingScreen(Screen):
         self._dot_idx = 0
         self._last_preview_id: str | None = None
         self._cancelled = False
+        self._active_box: str | None = None
+        self._last_card_widget: CardWidget | None = None
 
     def compose(self) -> ComposeResult:
         yield Static(self._question, id="question-display")
@@ -235,7 +244,7 @@ class ReadingScreen(Screen):
         with Horizontal(id="main-area"):
             with Vertical(id="cards-container"):
                 pass
-            with Vertical(id="card-preview"):
+            with VerticalScroll(id="card-preview"):
                 yield Static("Select a card", id="preview-placeholder")
         yield Static("", id="status")
         yield Static("↑/↓ move · Enter confirm · I interpret · Q back", id="hints")
@@ -320,6 +329,8 @@ class ReadingScreen(Screen):
             self.set_timer(len(self._drawn_cards) * 0.10 + 0.25, self._focus_first_card)
         else:
             self._focus_first_card()
+        self._active_box = "cards"
+        self._update_box_highlights()
 
     @staticmethod
     def _ordered_spread_widgets(widgets: list[CardWidget]) -> list[CardWidget]:
@@ -425,29 +436,89 @@ class ReadingScreen(Screen):
 
     def key_down(self) -> None:
         """Move focus down through spread cards."""
-        if isinstance(self.focused, CardWidget):
+        if self._active_box == "detail":
+            self.query_one("#card-preview", VerticalScroll).scroll_down(animate=True)
+        elif isinstance(self.focused, CardWidget):
             self._focus_card(1)
 
     def key_right(self) -> None:
         """Move focus right through spread cards."""
+        if self._active_box == "detail":
+            return
         if isinstance(self.focused, CardWidget):
             self._focus_card(1)
 
     def key_up(self) -> None:
         """Move focus up through spread cards."""
-        if isinstance(self.focused, CardWidget):
+        if self._active_box == "detail":
+            self.query_one("#card-preview", VerticalScroll).scroll_up(animate=True)
+        elif isinstance(self.focused, CardWidget):
             self._focus_card(-1)
 
     def key_left(self) -> None:
         """Move focus left through spread cards."""
+        if self._active_box == "detail":
+            return
         if isinstance(self.focused, CardWidget):
             self._focus_card(-1)
 
+    def on_key(self, event: Key) -> None:
+        if event.key == "shift+tab":
+            event.stop()
+            self._cycle_box(-1)
+
     def key_tab(self, event: Key) -> None:
-        """Cycle focus through spread cards."""
+        """Cycle between cards and detail panel."""
         event.stop()
+        self._cycle_box(1)
+
+    def on_descendant_focus(self, event: DescendantFocus) -> None:
+        if isinstance(event.widget, CardWidget):
+            if self._active_box != "cards":
+                self._active_box = "cards"
+                self._update_box_highlights()
+
+    # ── Box management ────────────────────────────────────────────────
+
+    def _available_boxes(self) -> list[str]:
+        return ["cards", "detail"]
+
+    def _update_box_highlights(self) -> None:
+        for box_id, selector in {"cards": "#cards-container", "detail": "#card-preview"}.items():
+            try:
+                el = self.query_one(selector)
+                el.set_class(box_id == self._active_box, "box-active")
+            except Exception:
+                pass
+
+    def _save_last_card(self) -> None:
         if isinstance(self.focused, CardWidget):
-            self._focus_card(1, wrap=True)
+            self._last_card_widget = self.focused
+
+    def _focus_box_widget(self) -> None:
+        if self._active_box == "cards":
+            if self._last_card_widget and self._last_card_widget.is_mounted:
+                self._last_card_widget.focus()
+            else:
+                cards = list(self.query(CardWidget))
+                if cards:
+                    cards[0].focus()
+        elif self._active_box == "detail":
+            self.query_one("#card-preview").focus()
+
+    def _cycle_box(self, delta: int) -> None:
+        boxes = self._available_boxes()
+        if len(boxes) <= 1:
+            return
+        self._save_last_card()
+        current = self._active_box or boxes[0]
+        try:
+            idx = boxes.index(current)
+        except ValueError:
+            idx = 0
+        self._active_box = boxes[(idx + delta) % len(boxes)]
+        self._update_box_highlights()
+        self._focus_box_widget()
 
     def _focus_card(self, delta: int, wrap: bool = False) -> bool:
         """Focus a neighboring card; return whether focus moved."""
