@@ -11,8 +11,11 @@ from textual.timer import Timer
 from textual.widgets import Input, Static
 
 BANNER_LINES = [
-    "Nekomata",
-    "Cat Tarot",
+    " _   _      _                         _        ",
+    r"| \ | | ___| | _____  _ __ ___   __ _| |_ __ _ ",
+    r"|  \| |/ _ \ |/ / _ \| '_ ` _ \ / _` | __/ _` |",
+    r"| |\  |  __/   < (_) | | | | | | (_| | || (_| |",
+    r"|_| \_|\___|_|\_\___/|_| |_| |_|\__,_|\__\__,_|",
 ]
 BANNER_WIDTH = max(len(line) for line in BANNER_LINES)
 BANNER_SCAN_FRAMES = BANNER_WIDTH + 10
@@ -153,7 +156,6 @@ class HomeScreen(Screen):
         with Vertical(id="home-stack"):
             with Center(id="title-row"):
                 yield Static("", id="title")
-            yield Static("Nekomata · Cat Tarot", id="subtitle")
             yield Static("─── ✦ ───", id="ornament")
             with Vertical(id="input-area"):
                 yield HomePromptInput(
