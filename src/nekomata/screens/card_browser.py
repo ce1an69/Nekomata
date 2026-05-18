@@ -2,7 +2,9 @@
 
 from textual.app import ComposeResult
 from textual.containers import Center, Horizontal, Vertical, VerticalScroll
+from textual.css.scalar import ScalarOffset
 from textual.events import Key
+from textual.geometry import Offset
 from textual.screen import Screen
 from textual.widgets import Button, Static
 
@@ -136,12 +138,12 @@ class CardBrowserScreen(Screen):
             filter_bar.styles.opacity = 0
             filter_bar.styles.offset = (0, -1)
             filter_bar.styles.animate("opacity", 1.0, duration=0.3, easing="out_cubic")
-            filter_bar.styles.animate("offset", (0, 0), duration=0.3, easing="out_cubic")
+            filter_bar.styles.animate("offset", ScalarOffset.from_offset(Offset(0, 0)), duration=0.3, easing="out_cubic")
             browser_area = self.query_one("#browser-area")
             browser_area.styles.opacity = 0
             browser_area.styles.offset = (0, 1)
             browser_area.styles.animate("opacity", 1.0, duration=0.35, easing="out_cubic")
-            browser_area.styles.animate("offset", (0, 0), duration=0.35, easing="out_cubic")
+            browser_area.styles.animate("offset", ScalarOffset.from_offset(Offset(0, 0)), duration=0.35, easing="out_cubic")
         self.set_timer(0.1, self._focus_first_card)
 
     def _focus_first_card(self) -> None:

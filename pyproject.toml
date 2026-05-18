@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "nekomata"
 version = "0.1.0"
 description = "像素风猫咪塔罗牌终端占卜应用"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 license = {text = "MIT"}
 dependencies = [
     "textual>=0.50",

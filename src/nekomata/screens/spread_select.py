@@ -6,6 +6,9 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import Static
 
+from textual.css.scalar import ScalarOffset
+from textual.geometry import Offset
+
 from nekomata.render.animations import animate_fade_in, animate_slide_in
 from nekomata.spread import SPREAD_REGISTRY
 
@@ -172,7 +175,7 @@ class SpreadSelectScreen(Screen):
             shell.styles.opacity = 0
             shell.styles.offset = (0, 1)
             shell.styles.animate("opacity", 1.0, duration=0.35, easing="out_cubic")
-            shell.styles.animate("offset", (0, 0), duration=0.35, easing="out_cubic")
+            shell.styles.animate("offset", ScalarOffset.from_offset(Offset(0, 0)), duration=0.35, easing="out_cubic")
             for i, opt in enumerate(options):
                 opt.styles.opacity = 0
                 opt.styles.offset = (0, 1)
@@ -180,7 +183,7 @@ class SpreadSelectScreen(Screen):
                     i * 0.05,
                     lambda w=opt: (
                         w.styles.animate("opacity", 1.0, duration=0.28, easing="out_cubic"),
-                        w.styles.animate("offset", (0, 0), duration=0.28, easing="out_cubic"),
+                        w.styles.animate("offset", ScalarOffset.from_offset(Offset(0, 0)), duration=0.28, easing="out_cubic"),
                     ),
                 )
 

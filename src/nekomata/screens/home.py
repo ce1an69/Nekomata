@@ -3,7 +3,9 @@
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Center, Vertical
+from textual.css.scalar import ScalarOffset
 from textual.events import Key
+from textual.geometry import Offset
 from textual.screen import Screen
 from textual.timer import Timer
 from textual.widgets import Input, Static
@@ -196,7 +198,7 @@ class HomeScreen(Screen):
             suggestions.styles.opacity = 0
             suggestions.styles.offset = (0, -1)
             suggestions.styles.animate("opacity", 1.0, duration=0.2, easing="out_cubic")
-            suggestions.styles.animate("offset", (0, 0), duration=0.2, easing="out_cubic")
+            suggestions.styles.animate("offset", ScalarOffset.from_offset(Offset(0, 0)), duration=0.2, easing="out_cubic")
         self.query_one("#prompt-input", Input).focus()
 
     def on_mount(self) -> None:
