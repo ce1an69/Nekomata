@@ -17,12 +17,12 @@
 
 ## 安装
 
-需要 [uv](https://docs.astral.sh/uv/) 和 Python 3.12+。
+需要 [uv](https://docs.astral.sh/uv/) 和 Python 3.14+。
 
 ```bash
-git clone https://github.com/celan/Nekomata.git
+git clone https://github.com/ce1an69/Nekomata.git
 cd Nekomata
-uv python pin 3.12    # 首次：固定 Python 版本
+uv python pin 3.14    # 首次：固定 Python 版本
 uv sync               # 安装运行时依赖
 ```
 
@@ -51,7 +51,7 @@ nekomata
 
 | 组件 | 技术 |
 |------|------|
-| 语言 | Python 3.12+ |
+| 语言 | Python 3.14+ |
 | TUI 框架 | Textual |
 | 牌面渲染 | rich-pixels |
 | 图像处理 | Pillow |
