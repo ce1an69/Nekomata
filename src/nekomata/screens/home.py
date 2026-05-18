@@ -2,23 +2,13 @@
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Center, Vertical
+from textual.containers import Vertical
 from textual.css.scalar import ScalarOffset
 from textual.events import Key
 from textual.geometry import Offset
 from textual.screen import Screen
 from textual.timer import Timer
 from textual.widgets import Input, Static
-
-BANNER_LINES = [
-    " _   _      _                         _        ",
-    r"| \ | | ___| | _____  _ __ ___   __ _| |_ __ _ ",
-    r"|  \| |/ _ \ |/ / _ \| '_ ` _ \ / _` | __/ _` |",
-    r"| |\  |  __/   < (_) | | | | | | (_| | || (_| |",
-    r"|_| \_|\___|_|\_\___/|_| |_| |_|\__,_|\__\__,_|",
-]
-BANNER_WIDTH = max(len(line) for line in BANNER_LINES)
-BANNER_SCAN_FRAMES = BANNER_WIDTH + 10
 
 SLASH_COMMANDS = {
     "/browse": ("card_browser", "Browse all 78 cards"),
@@ -59,25 +49,13 @@ class HomeScreen(Screen):
         transition: opacity 300ms out_cubic;
     }
     HomeScreen #title {
-        margin-bottom: 0;
+        margin-bottom: 1;
         width: 100%;
         background: #181825;
         color: #cba6f7;
         text-align: center;
         text-style: bold;
-    }
-    HomeScreen #title-row {
-        width: 100%;
-        height: auto;
-        background: #181825;
-    }
-    HomeScreen #subtitle {
-        width: 100%;
-        height: auto;
-        background: #181825;
-        color: #a6adc8;
-        text-align: center;
-        margin-bottom: 1;
+        text-size: 2 2;
     }
     HomeScreen #ornament, HomeScreen #ornament-bottom {
         display: none;
@@ -120,21 +98,6 @@ class HomeScreen(Screen):
         color: #cba6f7;
         text-style: bold;
     }
-    HomeScreen .banner-shimmer {
-        color: #b4befe;
-        text-style: bold;
-    }
-    HomeScreen .banner-lit {
-        color: #cba6f7;
-        text-style: bold;
-    }
-    HomeScreen .banner-edge {
-        color: #b4befe;
-        text-style: bold;
-    }
-    HomeScreen .banner-ghost {
-        color: #6c7086;
-    }
     HomeScreen #hints {
         width: 100%;
         height: auto;
@@ -147,15 +110,11 @@ class HomeScreen(Screen):
 
     def __init__(self) -> None:
         super().__init__()
-        self._banner_frame = 0
-        self._banner_timer: Timer | None = None
         self._suggestions_hide_timer: Timer | None = None
-        self._shimmer_idx = 0
 
     def compose(self) -> ComposeResult:
         with Vertical(id="home-stack"):
-            with Center(id="title-row"):
-                yield Static("", id="title")
+            yield Static("Nekomata", id="title")
             yield Static("─── ✦ ───", id="ornament")
             with Vertical(id="input-area"):
                 yield HomePromptInput(
@@ -210,71 +169,15 @@ class HomeScreen(Screen):
         self.query_one("#prompt-input", Input).focus()
 
     def on_mount(self) -> None:
-        """Hide command suggestions, focus input, start banner animation."""
+        """Hide command suggestions, focus input."""
         self.query_one("#command-suggestions", Static).display = False
         self.query_one("#prompt-input", Input).focus()
-        if self.app.animation_enabled:
-            self._banner_frame = 0
-            self._banner_timer = self.set_interval(0.035, self._animate_banner)
-        else:
-            self._update_banner(len(BANNER_LINES), None)
 
     def on_unmount(self) -> None:
-        """Stop the banner animation timer when screen is removed."""
-        if self._banner_timer is not None:
-            self._banner_timer.stop()
-            self._banner_timer = None
+        """Stop timers when screen is removed."""
         if self._suggestions_hide_timer is not None:
             self._suggestions_hide_timer.stop()
             self._suggestions_hide_timer = None
-
-    def _animate_banner(self) -> None:
-        """Advance the banner animation: scan-wave first, then shimmer."""
-        if self._banner_frame >= BANNER_SCAN_FRAMES:
-            self._shimmer_idx = (self._shimmer_idx + 1) % len(BANNER_LINES[0])
-            self._update_banner(len(BANNER_LINES), self._shimmer_idx)
-            return
-        self._update_etched_banner(self._banner_frame)
-        self._banner_frame += 5
-
-    def _update_banner(self, visible_lines: int, shimmer_idx: int | None) -> None:
-        """Render the banner with the given number of visible lines and optional shimmer column."""
-        lines = BANNER_LINES[:visible_lines]
-        if shimmer_idx is not None:
-            lines = [self._highlight_banner_column(line, shimmer_idx) for line in lines]
-        self.query_one("#title", Static).update("\n".join(lines))
-
-    def _update_etched_banner(self, frame: int) -> None:
-        """Render the etched scan-wave banner at the given frame position."""
-        rendered = [self._etch_line(line, frame) for line in BANNER_LINES]
-        self.query_one("#title", Static).update("\n".join(rendered))
-
-    def _etch_line(self, line: str, frame: int) -> str:
-        """Render a banner line with a left-to-right scan-wave effect."""
-        cells: list[str] = []
-        for idx, char in enumerate(line):
-            if char == " ":
-                cells.append(" ")
-                continue
-            distance = frame - idx
-            if distance < -8:
-                cells.append(" ")
-            elif distance < -4:
-                cells.append("[banner-ghost]░[/]")
-            elif distance < -1:
-                cells.append("[banner-ghost]▒[/]")
-            elif distance < 3:
-                cells.append(f"[banner-edge]{char}[/]")
-            else:
-                cells.append(f"[banner-lit]{char}[/]")
-        return "".join(cells)
-
-    def _highlight_banner_column(self, line: str, idx: int) -> str:
-        """Highlight a single column in a banner line for the shimmer effect."""
-        if not line.strip():
-            return line
-        idx = min(idx, len(line) - 1)
-        return line[:idx] + f"[banner-shimmer]{line[idx]}[/]" + line[idx + 1:]
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Update command suggestions dropdown as the user types."""
