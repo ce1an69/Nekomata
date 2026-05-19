@@ -131,7 +131,7 @@ def test_draw_detail_panel_docks_to_right_full_height():
     assert "dock: right;" in detail_css
     assert f"width: {DETAIL_PANEL_WIDTH};" in detail_css
     assert f"min-width: {DETAIL_PANEL_WIDTH};" in detail_css
-    assert "height: 100%;" in detail_css
+    assert "height: 1fr;" in detail_css
     assert "transition: opacity 240ms" in detail_css
     assert "offset 320ms" in detail_css
 
@@ -191,9 +191,22 @@ def test_draw_interpretation_panel_uses_arrow_scroll():
 def test_draw_stream_content_renders_markdown():
     source = inspect.getsource(DrawScreen._render_stream_content)
 
-    assert "Markdown(self._stream_thinking_text" in source
+    assert "Text(self._stream_thinking_text" in source
     assert "Markdown(self._stream_content_text" in source
+    assert "italic dim" in source
+    assert "C_OVERLAY0" in source
     assert "Group(*parts)" in source
+
+
+def test_draw_loading_hint_rotates_cat_tarot_messages():
+    source = inspect.getsource(DrawScreen._tick_loading_frame)
+    from nekomata.screens import draw
+
+    assert "模型正在解读" not in source
+    assert "_LOADING_MESSAGE_INTERVAL" in source
+    assert draw._LOADING_MESSAGE_INTERVAL == 2.0
+    assert len(draw._LOADING_MESSAGES) >= 3
+    assert any("猫" in message for message in draw._LOADING_MESSAGES)
 
 
 def test_interpretation_exit_confirm_uses_catppuccin_modal():
@@ -202,9 +215,11 @@ def test_interpretation_exit_confirm_uses_catppuccin_modal():
 
     assert "ConfirmExitInterpretation" in source
     assert "callback=self._on_exit_interpretation_confirmed" in source
+    assert "background: #11111b;" in css
+    assert "background: #11111b 70%" not in css
     assert "border: round #cba6f7" in css
     assert "background: #181825" in css
-    assert "#confirm-hint" in css
+    assert "#confirm-content" in css
     assert "transition: opacity 220ms" in css
 
 

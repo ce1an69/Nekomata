@@ -15,7 +15,7 @@ from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.css.scalar import ScalarOffset
 from textual.css.query import NoMatches
-from textual.events import DescendantFocus, Key
+from textual.events import DescendantFocus, Key, Resize
 from textual.geometry import Offset
 from textual.message import Message
 from textual.screen import ModalScreen
@@ -71,6 +71,19 @@ STREAM_TYPE_INTERVAL = 0.025
 STREAM_CHARS_PER_TICK = 3
 _LOADING_FRAMES = ("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏")
 _LOADING_INTERVAL = 0.08
+_LOADING_MESSAGE_INTERVAL = 2.0
+_LOADING_MESSAGES = (
+    "猫咪正在拨开牌雾...",
+    "猫爪轻点命运牌面...",
+    "猫又正在听取星星的低语...",
+    "塔罗猫在整理灵感...",
+    "月光下的小猫正在解牌...",
+    "猫尾轻扫水晶球...",
+    "占卜猫正在翻找灵感小鱼...",
+    "猫耳捕捉远方的预兆...",
+    "猫咪把问题叼给星辰...",
+    "牌桌上的猫影正在成形...",
+)
 DETAIL_PANEL_WIDTH = 66
 INTERP_PANEL_HEIGHT = "46%"
 INTERP_MIN_HEIGHT = 14
@@ -99,38 +112,36 @@ class ConfirmExitInterpretation(ModalScreen[bool]):
     DEFAULT_CSS = f"""
     ConfirmExitInterpretation {{
         align: center middle;
-        background: {C_CRUST} 70%;
+        background: {C_CRUST};
     }}
     ConfirmExitInterpretation #confirm-card {{
         width: 54;
         height: auto;
+        align: center middle;
         border: round {C_MAUVE};
         background: {C_MANTLE};
         padding: 1 2;
         transition: opacity 220ms {_EASE}, offset 260ms {_EASE};
     }}
-    ConfirmExitInterpretation #confirm-title {{
-        color: {C_MAUVE};
-        text-style: bold;
-        text-align: center;
-        margin: 0 0 1 0;
-    }}
-    ConfirmExitInterpretation #confirm-message {{
+    ConfirmExitInterpretation #confirm-content {{
+        width: 1fr;
+        height: auto;
         color: {C_TEXT};
+        background: {C_MANTLE};
         text-align: center;
-        margin: 0 0 1 0;
-    }}
-    ConfirmExitInterpretation #confirm-hint {{
-        color: {C_OVERLAY0};
-        text-align: center;
+        content-align: center middle;
     }}
     """
 
     def compose(self) -> ComposeResult:
         with Vertical(id="confirm-card"):
-            yield Static("退出解读？", id="confirm-title")
-            yield Static("当前解读将停止，并直接返回首页。", id="confirm-message")
-            yield Static("Enter 确认退出 · Esc 取消", id="confirm-hint")
+            content = Text(justify="center")
+            content.append("退出解读？", style=f"bold {C_MAUVE}")
+            content.append("\n\n")
+            content.append("当前解读将停止，并直接返回首页。", style=C_TEXT)
+            content.append("\n\n")
+            content.append("Enter 确认退出 · Esc 取消", style=C_OVERLAY0)
+            yield Static(content, id="confirm-content")
 
     def on_mount(self) -> None:
         card = self.query_one("#confirm-card")
@@ -491,7 +502,7 @@ class DrawScreen(Screen):
         dock: right;
         width: {DETAIL_PANEL_WIDTH};
         min-width: {DETAIL_PANEL_WIDTH};
-        height: 100%;
+        height: 1fr;
         border: round {C_SURFACE0};
         background: {C_MANTLE};
         padding: 1 1;
@@ -893,6 +904,7 @@ class DrawScreen(Screen):
         self._detail_visible = True
         self._sync_interp_layout()
         preview = self.query_one("#card-preview")
+        self._fit_detail_panel_height()
         preview.display = True
         if self.app.animation_enabled:
             preview.styles.opacity = 0
@@ -932,6 +944,15 @@ class DrawScreen(Screen):
         preview.remove_class("visible")
         preview.display = False
         self._center_spread_area()
+
+    def _fit_detail_panel_height(self) -> None:
+        try:
+            preview = self.query_one("#card-preview")
+            spread_area = self.query_one("#spread-area")
+        except NoMatches:
+            return
+        spread_bottom = spread_area.region.y + spread_area.region.height
+        preview.styles.height = max(1, spread_bottom - 1)
 
     def action_toggle_detail(self) -> None:
         if self._phase != Phase.DONE:
@@ -976,6 +997,7 @@ class DrawScreen(Screen):
             return
         if self._detail_visible:
             dialog.add_class("detail-visible")
+            dialog.styles.margin = (0, 1, 2, 1)
             dialog.styles.width = max(
                 40,
                 self.size.width
@@ -985,6 +1007,7 @@ class DrawScreen(Screen):
             )
         else:
             dialog.remove_class("detail-visible")
+            dialog.styles.margin = (0, 1, 1, 1)
             dialog.styles.width = max(
                 40,
                 self.size.width
@@ -1051,7 +1074,8 @@ class DrawScreen(Screen):
         self._reset_stream_display()
         self.query_one("#status", Static).update("")
 
-    def on_resize(self) -> None:
+    def on_resize(self, event: Resize) -> None:
+        self._fit_detail_panel_height()
         self._sync_interp_layout()
 
     def _hide_interp_dialog(self) -> None:
@@ -1101,13 +1125,18 @@ class DrawScreen(Screen):
 
     def _tick_loading_frame(self) -> None:
         frame = _LOADING_FRAMES[self._loading_frame % len(_LOADING_FRAMES)]
+        message_index = int(
+            self._loading_frame * _LOADING_INTERVAL / _LOADING_MESSAGE_INTERVAL
+        ) % len(_LOADING_MESSAGES)
+        message = _LOADING_MESSAGES[message_index]
         self._loading_frame += 1
         self.query_one("#interp-dialog-hints", Static).update(
-            Text(f"{frame} 模型正在解读...", style=C_OVERLAY0)
+            Text(f"{frame} {message}", style=C_OVERLAY0)
         )
 
-    def _stop_stream_timer(self) -> None:
-        self._stop_loading_animation()
+    def _stop_stream_timer(self, stop_loading: bool = True) -> None:
+        if stop_loading:
+            self._stop_loading_animation()
         if self._stream_timer is not None:
             self._stream_timer.stop()
             self._stream_timer = None
@@ -1127,7 +1156,7 @@ class DrawScreen(Screen):
             if self._stream_source_done:
                 self._finish_stream_display()
                 return
-            self._stop_stream_timer()
+            self._stop_stream_timer(stop_loading=False)
             return
 
         for _ in range(STREAM_CHARS_PER_TICK):
@@ -1158,8 +1187,9 @@ class DrawScreen(Screen):
     def _render_stream_content(self) -> None:
         parts = []
         if self._stream_thinking_text:
-            parts.append(Text("思考", style=f"bold {C_SUBTEXT0}"))
-            parts.append(Markdown(self._stream_thinking_text, style=C_SUBTEXT0))
+            thinking_style = f"italic dim {C_OVERLAY0}"
+            parts.append(Text("思考", style=f"bold {thinking_style}"))
+            parts.append(Text(self._stream_thinking_text, style=thinking_style))
         if self._stream_content_text:
             if parts:
                 parts.append(Text(""))
