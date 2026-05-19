@@ -1,0 +1,126 @@
+/** AI interpretation — SSE consumption & incremental rendering. */
+
+export class InterpretationController {
+    constructor(container, loadingEl, spinnerEl, loadMsgEl) {
+        this._container = container;
+        this._loadingEl = loadingEl;
+        this._spinnerEl = spinnerEl;
+        this._loadMsgEl = loadMsgEl;
+        this._abortController = null;
+        this._loadFrame = 0;
+        this._loadTimer = null;
+    }
+
+    async start(drawnCards, question, strings) {
+        this._container.innerHTML = '';
+        this._showLoading(true, strings);
+        this._abortController = new AbortController();
+
+        try {
+            const resp = await fetch('/api/interpret', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question,
+                    cards: drawnCards.map(dc => ({
+                        card_id: dc.card.id,
+                        position_name: dc.position.name,
+                        is_reversed: dc.isReversed,
+                    })),
+                }),
+                signal: this._abortController.signal,
+            });
+            if (!resp.ok) {
+                throw new Error(`解读请求失败 (${resp.status})`);
+            }
+            if (!resp.body) {
+                throw new Error('解读请求没有返回内容');
+            }
+
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let currentKind = null;
+            let currentEl = null;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed || trimmed === 'data: [DONE]') continue;
+                    if (!trimmed.startsWith('data: ')) continue;
+
+                    try {
+                        const chunk = JSON.parse(trimmed.slice(6));
+                        if (chunk.error) {
+                            this._appendError(chunk.error);
+                            this._showLoading(false);
+                            return;
+                        }
+                        // Render each chunk as it arrives
+                        if (chunk.kind !== currentKind) {
+                            currentKind = chunk.kind;
+                            currentEl = document.createElement('div');
+                            currentEl.className = chunk.kind === 'thinking' ? 'thinking' : 'content';
+                            this._container.appendChild(currentEl);
+                        }
+                        currentEl.textContent += chunk.text;
+                    } catch { /* skip malformed */ }
+                }
+            }
+
+            this._showLoading(false);
+            const doneEl = document.createElement('div');
+            doneEl.className = 'interp-done';
+            doneEl.textContent = '— done —';
+            this._container.appendChild(doneEl);
+
+        } catch (e) {
+            if (e.name !== 'AbortError') {
+                this._appendError(e.message);
+            }
+            this._showLoading(false);
+        }
+    }
+
+    abort() {
+        if (this._abortController) this._abortController.abort();
+        this._showLoading(false);
+    }
+
+    _showLoading(show, strings) {
+        if (show) {
+            this._loadingEl.classList.remove('hidden');
+            this._loadFrame = 0;
+            const s = strings || {};
+            const frames = s.loading_frames || [];
+            const msgs = s.loading_messages || [];
+            const interval = s.loading_interval_ms || 80;
+            const msgInterval = s.loading_message_interval_s || 2.0;
+            this._loadTimer = setInterval(() => {
+                if (frames.length) this._spinnerEl.textContent = frames[this._loadFrame % frames.length];
+                if (msgs.length) {
+                    const msgIdx = Math.floor(this._loadFrame * interval / (msgInterval * 1000)) % msgs.length;
+                    this._loadMsgEl.textContent = msgs[msgIdx];
+                }
+                this._loadFrame++;
+            }, interval);
+        } else {
+            if (this._loadTimer) clearInterval(this._loadTimer);
+            this._loadingEl.classList.add('hidden');
+        }
+    }
+
+    _appendError(msg) {
+        const el = document.createElement('div');
+        el.className = 'error-text';
+        el.textContent = msg;
+        this._container.appendChild(el);
+    }
+}
