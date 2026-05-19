@@ -9,11 +9,10 @@
 ## 功能
 
 - 78 张像素风猫咪塔罗牌（大阿尔卡纳 + 四小阿尔卡纳）
-- 多种牌阵：单牌、三牌阵、五牌阵、凯尔特十字
+- 多种牌阵：单牌、三牌阵、五牌阵
 - 牌面像素渲染，按终端尺寸自适应
-- AI 解牌（支持 Ollama / 远程 API / 本地模板降级）
-- 占卜历史记录（SQLite）
-- 可配置用户设置（TOML）
+- AI 解牌（OpenAI 兼容接口）
+- 首次运行引导配置（API 地址、密钥、模型）
 - Web UI：浏览器内占卜界面（`--web` 启动）
 
 ## 安装
@@ -39,16 +38,18 @@ nekomata --web --port 3000  # 指定端口
 
 | 按键 | 功能 |
 |------|------|
-| `q` | 返回 / 退出 |
-| `↑` `↓` | 选择牌阵 / 浏览牌面 |
+| `q` / `Esc` | 返回 / 退出 |
+| `↑` `↓` `←` `→` | 导航 |
+| `Enter` | 确认 / 选择 |
+| `Tab` | 切换焦点面板 |
+| `1`–`6` | 快速选择牌阵 |
+| `i` | AI 解读 |
+| `d` | 显示 / 隐藏详情 |
+| `r` | 切换正逆位（牌库浏览） |
 
 ## 配置
 
-编辑 `config.toml` 可配置 AI 后端、主题等。AI 后端支持：
-
-- **Ollama** — 本地运行，无需网络
-- **远程 API** — OpenAI 兼容接口
-- **本地模板** — 无需 AI 的离线降级方案
+首次启动时会进入引导界面配置 AI 后端（API 地址、密钥、模型）。配置保存在 `.neko/settings.json`（当前目录或 `~/.neko/`）。
 
 ## 技术栈
 
@@ -58,31 +59,29 @@ nekomata --web --port 3000  # 指定端口
 | TUI 框架 | Textual |
 | 牌面渲染 | rich-pixels |
 | 图像处理 | Pillow |
-| AI 解牌 | OpenAI-compatible 接口 |
+| AI 解牌 | OpenAI-compatible 接口（远程 API） |
 | Web UI | FastAPI + vanilla JS |
 | 牌义数据 | YAML |
-| 历史记录 | SQLite |
-| 用户配置 | TOML |
+| 用户配置 | JSON（`.neko/settings.json`） |
 
 ## 项目结构
 
 ```
 src/nekomata/
-  screens/        # Textual Screen（首页、选牌阵、解读等）
+  screens/        # Textual Screen（首页、选牌阵、抽牌、解读、牌库浏览、首次配置）
   card/           # 牌组逻辑、数据模型、牌义加载
-  spread/         # 牌阵（单牌、三牌阵、凯尔特十字等）
+  spread/         # 牌阵（单牌、三牌阵、五牌阵等）
   render/         # PNG 渲染、动画、主题
   ai/             # AI 解牌接口 + prompt 模板
-  storage/        # Journal SQLite + TOML 配置读写
+  storage/        # JSON 配置读写
   web/            # FastAPI Web UI 服务
     static/       # 前端静态文件（HTML/JS/CSS）
 assets/
-  cards/          # 78 张像素风猫咪塔罗牌 PNG
-  ui/             # UI 装饰像素图
+  cards/          # 像素风猫咪塔罗牌 PNG
 data/
   card_meanings.yaml  # 78 张牌正逆位释义
   ui_strings.json     # 共享 UI 文案（加载提示、装饰符等）
-config.toml           # 用户配置
+.neko/settings.json   # 用户配置（API 地址、密钥、模型）
 ```
 
 ## 开发
@@ -96,4 +95,4 @@ uv run pytest         # 运行测试
 ## 许可证
 
 - 代码：[MIT License](LICENSE)
-- 美术资源（`assets/cards/`、`assets/ui/` 下所有 PNG）：[CC BY-NC-SA 4.0](LICENSE-ASSETS.md)
+- 美术资源（`assets/cards/` 下所有 PNG）：[CC BY-NC-SA 4.0](LICENSE-ASSETS.md)

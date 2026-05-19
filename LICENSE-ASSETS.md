@@ -8,7 +8,6 @@ The pixel art card images and UI decoration images in this project are licensed 
 All PNG files under the following directories:
 
 - `assets/cards/` — 78 tarot card images (regular + detail preview variants)
-- `assets/ui/` — UI decoration pixel art
 
 ## License Summary
 
