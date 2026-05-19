@@ -484,6 +484,42 @@ async def test_q_during_interpretation_confirms_then_returns_home():
 
 
 @pytest.mark.asyncio
+async def test_detail_panel_keeps_interpretation_height_after_toggle():
+    """Reopening detail during interpretation should keep it aligned with the dialog."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "toggle detail during interpretation"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+
+        from nekomata.screens.draw import DrawScreen
+
+        assert isinstance(app.screen, DrawScreen)
+        app.screen._show_interp_dialog()
+        await pilot.pause(0.2)
+
+        await pilot.press("d")
+        await pilot.pause(0.2)
+        await pilot.press("d")
+        await pilot.pause(0.2)
+
+        preview = app.screen.query_one("#card-preview")
+        dialog = app.screen.query_one("#interp-dialog")
+        preview_bottom = preview.region.y + preview.region.height
+        dialog_bottom = dialog.region.y + dialog.region.height
+        assert preview.has_class("visible")
+        assert dialog_bottom == preview_bottom
+
+
+@pytest.mark.asyncio
 async def test_loading_hint_keeps_rotating_between_stream_chunks():
     """Loading hint should keep animating while the model stream is temporarily quiet."""
     app = NekomataApp()
