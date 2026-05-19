@@ -10,11 +10,12 @@ Nekomata（猫又）是终端里的像素风猫咪塔罗占卜应用，78 张牌
 
 | 组件 | 技术 |
 |------|------|
-| 语言 | Python 3.12+ |
+| 语言 | Python 3.14+ |
 | TUI 框架 | Textual |
 | 牌面渲染 | rich-pixels |
 | 图像处理 | Pillow |
 | AI 解牌 | OpenAI-compatible 接口（Ollama / 远程 API / 本地模板降级） |
+| Web UI | FastAPI + vanilla JS（`--web` 启动，可选依赖 `uv sync --extra web`） |
 | 牌义数据 | YAML |
 | 历史记录 | SQLite |
 | 用户配置 | TOML |
@@ -28,9 +29,11 @@ Nekomata（猫又）是终端里的像素风猫咪塔罗占卜应用，78 张牌
   - `render/` — PNG 渲染、动画、主题
   - `ai/` — AI 解牌接口 + prompt 模板
   - `storage/` — Journal SQLite + TOML 配置读写
+  - `web/` — FastAPI Web UI 服务（`static/` 下为前端文件）
 - `assets/cards/` — 78 张像素风猫咪塔罗牌 PNG（major/cups/wands/swords/pentacles）
 - `assets/ui/` — UI 装饰像素图
 - `data/card_meanings.yaml` — 78 张牌正逆位释义
+- `data/ui_strings.json` — 共享 UI 文案（加载提示、装饰符、流式速度等）
 - `config.toml` — 用户配置
 - `tests/` — 测试（unit / integration）
 
