@@ -12,6 +12,16 @@ from nekomata.card.data import load_all_cards
 from nekomata.card.types import Arcana, ARCANA_ZH, Card, DrawnCard, Position
 from nekomata.render.animations import animate_fade_in
 from nekomata.render.card_renderer import render_card_detail, render_card_image_detail
+from nekomata.render.styles import (
+    C_CRUST,
+    C_MANTLE,
+    C_MAUVE,
+    C_OVERLAY0,
+    C_SUBTEXT0,
+    C_SURFACE0,
+    C_SURFACE1,
+    C_TEXT,
+)
 from nekomata.screens.widgets import focus_sibling
 
 # Roman numerals for Major Arcana display
@@ -42,72 +52,72 @@ class CardBrowserScreen(Screen):
         ("escape", "go_back", "Back"),
     ]
 
-    DEFAULT_CSS = """
-    CardBrowserScreen {
+    DEFAULT_CSS = f"""
+    CardBrowserScreen {{
         align: center top;
-    }
-    CardBrowserScreen #filter-bar {
+    }}
+    CardBrowserScreen #filter-bar {{
         align: center middle;
         height: auto;
         margin: 0 0 1 0;
-        border: round #313244;
-        background: #181825;
+        border: round {C_SURFACE0};
+        background: {C_MANTLE};
         padding: 0 1;
         transition: opacity 300ms out_cubic, offset 300ms out_cubic;
-    }
-    CardBrowserScreen #filter-bar Button {
+    }}
+    CardBrowserScreen #filter-bar Button {{
         width: auto;
         min-width: 10;
         margin: 0 1;
         transition: background 180ms, border 180ms, color 180ms;
-    }
-    CardBrowserScreen #filter-bar Button.active-filter {
-        border: round #cba6f7;
-        color: #cba6f7;
-    }
-    CardBrowserScreen #card-count {
+    }}
+    CardBrowserScreen #filter-bar Button.active-filter {{
+        border: round {C_MAUVE};
+        color: {C_MAUVE};
+    }}
+    CardBrowserScreen #card-count {{
         width: 100%;
         height: auto;
-        color: #6c7086;
+        color: {C_OVERLAY0};
         text-align: center;
         margin-bottom: 0;
-    }
-    CardBrowserScreen #browser-area {
+    }}
+    CardBrowserScreen #browser-area {{
         height: 1fr;
         transition: opacity 300ms out_cubic, offset 300ms out_cubic;
-    }
-    CardBrowserScreen #card-list {
+    }}
+    CardBrowserScreen #card-list {{
         width: 1fr;
         height: 1fr;
-        border: round #313244;
-        background: #11111b;
+        border: round {C_SURFACE0};
+        background: {C_CRUST};
         padding: 1 1;
         transition: opacity 220ms out_cubic;
-    }
-    CardBrowserScreen #card-detail {
+    }}
+    CardBrowserScreen #card-detail {{
         width: 1fr;
         height: 1fr;
-        border: round #45475a;
-        background: #181825;
+        border: round {C_SURFACE1};
+        background: {C_MANTLE};
         padding: 1 2;
         margin-left: 1;
         transition: opacity 250ms out_cubic;
-    }
-    CardBrowserScreen #card-detail Static {
-        background: #181825;
-    }
-    CardBrowserScreen #back-bar {
+    }}
+    CardBrowserScreen #card-detail Static {{
+        background: {C_MANTLE};
+    }}
+    CardBrowserScreen #back-bar {{
         align: center middle;
         height: auto;
         margin-top: 1;
-    }
-    CardBrowserScreen #hints {
+    }}
+    CardBrowserScreen #hints {{
         width: 100%;
         height: auto;
-        color: #6c7086;
+        color: {C_OVERLAY0};
         text-align: center;
         margin-top: 1;
-    }
+    }}
     """
 
     def __init__(self) -> None:
@@ -286,32 +296,32 @@ class CardListItem(Static):
 
     can_focus = True
 
-    DEFAULT_CSS = """
-    CardListItem {
+    DEFAULT_CSS = f"""
+    CardListItem {{
         padding: 0 1;
         height: auto;
-        border: round #11111b;
-        background: #11111b;
+        border: round {C_CRUST};
+        background: {C_CRUST};
         transition: background 180ms, border 180ms, color 180ms, opacity 250ms out_cubic;
-    }
-    CardListItem:focus {
+    }}
+    CardListItem:focus {{
         background: #1e1e2e;
-        color: #cba6f7;
+        color: {C_MAUVE};
         text-style: bold;
-        border: round #cba6f7;
-    }
-    CardListItem:hover {
+        border: round {C_MAUVE};
+    }}
+    CardListItem:hover {{
         background: #1e1e2e;
-    }
-    CardListItem.selected {
-        background: #181825;
-        border: round #cba6f7;
-    }
-    CardListItem.selected:focus {
+    }}
+    CardListItem.selected {{
+        background: {C_MANTLE};
+        border: round {C_MAUVE};
+    }}
+    CardListItem.selected:focus {{
         background: #1e1e2e;
-        color: #cba6f7;
+        color: {C_MAUVE};
         text-style: bold;
-    }
+    }}
     """
 
     def __init__(self, card: Card) -> None:

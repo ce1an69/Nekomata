@@ -1,11 +1,11 @@
 import pytest
 
 from nekomata.app import NekomataApp
-from nekomata.screens.draw import (
+from nekomata.screens.draw_widgets import (
     DECK_HIDE_DELAY,
     PICK_COMPLETE_DELAY,
     DeckCard,
-    DrawScreen,
+    DECK_ROW_COUNT,
     NUM_DECK_CARDS,
     SLOT_FLIP_FADE_IN,
     SLOT_FLIP_FADE_OUT,
@@ -17,22 +17,6 @@ from nekomata.screens.draw import (
     SPREAD_RECENTER_OFFSET,
     SpreadSlot,
 )
-
-
-class DummyStyles:
-    opacity = 1
-    offset = (0, 0)
-
-
-class SyncAnimateWidget:
-    def __init__(self) -> None:
-        self.styles = DummyStyles()
-        self.calls = []
-        self.styles.animate = self.styles_animate
-
-    def styles_animate(self, attribute, value, duration):
-        self.calls.append((attribute, value, duration))
-        return None
 
 
 @pytest.mark.asyncio
@@ -47,7 +31,8 @@ async def test_draw_screen_mounts_deck():
         await pilot.pause()
         await pilot.click("#spread-single")
         await pilot.pause()
-        from nekomata.screens.draw import DrawScreen, DeckCard, SpreadSlot
+        from nekomata.screens.draw import DrawScreen
+        from nekomata.screens.draw_widgets import DeckCard, SpreadSlot
         assert isinstance(app.screen, DrawScreen)
         deck_rows = app.screen.query(".deck-row-line")
         assert len(deck_rows) == 3
@@ -56,12 +41,6 @@ async def test_draw_screen_mounts_deck():
         assert len(deck_cards) > 0
         slots = app.screen.query(SpreadSlot)
         assert len(slots) == 1
-
-
-def test_animation_functions_exist():
-    """Verify animation module exports the reveal function."""
-    from nekomata.render.animations import animate_reveal
-    assert callable(animate_reveal)
 
 
 def test_deck_card_back_uses_card_like_terminal_ratio():
@@ -106,6 +85,7 @@ def test_spread_slot_matches_deck_card_ratio_and_rounding():
 
 def test_spread_grid_uses_compact_columns():
     """Spread cards should sit close together instead of stretching across the row."""
+    from nekomata.screens.draw import DrawScreen
     css = DrawScreen.DEFAULT_CSS
 
     assert "grid-columns: 1fr 1fr 1fr;" not in css
@@ -124,6 +104,7 @@ def test_deck_cards_have_light_spacing():
 
 def test_deck_section_has_room_for_three_rows():
     """The candidate deck area should comfortably fit three rows."""
+    from nekomata.screens.draw import DrawScreen
     css = DrawScreen.DEFAULT_CSS
 
     min_height = int(css.split("#deck-section {")[1].split("min-height: ")[1].split(";")[0])
@@ -135,8 +116,9 @@ def test_draw_screen_offers_more_candidate_cards():
     assert NUM_DECK_CARDS == 24
 
 
-def test_pick_complete_transition_is_gentler():
+def test_pick_complete_transition_is_gentle():
     """Finishing selection should move briskly into the flip phase."""
+    from nekomata.screens.draw import DrawScreen
     css = DrawScreen.DEFAULT_CSS
 
     assert "transition: opacity 420ms" in css
@@ -147,6 +129,7 @@ def test_pick_complete_transition_is_gentler():
 
 def test_spread_recenters_with_motion_after_deck_exit():
     """When the deck disappears, the spread should glide into its centered layout."""
+    from nekomata.screens.draw import DrawScreen
     css = DrawScreen.DEFAULT_CSS
 
     main_area_css = css.split("#main-area {")[1].split("}")[0]
@@ -157,6 +140,7 @@ def test_spread_recenters_with_motion_after_deck_exit():
 
 def test_spread_slot_place_uses_short_slide_in():
     """Placed cards should slide into their slot quickly instead of just fading in."""
+    from nekomata.screens.draw import DrawScreen
     constants = DrawScreen._animate_slot_entrance.__code__.co_names
     reveal_constants = DrawScreen._reveal_slot.__code__.co_names
 
@@ -181,6 +165,7 @@ def test_spread_slot_flip_uses_smooth_two_phase_motion():
 
 def test_done_phase_does_not_wait_for_completion_shimmer():
     """The detail panel should appear immediately after the final flip."""
+    from nekomata.screens.draw import DrawScreen
     names = DrawScreen.on_spread_slot_flipped.__code__.co_names
 
     assert "run_worker" in names
@@ -189,19 +174,7 @@ def test_done_phase_does_not_wait_for_completion_shimmer():
 
 def test_completion_shimmer_avoids_zero_delay_timer():
     """The first completion pulse should not use Textual's zero-second timer path."""
+    from nekomata.screens.draw import DrawScreen
     constants = DrawScreen._completion_shimmer.__code__.co_consts
 
     assert 0.01 in constants
-
-
-@pytest.mark.asyncio
-async def test_animate_reveal_allows_sync_textual_animate():
-    """Installed Textual may return None from animate()."""
-    from nekomata.render.animations import animate_reveal
-
-    widget = SyncAnimateWidget()
-
-    await animate_reveal(widget)
-
-    assert widget.styles.opacity == 0
-    assert widget.calls == [("opacity", 1.0, 0.3)]

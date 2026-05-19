@@ -1,0 +1,19 @@
+"""Shared Catppuccin Mocha color palette and animation easing."""
+
+EASE = "out_cubic"
+
+# Catppuccin Mocha
+C_CRUST = "#11111b"
+C_MANTLE = "#181825"
+C_BASE = "#1e1e2e"
+C_SURFACE0 = "#313244"
+C_SURFACE1 = "#45475a"
+C_SURFACE2 = "#585b70"
+C_OVERLAY0 = "#6c7086"
+C_SUBTEXT0 = "#a6adc8"
+C_SUBTEXT1 = "#bac2de"
+C_TEXT = "#cdd6f4"
+C_MAUVE = "#cba6f7"
+C_LAVENDER = "#b4befe"
+C_PINK = "#f5c2e7"
+C_RED = "#f38ba8"

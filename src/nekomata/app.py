@@ -3,6 +3,16 @@
 from textual.app import App
 from textual.events import Resize
 
+from nekomata.render.styles import (
+    C_CRUST,
+    C_LAVENDER,
+    C_MANTLE,
+    C_MAUVE,
+    C_SUBTEXT0,
+    C_SURFACE0,
+    C_SURFACE1,
+    C_TEXT,
+)
 from nekomata.render.terminal import get_render_mode
 from nekomata.render.themes import set_default_theme
 from nekomata.screens.home import HomeScreen
@@ -15,67 +25,67 @@ class NekomataApp(App):
     TITLE = "Nekomata"
     CSS_PATH = None
 
-    DEFAULT_CSS = """
-    Screen {
-        background: #11111b;
-        color: #cdd6f4;
+    DEFAULT_CSS = f"""
+    Screen {{
+        background: {C_CRUST};
+        color: {C_TEXT};
         padding: 1 2;
-    }
-    Button {
-        background: #181825;
-        color: #a6adc8;
-        border: round #313244;
+    }}
+    Button {{
+        background: {C_MANTLE};
+        color: {C_SUBTEXT0};
+        border: round {C_SURFACE0};
         padding: 0 2;
         min-width: 12;
         transition: background 180ms, border 180ms, color 180ms;
-    }
-    Button:hover {
+    }}
+    Button:hover {{
         background: #1e1e2e;
-        color: #cdd6f4;
-        border: round #45475a;
-    }
-    Button:focus {
+        color: {C_TEXT};
+        border: round {C_SURFACE1};
+    }}
+    Button:focus {{
         background: #1e1e2e;
-        border: round #cba6f7;
-        color: #cdd6f4;
+        border: round {C_MAUVE};
+        color: {C_TEXT};
         text-style: bold;
-    }
-    Button.-primary {
+    }}
+    Button.-primary {{
         background: #1e1e2e;
-        border: round #cba6f7;
-        color: #cba6f7;
-    }
-    Button.-primary:hover {
-        background: #313244;
-    }
-    Button.-primary:focus {
-        background: #313244;
+        border: round {C_MAUVE};
+        color: {C_MAUVE};
+    }}
+    Button.-primary:hover {{
+        background: {C_SURFACE0};
+    }}
+    Button.-primary:focus {{
+        background: {C_SURFACE0};
         text-style: bold;
-    }
-    Button.-success {
+    }}
+    Button.-success {{
         background: #1e1e2e;
-        border: round #b4befe;
-        color: #b4befe;
-    }
-    Button.-success:hover {
-        background: #313244;
-    }
-    Button.-success:disabled {
+        border: round {C_LAVENDER};
+        color: {C_LAVENDER};
+    }}
+    Button.-success:hover {{
+        background: {C_SURFACE0};
+    }}
+    Button.-success:disabled {{
         opacity: 0.5;
-    }
-    Input {
+    }}
+    Input {{
         background: #1e1e2e;
-        color: #cdd6f4;
-        border: round #45475a;
+        color: {C_TEXT};
+        border: round {C_SURFACE1};
         transition: background 180ms, border 180ms;
-    }
-    Input:focus {
-        border: round #cba6f7;
-    }
-    VerticalScroll {
-        scrollbar-background: #181825;
-        scrollbar-color: #45475a;
-    }
+    }}
+    Input:focus {{
+        border: round {C_MAUVE};
+    }}
+    VerticalScroll {{
+        scrollbar-background: {C_MANTLE};
+        scrollbar-color: {C_SURFACE1};
+    }}
     """
 
     def __init__(self) -> None:
