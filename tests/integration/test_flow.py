@@ -434,8 +434,10 @@ async def test_detail_panel_has_content_after_first_flip():
         await pilot.pause(1.2)
 
         preview = app.screen.query_one("#card-preview")
+        spread_area = app.screen.query_one("#spread-area")
         content = app.screen.query_one("#preview-content")
         assert preview.has_class("visible")
+        assert preview.region.y + preview.region.height == spread_area.region.y + spread_area.region.height
         assert str(content.render()).strip()
 
 
@@ -461,7 +463,10 @@ async def test_q_during_interpretation_confirms_then_returns_home():
 
         assert isinstance(app.screen, DrawScreen)
         app.screen._show_interp_dialog()
-        await pilot.pause()
+        await pilot.pause(0.2)
+        preview = app.screen.query_one("#card-preview")
+        dialog = app.screen.query_one("#interp-dialog")
+        assert dialog.region.y + dialog.region.height == preview.region.y + preview.region.height
 
         await pilot.press("q")
         await pilot.pause()
@@ -470,3 +475,37 @@ async def test_q_during_interpretation_confirms_then_returns_home():
         await pilot.press("enter")
         await pilot.pause()
         assert isinstance(app.screen, HomeScreen)
+
+
+@pytest.mark.asyncio
+async def test_loading_hint_keeps_rotating_between_stream_chunks():
+    """Loading hint should keep animating while the model stream is temporarily quiet."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "loading hint keeps rotating"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+
+        from nekomata.ai.interpreter import StreamChunk
+        from nekomata.screens.draw import DrawScreen
+
+        assert isinstance(app.screen, DrawScreen)
+        app.screen._show_interp_dialog()
+        app.screen._append_stream_chunk(StreamChunk("猫", "thinking"))
+        await pilot.pause(0.3)
+
+        assert app.screen._stream_timer is None
+        assert app.screen._loading_timer is not None
+        first_hint = str(app.screen.query_one("#interp-dialog-hints").render())
+
+        await pilot.pause(2.1)
+        second_hint = str(app.screen.query_one("#interp-dialog-hints").render())
+        assert first_hint != second_hint
