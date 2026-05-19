@@ -591,8 +591,9 @@ class DrawScreen(Screen):
         self._detail_visible = True
         self._sync_interp_layout()
         preview = self.query_one("#card-preview")
-        self._fit_detail_panel_height()
         preview.display = True
+        self._fit_detail_panel_height()
+        self.call_after_refresh(self._fit_detail_panel_height)
         if self.app.animation_enabled:
             preview.styles.opacity = 0
             preview.styles.offset = (4, 0)
@@ -630,16 +631,26 @@ class DrawScreen(Screen):
         preview = self.query_one("#card-preview")
         preview.remove_class("visible")
         preview.display = False
+        preview.styles.height = "1fr"
         self._center_spread_area()
 
     def _fit_detail_panel_height(self) -> None:
         try:
             preview = self.query_one("#card-preview")
-            spread_area = self.query_one("#spread-area")
+            main_area = self.query_one("#main-area")
         except NoMatches:
             return
-        spread_bottom = spread_area.region.y + spread_area.region.height
-        preview.styles.height = max(1, spread_bottom - 1)
+        # Without interpretation, align with the main area. During interpretation,
+        # extend to the dialog bottom so hide/show keeps both panels aligned.
+        bottom = main_area.region.y + main_area.region.height
+        try:
+            dialog = self.query_one("#interp-dialog")
+        except NoMatches:
+            pass
+        else:
+            if dialog.has_class("visible"):
+                bottom = max(bottom, dialog.region.y + dialog.region.height)
+        preview.styles.height = max(1, bottom - 1)
 
     def action_toggle_detail(self) -> None:
         if self._phase != Phase.DONE:
@@ -745,6 +756,7 @@ class DrawScreen(Screen):
         self._active_box = "interp"
         self._update_box_highlights()
         self._sync_interp_layout()
+        self._fit_detail_panel_height()
         dialog.display = True
         if self.app.animation_enabled:
             dialog.styles.opacity = 0
@@ -770,6 +782,8 @@ class DrawScreen(Screen):
         self._stop_stream_timer()
         self._active_box = "spread"
         self._update_box_highlights()
+        self._sync_interp_layout()
+        self._fit_detail_panel_height()
         dialog = self.query_one("#interp-dialog")
         if self.app.animation_enabled:
             dialog.styles.animate("opacity", 0.0, duration=0.18, easing=EASE)
