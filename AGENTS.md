@@ -4,8 +4,6 @@
 
 Nekomata（猫又）是终端里的像素风猫咪塔罗占卜应用，78 张牌全部融入猫咪元素，搭配 AI 个性化解牌。
 
-详细架构设计见 `docs/architecture.md`。
-
 ## 技术栈
 
 | 组件 | 技术 |
@@ -14,47 +12,44 @@ Nekomata（猫又）是终端里的像素风猫咪塔罗占卜应用，78 张牌
 | TUI 框架 | Textual |
 | 牌面渲染 | rich-pixels |
 | 图像处理 | Pillow |
-| AI 解牌 | OpenAI-compatible 接口（Ollama / 远程 API / 本地模板降级） |
+| AI 解牌 | OpenAI-compatible 接口（远程 API） |
 | Web UI | FastAPI + vanilla JS（`--web` 启动，可选依赖 `uv sync --extra web`） |
 | 牌义数据 | YAML |
-| 历史记录 | SQLite |
-| 用户配置 | TOML |
+| 用户配置 | JSON（`.neko/settings.json`，首次运行引导） |
 
 ## 目录结构要点
 
 - `src/nekomata/` — 主代码包
-  - `screens/` — Textual Screen（首页、选牌阵、解读等）
+  - `screens/` — Textual Screen（首页、选牌阵、抽牌、解读、牌库浏览、首次配置）
   - `card/` — 牌组逻辑、数据模型、牌义加载
-  - `spread/` — 牌阵（单牌、三牌阵、凯尔特十字等）
+  - `spread/` — 牌阵（单牌、三牌阵、五牌阵等）
   - `render/` — PNG 渲染、动画、主题
   - `ai/` — AI 解牌接口 + prompt 模板
-  - `storage/` — Journal SQLite + TOML 配置读写
+  - `storage/` — JSON 配置读写
   - `web/` — FastAPI Web UI 服务（`static/` 下为前端文件）
-- `assets/cards/` — 78 张像素风猫咪塔罗牌 PNG（major/cups/wands/swords/pentacles）
-- `assets/ui/` — UI 装饰像素图
+- `assets/cards/` — 像素风猫咪塔罗牌 PNG
 - `data/card_meanings.yaml` — 78 张牌正逆位释义
 - `data/ui_strings.json` — 共享 UI 文案（加载提示、装饰符、流式速度等）
-- `config.toml` — 用户配置
+- `.neko/settings.json` — 用户配置（API 地址、密钥、模型）
 - `tests/` — 测试（unit / integration）
 
 ## 项目规范
 
 - **代码许可证**：MIT
-- **美术资源**：CC BY-NC-SA 4.0（`assets/cards/` 和 `assets/ui/` 下所有 PNG）
+- **美术资源**：CC BY-NC-SA 4.0（`assets/cards/` 下所有 PNG）
   - 生成牌面时不引用具体商业牌组名称或风格描述
   - 提示词仅使用"像素风 + 猫咪 + 塔罗元素"等通用描述
 - **牌面规格**：64×96 像素，RGBA，NEAREST 插值缩放
-- **渲染分级**：按终端尺寸动态选择（全尺寸 64×96 / 中等 48×72 / 紧凑 32×48 / 纯文字）
+- **渲染分级**：按终端尺寸动态选择（全尺寸 64×96 / 中等 48×72 / 紧凑 32×48 / 预览 56×84 / 纯文字）
 - **动画**：使用 Textual `offset`/`opacity` 属性动画，不依赖浏览器式 3D 翻转
 - **DrawnCard** 使用组合模式（持有 `Card` 引用），不继承 `Card`
-- **AI 后端**：通过 `AIConfig.backend` 注册，实现 `AIInterpreter` 协议即可扩展
 
 ## 测试要求
 
 - 使用 pytest + pytest-asyncio
 - Textual 交互测试用 `app.run_test()` (pilot)
 - AI 后端测试用 mock
-- 核心覆盖：牌组完整性、洗牌无重复、逆位概率、牌阵位置数、Journal 序列化、AI 降级流程
+- 核心覆盖：牌组完整性、洗牌无重复、逆位概率、牌阵位置数
 
 ---
 
