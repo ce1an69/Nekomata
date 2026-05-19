@@ -1,0 +1,28 @@
+{
+  "arcana_labels": {
+    "all": "全部",
+    "major": "大阿卡纳",
+    "cups": "圣杯",
+    "wands": "权杖",
+    "swords": "宝剑",
+    "pentacles": "星币"
+  },
+  "loading_messages": [
+    "猫咪正在拨开牌雾...",
+    "猫爪轻点命运牌面...",
+    "猫又正在听取星星的低语...",
+    "塔罗猫在整理灵感...",
+    "月光下的小猫正在解牌...",
+    "猫尾轻扫水晶球...",
+    "占卜猫正在翻找灵感小鱼...",
+    "猫耳捕捉远方的预兆...",
+    "猫咪把问题叼给星辰...",
+    "牌桌上的猫影正在成形..."
+  ],
+  "loading_frames": ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
+  "ornament": "─── ✦ ───",
+  "stream_tick_ms": 25,
+  "stream_chars_per_tick": 3,
+  "loading_interval_ms": 80,
+  "loading_message_interval_s": 2.0
+}

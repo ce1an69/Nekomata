@@ -60,21 +60,18 @@ from nekomata.spread import get_spread
 
 STREAM_TYPE_INTERVAL = 0.025
 STREAM_CHARS_PER_TICK = 3
-_LOADING_FRAMES = ("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏")
-_LOADING_INTERVAL = 0.08
-_LOADING_MESSAGE_INTERVAL = 2.0
-_LOADING_MESSAGES = (
-    "猫咪正在拨开牌雾...",
-    "猫爪轻点命运牌面...",
-    "猫又正在听取星星的低语...",
-    "塔罗猫在整理灵感...",
-    "月光下的小猫正在解牌...",
-    "猫尾轻扫水晶球...",
-    "占卜猫正在翻找灵感小鱼...",
-    "猫耳捕捉远方的预兆...",
-    "猫咪把问题叼给星辰...",
-    "牌桌上的猫影正在成形...",
+
+# Shared UI strings from data/ui_strings.json
+import json as _json
+from pathlib import Path as _Path
+
+_UI_STRINGS = _json.loads(
+    (_Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
 )
+_LOADING_FRAMES = tuple(_UI_STRINGS["loading_frames"])
+_LOADING_INTERVAL = _UI_STRINGS["loading_interval_ms"] / 1000.0
+_LOADING_MESSAGE_INTERVAL = _UI_STRINGS["loading_message_interval_s"]
+_LOADING_MESSAGES = tuple(_UI_STRINGS["loading_messages"])
 DETAIL_PANEL_WIDTH = 66
 INTERP_PANEL_HEIGHT = "46%"
 INTERP_MIN_HEIGHT = 14

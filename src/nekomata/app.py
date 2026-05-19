@@ -120,8 +120,19 @@ class NekomataApp(App):
 
 
 def main() -> None:
-    app = NekomataApp()
-    app.run()
+    import argparse
+
+    parser = argparse.ArgumentParser(prog="nekomata")
+    parser.add_argument("--web", action="store_true", help="Launch web UI")
+    parser.add_argument("--port", type=int, default=8080, help="Web server port")
+    args = parser.parse_args()
+
+    if args.web:
+        from nekomata.web.server import start_web_server
+        start_web_server(port=args.port)
+    else:
+        app = NekomataApp()
+        app.run()
 
 
 if __name__ == "__main__":
