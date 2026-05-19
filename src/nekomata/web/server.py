@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from nekomata.ai.interpreter import InterpretationError, get_interpreter
 from nekomata.card.data import load_all_cards
-from nekomata.card.types import ARCANA_ZH, Arcana, Card, DrawnCard, Position
+from nekomata.card.types import ARCANA_ZH, Card, DrawnCard, Position
 from nekomata.render.styles import (
     C_BASE,
     C_CRUST,
@@ -201,9 +201,12 @@ def create_app() -> FastAPI:
 
         try:
             interp = get_interpreter(config)
-        except InterpretationError as e:
+        except InterpretationError as exc:
+            err_msg = str(exc)
+
             async def _err_setup():
-                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                yield f"data: {json.dumps({'error': err_msg})}\n\n"
+
             return StreamingResponse(_err_setup(), media_type="text/event-stream")
 
         async def _stream():
