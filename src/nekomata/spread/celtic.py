@@ -23,3 +23,7 @@ class CelticCross(Spread):
             Position(name="Guidance", name_zh="指引", description="建议的行动方向"),
             Position(name="Final Outcome", name_zh="最终结果", description="整体局势的最终走向"),
         ]
+
+    @property
+    def display_order(self) -> list[int]:
+        return [4, 0, 1, 5, 9, 3, 2, 6, 7, 8]

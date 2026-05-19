@@ -10,6 +10,17 @@ from textual.screen import Screen
 from textual.timer import Timer
 from textual.widgets import Input, Static
 
+from nekomata.render.styles import (
+    C_CRUST,
+    C_MANTLE,
+    C_MAUVE,
+    C_OVERLAY0,
+    C_SUBTEXT0,
+    C_SURFACE0,
+    C_SURFACE1,
+    C_TEXT,
+)
+
 SLASH_COMMANDS = {
     "/browse": ("card_browser", "Browse all 78 cards"),
     "/help": ("help", "Show available commands"),
@@ -35,76 +46,76 @@ class HomeScreen(Screen):
         Binding("q", "quit_if_empty", "Quit", priority=True),
     ]
 
-    DEFAULT_CSS = """
-    HomeScreen {
+    DEFAULT_CSS = f"""
+    HomeScreen {{
         align: center middle;
-    }
-    HomeScreen #home-stack {
+    }}
+    HomeScreen #home-stack {{
         width: 72;
         height: auto;
         align: center middle;
-        border: round #313244;
-        background: #181825;
+        border: round {C_SURFACE0};
+        background: {C_MANTLE};
         padding: 1 2;
         transition: opacity 300ms out_cubic;
-    }
-    HomeScreen #title {
+    }}
+    HomeScreen #title {{
         margin-bottom: 1;
         width: 100%;
-        background: #181825;
-        color: #cba6f7;
+        background: {C_MANTLE};
+        color: {C_MAUVE};
         text-align: center;
         text-style: bold;
-    }
-    HomeScreen #ornament, HomeScreen #ornament-bottom {
+    }}
+    HomeScreen #ornament, HomeScreen #ornament-bottom {{
         display: none;
-    }
-    HomeScreen #ornament {
+    }}
+    HomeScreen #ornament {{
         margin-bottom: 1;
-    }
-    HomeScreen #ornament-bottom {
+    }}
+    HomeScreen #ornament-bottom {{
         margin-top: 1;
-    }
-    HomeScreen #input-area {
+    }}
+    HomeScreen #input-area {{
         width: 100%;
         height: auto;
         align: center top;
-        background: #181825;
-    }
-    HomeScreen #prompt-input {
+        background: {C_MANTLE};
+    }}
+    HomeScreen #prompt-input {{
         width: 100%;
         height: 3;
-        border: round #45475a;
+        border: round {C_SURFACE1};
         background: #1e1e2e;
-        color: #cdd6f4;
+        color: {C_TEXT};
         padding: 0 1;
-    }
-    HomeScreen #prompt-input:focus {
-        border: round #cba6f7;
-        background: #181825;
-    }
-    HomeScreen #command-suggestions {
+    }}
+    HomeScreen #prompt-input:focus {{
+        border: round {C_MAUVE};
+        background: {C_MANTLE};
+    }}
+    HomeScreen #command-suggestions {{
         width: 100%;
         height: auto;
         margin-top: 1;
         padding: 0 1;
-        border: round #313244;
-        color: #a6adc8;
-        background: #11111b;
+        border: round {C_SURFACE0};
+        color: {C_SUBTEXT0};
+        background: {C_CRUST};
         transition: opacity 250ms out_cubic, offset 250ms out_cubic;
-    }
-    HomeScreen .command-highlight {
-        color: #cba6f7;
+    }}
+    HomeScreen .command-highlight {{
+        color: {C_MAUVE};
         text-style: bold;
-    }
-    HomeScreen #hints {
+    }}
+    HomeScreen #hints {{
         width: 100%;
         height: auto;
-        background: #181825;
-        color: #6c7086;
+        background: {C_MANTLE};
+        color: {C_OVERLAY0};
         text-align: center;
         margin-top: 1;
-    }
+    }}
     """
 
     def __init__(self) -> None:

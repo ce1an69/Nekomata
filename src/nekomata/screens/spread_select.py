@@ -9,7 +9,15 @@ from textual.widgets import Static
 from textual.css.scalar import ScalarOffset
 from textual.geometry import Offset
 
-from nekomata.render.animations import animate_fade_in, animate_slide_in
+from nekomata.render.styles import (
+    C_CRUST,
+    C_MANTLE,
+    C_MAUVE,
+    C_OVERLAY0,
+    C_SUBTEXT0,
+    C_SURFACE0,
+    C_TEXT,
+)
 from nekomata.spread import SPREAD_REGISTRY
 
 
@@ -18,31 +26,31 @@ class SpreadOption(Static):
 
     can_focus = True
 
-    DEFAULT_CSS = """
-    SpreadOption {
+    DEFAULT_CSS = f"""
+    SpreadOption {{
         height: 3;
         padding: 0 2;
         margin-bottom: 1;
-        border: round #181825;
-        background: #181825;
-        color: #a6adc8;
+        border: round {C_MANTLE};
+        background: {C_MANTLE};
+        color: {C_SUBTEXT0};
         transition: offset 300ms out_cubic, opacity 300ms out_cubic,
                     background 200ms, border 200ms, color 200ms;
-    }
-    SpreadOption:hover {
+    }}
+    SpreadOption:hover {{
         background: #1e1e2e;
-        color: #cdd6f4;
-    }
-    SpreadOption:focus {
+        color: {C_TEXT};
+    }}
+    SpreadOption:focus {{
         background: #1e1e2e;
-        border: round #cba6f7;
-        color: #cdd6f4;
+        border: round {C_MAUVE};
+        color: {C_TEXT};
         text-style: bold;
-    }
-    SpreadOption.back {
+    }}
+    SpreadOption.back {{
         margin-top: 1;
-        color: #a6adc8;
-    }
+        color: {C_SUBTEXT0};
+    }}
     """
 
     class Selected(Message):
@@ -74,74 +82,74 @@ class SpreadSelectScreen(Screen):
         ("escape", "go_back", "Back"),
     ]
 
-    DEFAULT_CSS = """
-    SpreadSelectScreen {
+    DEFAULT_CSS = f"""
+    SpreadSelectScreen {{
         align: center middle;
-    }
-    SpreadSelectScreen #spread-shell {
+    }}
+    SpreadSelectScreen #spread-shell {{
         width: 86;
         height: auto;
-    }
-    SpreadSelectScreen #question {
+    }}
+    SpreadSelectScreen #question {{
         text-align: center;
-        color: #cdd6f4;
-        border: round #313244;
-        background: #181825;
+        color: {C_TEXT};
+        border: round {C_SURFACE0};
+        background: {C_MANTLE};
         padding: 0 2;
         margin-bottom: 1;
         width: 100%;
-    }
-    SpreadSelectScreen #prompt {
+    }}
+    SpreadSelectScreen #prompt {{
         text-align: center;
-        color: #cba6f7;
+        color: {C_MAUVE};
         text-style: bold;
         margin-bottom: 1;
-    }
-    SpreadSelectScreen #spread-body {
+    }}
+    SpreadSelectScreen #spread-body {{
         height: auto;
-    }
-    SpreadSelectScreen #spread-buttons {
+    }}
+    SpreadSelectScreen #spread-buttons {{
         width: 44;
         height: auto;
-        border: round #313244;
-        background: #181825;
+        border: round {C_SURFACE0};
+        background: {C_MANTLE};
         padding: 1 1;
-    }
-    SpreadSelectScreen #spread-preview {
+    }}
+    SpreadSelectScreen #spread-preview {{
         width: 1fr;
         height: 100%;
-        color: #6c7086;
+        color: {C_OVERLAY0};
         text-align: left;
         margin-left: 1;
         margin-bottom: 0;
-        border: round #313244;
-        background: #11111b;
+        border: round {C_SURFACE0};
+        background: {C_CRUST};
         padding: 1 2;
         transition: opacity 250ms out_cubic;
-    }
-    SpreadSelectScreen #preview-title {
-        background: #11111b;
-        color: #cba6f7;
+    }}
+    SpreadSelectScreen #preview-title {{
+        background: {C_CRUST};
+        color: {C_MAUVE};
         text-style: bold;
         margin-bottom: 1;
-    }
-    SpreadSelectScreen #preview-desc {
-        background: #11111b;
-        color: #a6adc8;
+    }}
+    SpreadSelectScreen #preview-desc {{
+        background: {C_CRUST};
+        color: {C_SUBTEXT0};
         margin-bottom: 1;
-    }
-    SpreadSelectScreen #preview-positions {
-        background: #11111b;
-        color: #6c7086;
+    }}
+    SpreadSelectScreen #preview-positions {{
+        background: {C_CRUST};
+        color: {C_OVERLAY0};
         padding: 0 2;
-    }
-    SpreadSelectScreen #hints {
+    }}
+    SpreadSelectScreen #hints {{
         width: 100%;
         height: auto;
-        color: #6c7086;
+        color: {C_OVERLAY0};
         text-align: center;
         margin-top: 1;
-    }
+    }}
     """
 
     def compose(self) -> ComposeResult:

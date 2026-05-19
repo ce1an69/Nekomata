@@ -26,6 +26,11 @@ class Spread:
         """Cards drawn into this spread (copy to prevent mutation)."""
         return list(self._drawn_cards)
 
+    @property
+    def display_order(self) -> list[int]:
+        """Visual layout order for grid display. Override for custom layouts."""
+        return list(range(len(self._positions)))
+
     def draw(self, deck: Deck, reversal_prob: float = 0.5) -> None:
         """Draw one card per position from the deck, clearing any previous draw.
 

@@ -18,3 +18,7 @@ class FiveCardCross(Spread):
             Position(name="Past", name_zh="过去", description="近期影响"),
             Position(name="Guidance", name_zh="指引", description="建议方向"),
         ]
+
+    @property
+    def display_order(self) -> list[int]:
+        return [4, 0, 1, 3, 2]

@@ -9,6 +9,16 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import Input, Static
 
+from nekomata.render.styles import (
+    C_MANTLE,
+    C_MAUVE,
+    C_OVERLAY0,
+    C_RED,
+    C_SUBTEXT0,
+    C_SURFACE0,
+    C_SURFACE1,
+    C_TEXT,
+)
 from nekomata.storage.config import AppConfig
 
 
@@ -34,129 +44,129 @@ class SetupScreen(Screen):
         Binding("q", "quit", "Quit"),
     ]
 
-    DEFAULT_CSS = """
-    SetupScreen {
+    DEFAULT_CSS = f"""
+    SetupScreen {{
         align: center middle;
-    }
-    SetupScreen #setup-stack {
+    }}
+    SetupScreen #setup-stack {{
         width: 60;
         height: auto;
         align: center middle;
-        border: round #313244;
-        background: #181825;
+        border: round {C_SURFACE0};
+        background: {C_MANTLE};
         padding: 1 2;
-    }
-    SetupScreen #setup-title {
+    }}
+    SetupScreen #setup-title {{
         margin-bottom: 0;
         width: 100%;
-        background: #181825;
-        color: #cba6f7;
+        background: {C_MANTLE};
+        color: {C_MAUVE};
         text-align: center;
         text-style: bold;
-    }
-    SetupScreen #setup-subtitle {
+    }}
+    SetupScreen #setup-subtitle {{
         width: 100%;
         height: auto;
-        background: #181825;
-        color: #a6adc8;
+        background: {C_MANTLE};
+        color: {C_SUBTEXT0};
         text-align: center;
         margin-bottom: 1;
-    }
-    SetupScreen #setup-ornament-top {
-        background: #181825;
-        color: #45475a;
+    }}
+    SetupScreen #setup-ornament-top {{
+        background: {C_MANTLE};
+        color: {C_SURFACE1};
         text-align: center;
         height: 1;
         margin-bottom: 1;
-    }
-    SetupScreen #setup-ornament-bottom {
-        background: #181825;
-        color: #45475a;
+    }}
+    SetupScreen #setup-ornament-bottom {{
+        background: {C_MANTLE};
+        color: {C_SURFACE1};
         text-align: center;
         height: 1;
         margin-bottom: 1;
-    }
-    SetupScreen .field-label {
+    }}
+    SetupScreen .field-label {{
         width: 100%;
         height: auto;
-        background: #181825;
-        color: #a6adc8;
+        background: {C_MANTLE};
+        color: {C_SUBTEXT0};
         margin-bottom: 0;
-    }
-    SetupScreen #api-url-input {
+    }}
+    SetupScreen #api-url-input {{
         width: 100%;
         height: 3;
         margin-bottom: 1;
-        border: round #45475a;
+        border: round {C_SURFACE1};
         background: #1e1e2e;
-        color: #cdd6f4;
+        color: {C_TEXT};
         padding: 0 1;
-    }
-    SetupScreen #api-url-input:focus {
-        border: round #cba6f7;
-        background: #181825;
-    }
-    SetupScreen #api-key-input {
+    }}
+    SetupScreen #api-url-input:focus {{
+        border: round {C_MAUVE};
+        background: {C_MANTLE};
+    }}
+    SetupScreen #api-key-input {{
         width: 100%;
         height: 3;
         margin-bottom: 1;
-        border: round #45475a;
+        border: round {C_SURFACE1};
         background: #1e1e2e;
-        color: #cdd6f4;
+        color: {C_TEXT};
         padding: 0 1;
-    }
-    SetupScreen #api-key-input:focus {
-        border: round #cba6f7;
-        background: #181825;
-    }
-    SetupScreen #model-input {
+    }}
+    SetupScreen #api-key-input:focus {{
+        border: round {C_MAUVE};
+        background: {C_MANTLE};
+    }}
+    SetupScreen #model-input {{
         width: 100%;
         height: 3;
         margin-bottom: 1;
-        border: round #45475a;
+        border: round {C_SURFACE1};
         background: #1e1e2e;
-        color: #cdd6f4;
+        color: {C_TEXT};
         padding: 0 1;
-    }
-    SetupScreen #model-input:focus {
-        border: round #cba6f7;
-        background: #181825;
-    }
-    SetupButton {
+    }}
+    SetupScreen #model-input:focus {{
+        border: round {C_MAUVE};
+        background: {C_MANTLE};
+    }}
+    SetupButton {{
         width: 12;
         height: 3;
         margin-top: 1;
         padding: 0 2;
         background: #1e1e2e;
-        border: round #cba6f7;
-        color: #cba6f7;
+        border: round {C_MAUVE};
+        color: {C_MAUVE};
         content-align: center middle;
-    }
-    SetupButton:hover {
-        background: #313244;
-        color: #cdd6f4;
-    }
-    SetupButton:focus {
-        background: #313244;
-        border: round #cba6f7;
-        color: #cdd6f4;
+    }}
+    SetupButton:hover {{
+        background: {C_SURFACE0};
+        color: {C_TEXT};
+    }}
+    SetupButton:focus {{
+        background: {C_SURFACE0};
+        border: round {C_MAUVE};
+        color: {C_TEXT};
         text-style: bold;
-    }
-    SetupScreen #setup-error {
-        background: #181825;
-        color: #f38ba8;
+    }}
+    SetupScreen #setup-error {{
+        background: {C_MANTLE};
+        color: {C_RED};
         text-align: center;
         height: auto;
         margin-top: 1;
-    }
-    SetupScreen #setup-hints {
+    }}
+    SetupScreen #setup-hints {{
         width: 100%;
         height: auto;
-        background: #181825;
-        color: #6c7086;
+        background: {C_MANTLE};
+        color: {C_OVERLAY0};
         text-align: center;
         margin-top: 1;
-    }
+    }}
     """
 
     def compose(self) -> ComposeResult:

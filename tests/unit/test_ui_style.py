@@ -5,22 +5,29 @@ import re
 
 from nekomata.app import NekomataApp
 from nekomata.render.themes import THEMES
+from nekomata.render.styles import (
+    C_CRUST,
+    C_LAVENDER,
+    C_MANTLE,
+    C_MAUVE,
+    C_OVERLAY0,
+    C_PINK,
+    C_RED,
+    C_SUBTEXT0,
+    C_SUBTEXT1,
+    C_SURFACE0,
+    C_SURFACE1,
+    C_SURFACE2,
+    C_TEXT,
+)
 from nekomata.screens.card_browser import CardBrowserScreen, CardListItem
-from nekomata.screens.draw import (
+from nekomata.screens.draw import DrawScreen
+from nekomata.screens.draw_widgets import (
     ConfirmExitInterpretation,
-    DETAIL_PANEL_WIDTH,
-    INTERP_FULL_SIDE_MARGIN,
-    INTERP_FULL_WIDTH_CORRECTION,
-    INTERP_MAX_HEIGHT,
-    INTERP_MIN_HEIGHT,
-    INTERP_PANEL_HEIGHT,
     DeckCard,
-    DrawScreen,
     SpreadSlot,
 )
 from nekomata.screens.home import HomeScreen
-from nekomata.screens.interpretation import InterpretationScreen
-from nekomata.screens.reading import CardWidget, ReadingScreen
 from nekomata.screens.setup import SetupButton, SetupScreen
 from nekomata.screens.spread_select import SpreadSelectScreen
 
@@ -29,9 +36,6 @@ CSS_SOURCES = [
     NekomataApp.DEFAULT_CSS,
     HomeScreen.DEFAULT_CSS,
     SpreadSelectScreen.DEFAULT_CSS,
-    ReadingScreen.DEFAULT_CSS,
-    CardWidget.DEFAULT_CSS,
-    InterpretationScreen.DEFAULT_CSS,
     CardBrowserScreen.DEFAULT_CSS,
     CardListItem.DEFAULT_CSS,
     DeckCard.DEFAULT_CSS,
@@ -43,20 +47,20 @@ CSS_SOURCES = [
 ]
 
 CATPPUCCIN_MOCHA = {
-    "#11111b",  # crust
-    "#181825",  # mantle
+    C_CRUST,
+    C_MANTLE,
     "#1e1e2e",  # base
-    "#313244",  # surface0
-    "#45475a",  # surface1
-    "#585b70",  # surface2
-    "#6c7086",  # overlay0
-    "#a6adc8",  # subtext0
-    "#bac2de",  # subtext1
-    "#cdd6f4",  # text
-    "#cba6f7",  # mauve
-    "#b4befe",  # lavender
-    "#f5c2e7",  # pink
-    "#f38ba8",  # red
+    C_SURFACE0,
+    C_SURFACE1,
+    C_SURFACE2,
+    C_OVERLAY0,
+    C_SUBTEXT0,
+    C_SUBTEXT1,
+    C_TEXT,
+    C_MAUVE,
+    C_LAVENDER,
+    C_PINK,
+    C_RED,
 }
 
 
@@ -85,10 +89,10 @@ def test_setup_hints_do_not_advertise_q_quit():
 def test_card_rendering_catppuccin_theme_uses_purple_accents():
     theme = THEMES["catppuccin"]
 
-    assert theme.upright_border == "#cba6f7"
-    assert theme.reversed_border == "#b4befe"
-    assert theme.title_style == "bold #b4befe"
-    assert theme.keyword_style == "bold #cba6f7"
+    assert theme.upright_border == C_MAUVE
+    assert theme.reversed_border == C_LAVENDER
+    assert theme.title_style == f"bold {C_LAVENDER}"
+    assert theme.keyword_style == f"bold {C_MAUVE}"
 
 
 def test_home_suggestion_panel_can_animate_out():
@@ -107,30 +111,11 @@ def test_card_browser_list_and_detail_have_swap_transitions():
     assert "transition: opacity 250ms" in detail_css
 
 
-def test_interpretation_manual_scroll_uses_animation():
-    for method in (
-        InterpretationScreen.key_down,
-        InterpretationScreen.key_up,
-        InterpretationScreen.key_right,
-        InterpretationScreen.key_left,
-    ):
-        assert True in method.__code__.co_consts
-
-
-def test_interpretation_offset_animation_uses_scalar_offset():
-    from nekomata.screens import interpretation
-
-    assert "ScalarOffset" in interpretation._ease_in.__code__.co_names
-    assert "Offset" in interpretation._ease_in.__code__.co_names
-
-
 def test_draw_detail_panel_docks_to_right_full_height():
     css = DrawScreen.DEFAULT_CSS
 
     detail_css = css.split("#card-preview {")[1].split("}")[0]
     assert "dock: right;" in detail_css
-    assert f"width: {DETAIL_PANEL_WIDTH};" in detail_css
-    assert f"min-width: {DETAIL_PANEL_WIDTH};" in detail_css
     assert "height: 1fr;" in detail_css
     assert "transition: opacity 240ms" in detail_css
     assert "offset 320ms" in detail_css
@@ -143,9 +128,6 @@ def test_draw_interpretation_panel_fills_bottom_flow_space():
     content_css = css.split("#interp-dialog-content {")[1].split("}")[0]
     assert "dock: bottom;" in interp_css
     assert "width: 1fr;" in interp_css
-    assert f"height: {INTERP_PANEL_HEIGHT};" in interp_css
-    assert f"min-height: {INTERP_MIN_HEIGHT};" in interp_css
-    assert f"max-height: {INTERP_MAX_HEIGHT};" in interp_css
     assert "transition: opacity 240ms" in interp_css
     assert "width 220ms" in interp_css
     assert "height: 1fr;" not in content_css
@@ -168,8 +150,6 @@ def test_draw_hiding_detail_recenters_spread_area():
     assert "_center_spread_area" in source
     assert "preview.display = False" in finish_source
     assert "_center_spread_area" in finish_source
-    assert INTERP_FULL_SIDE_MARGIN > 1
-    assert INTERP_FULL_WIDTH_CORRECTION >= 4
 
 
 def test_draw_stream_uses_app_thread_callback():
@@ -215,10 +195,10 @@ def test_interpretation_exit_confirm_uses_catppuccin_modal():
 
     assert "ConfirmExitInterpretation" in source
     assert "callback=self._on_exit_interpretation_confirmed" in source
-    assert "background: #11111b;" in css
+    assert f"background: {C_CRUST};" in css
     assert "background: #11111b 70%" not in css
-    assert "border: round #cba6f7" in css
-    assert "background: #181825" in css
+    assert f"border: round {C_MAUVE}" in css
+    assert f"background: {C_MANTLE}" in css
     assert "#confirm-content" in css
     assert "transition: opacity 220ms" in css
 

@@ -16,7 +16,8 @@ async def test_three_card_flow():
         await pilot.pause()
         from nekomata.screens.draw import DrawScreen
         assert isinstance(app.screen, DrawScreen)
-        from nekomata.screens.draw import SpreadSlot
+        from nekomata.screens.draw import DrawScreen
+        from nekomata.screens.draw_widgets import SpreadSlot
         slots = app.screen.query(SpreadSlot)
         assert len(slots) == 3
 
@@ -113,7 +114,8 @@ async def test_draw_screen_candidate_grid_uses_all_arrow_keys():
         await pilot.pause()
         await pilot.click("#spread-single")
         await pilot.pause()
-        from nekomata.screens.draw import DeckCard, DrawScreen
+        from nekomata.screens.draw import DrawScreen
+        from nekomata.screens.draw_widgets import DeckCard
         assert isinstance(app.screen, DrawScreen)
 
         cards = list(app.screen.query(DeckCard))
@@ -166,7 +168,8 @@ async def test_draw_screen_ignores_repeated_pick_on_same_card():
         await pilot.pause()
         await pilot.click("#spread-past_present_future")
         await pilot.pause()
-        from nekomata.screens.draw import DeckCard, DrawScreen, SpreadSlot
+        from nekomata.screens.draw import DrawScreen
+        from nekomata.screens.draw_widgets import DeckCard, SpreadSlot
         assert isinstance(app.screen, DrawScreen)
 
         cards = list(app.screen.query(DeckCard))
@@ -196,7 +199,8 @@ async def test_draw_screen_keeps_focus_on_picked_card():
         await pilot.pause()
         await pilot.click("#spread-past_present_future")
         await pilot.pause()
-        from nekomata.screens.draw import DeckCard, DrawScreen
+        from nekomata.screens.draw import DrawScreen
+        from nekomata.screens.draw_widgets import DeckCard
         assert isinstance(app.screen, DrawScreen)
 
         cards = list(app.screen.query(DeckCard))
@@ -235,7 +239,8 @@ async def test_draw_screen_spread_slots_use_all_arrow_keys_after_pick():
                 await pilot.pause(0.1)
         await pilot.pause(1.0)
 
-        from nekomata.screens.draw import DrawScreen, SpreadSlot
+        from nekomata.screens.draw import DrawScreen
+        from nekomata.screens.draw_widgets import SpreadSlot
         assert isinstance(app.screen, DrawScreen)
         slots = list(app.screen.query(SpreadSlot))
         assert app.screen.focused is slots[0]
@@ -458,7 +463,8 @@ async def test_q_during_interpretation_confirms_then_returns_home():
         await pilot.press("enter")
         await pilot.pause(1.0)
 
-        from nekomata.screens.draw import ConfirmExitInterpretation, DrawScreen
+        from nekomata.screens.draw import DrawScreen
+        from nekomata.screens.draw_widgets import ConfirmExitInterpretation
         from nekomata.screens.home import HomeScreen
 
         assert isinstance(app.screen, DrawScreen)
