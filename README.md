@@ -14,6 +14,7 @@
 - AI 解牌（支持 Ollama / 远程 API / 本地模板降级）
 - 占卜历史记录（SQLite）
 - 可配置用户设置（TOML）
+- Web UI：浏览器内占卜界面（`--web` 启动）
 
 ## 安装
 
@@ -29,10 +30,12 @@ uv sync               # 安装运行时依赖
 ## 使用
 
 ```bash
-nekomata
+nekomata           # 终端 TUI 模式
+nekomata --web     # 浏览器 Web UI 模式（默认端口 8080）
+nekomata --web --port 3000  # 指定端口
 ```
 
-### 键盘快捷键
+### 键盘快捷键（TUI 模式）
 
 | 按键 | 功能 |
 |------|------|
@@ -56,6 +59,7 @@ nekomata
 | 牌面渲染 | rich-pixels |
 | 图像处理 | Pillow |
 | AI 解牌 | OpenAI-compatible 接口 |
+| Web UI | FastAPI + vanilla JS |
 | 牌义数据 | YAML |
 | 历史记录 | SQLite |
 | 用户配置 | TOML |
@@ -70,11 +74,14 @@ src/nekomata/
   render/         # PNG 渲染、动画、主题
   ai/             # AI 解牌接口 + prompt 模板
   storage/        # Journal SQLite + TOML 配置读写
+  web/            # FastAPI Web UI 服务
+    static/       # 前端静态文件（HTML/JS/CSS）
 assets/
   cards/          # 78 张像素风猫咪塔罗牌 PNG
   ui/             # UI 装饰像素图
 data/
   card_meanings.yaml  # 78 张牌正逆位释义
+  ui_strings.json     # 共享 UI 文案（加载提示、装饰符等）
 config.toml           # 用户配置
 ```
 
@@ -82,6 +89,7 @@ config.toml           # 用户配置
 
 ```bash
 uv sync --extra dev   # 安装开发依赖（pytest 等）
+uv sync --extra web   # 安装 Web UI 依赖（FastAPI 等）
 uv run pytest         # 运行测试
 ```
 
