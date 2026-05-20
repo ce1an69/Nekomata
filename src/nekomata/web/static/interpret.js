@@ -11,7 +11,7 @@ export class InterpretationController {
         this._loadTimer = null;
     }
 
-    async start(drawnCards, question, strings) {
+    async start(drawnCards, question, strings, spreadKey = '') {
         this._container.innerHTML = '';
         this._showLoading(true, strings);
         this._abortController = new AbortController();
@@ -22,6 +22,7 @@ export class InterpretationController {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     question,
+                    spread_key: spreadKey,
                     cards: drawnCards.map(dc => ({
                         card_id: dc.card.id,
                         position_name: dc.position.name,

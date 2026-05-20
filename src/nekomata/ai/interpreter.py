@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Generator, Protocol, runtime_checkable
 
 from nekomata.card.types import DrawnCard
-from nekomata.ai.prompts import SYSTEM_PROMPT, build_interpretation_prompt
+from nekomata.ai.prompts import build_user_prompt, load_spread_prompt, load_system_prompt
 from nekomata.storage.config import AppConfig
 
 log = logging.getLogger(__name__)
@@ -57,11 +57,15 @@ def _cards_info(drawn_cards: list[DrawnCard]) -> str:
     return "\n".join(lines)
 
 
-def _build_messages(style: str, question: str, drawn_cards: list[DrawnCard]) -> list[dict]:
+def _build_messages(style: str, question: str, drawn_cards: list[DrawnCard], spread_key: str = "") -> list[dict]:
     """Build the system + user message list for the OpenAI chat API."""
+    system_content = load_system_prompt().format(style=style)
+    spread_prompt = load_spread_prompt(spread_key) if spread_key else ""
+    if spread_prompt:
+        system_content += "\n\n" + spread_prompt
     return [
-        {"role": "system", "content": SYSTEM_PROMPT.format(style=style)},
-        {"role": "user", "content": build_interpretation_prompt(question, _cards_info(drawn_cards))},
+        {"role": "system", "content": system_content},
+        {"role": "user", "content": build_user_prompt(question, _cards_info(drawn_cards))},
     ]
 
 
@@ -78,11 +82,11 @@ class OpenAIInterpreter:
         self._url = f"{base_url.rstrip('/')}/chat/completions"
         self._api_key = api_key
 
-    def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str:
+    def interpret(self, drawn_cards: list[DrawnCard], question: str, spread_key: str = "") -> str:
         """Send cards and question to the API and return the interpretation."""
         payload = json.dumps({
             "model": self._model,
-            "messages": _build_messages(_DEFAULT_STYLE, question, drawn_cards),
+            "messages": _build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key),
             "stream": False,
         }).encode()
 
@@ -104,12 +108,12 @@ class OpenAIInterpreter:
             raise InterpretationError(str(e), retryable=False) from e
 
     def interpret_stream(
-        self, drawn_cards: list[DrawnCard], question: str
+        self, drawn_cards: list[DrawnCard], question: str, spread_key: str = ""
     ) -> Generator[StreamChunk, None, None]:
         """Yield text chunks from the streaming API (SSE)."""
         payload = json.dumps({
             "model": self._model,
-            "messages": _build_messages(_DEFAULT_STYLE, question, drawn_cards),
+            "messages": _build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key),
             "stream": True,
         }).encode()
 

@@ -3,7 +3,6 @@ from nekomata.card.types import Card, Arcana
 from nekomata.spread.single import SingleCardSpread
 from nekomata.spread.three_card import PastPresentFuture, SituationActionResult, BodyMindSpirit
 from nekomata.spread.five_card import FiveCardCross
-from nekomata.spread.celtic import CelticCross
 from nekomata.spread import get_spread, SPREAD_REGISTRY
 
 
@@ -22,40 +21,39 @@ def make_deck(n: int = 10) -> Deck:
 
 class TestSingleCardSpread:
     def test_name(self):
-        s = SingleCardSpread()
+        s = get_spread("single")
         assert s.name == "Single Card"
-        assert s.name_zh == "单牌"
 
     def test_position_count(self):
-        assert len(SingleCardSpread().positions) == 1
+        assert len(get_spread("single").positions) == 1
 
     def test_draw(self):
-        spread = SingleCardSpread()
+        spread = get_spread("single")
         deck = make_deck()
         spread.draw(deck)
         assert len(spread.drawn_cards) == 1
-        assert spread.drawn_cards[0].position.name_zh == "今日指引"
+        assert spread.drawn_cards[0].position.name == "Daily Guidance"
         assert deck.remaining == 9
 
 
 class TestThreeCardSpreads:
     def test_past_present_future(self):
-        s = PastPresentFuture()
+        s = get_spread("past_present_future")
         assert len(s.positions) == 3
-        assert [p.name_zh for p in s.positions] == ["过去", "现在", "未来"]
+        assert [p.name for p in s.positions] == ["Past", "Present", "Future"]
 
     def test_situation_action_result(self):
-        s = SituationActionResult()
+        s = get_spread("situation_action_result")
         assert len(s.positions) == 3
-        assert [p.name_zh for p in s.positions] == ["处境", "行动", "结果"]
+        assert [p.name for p in s.positions] == ["Situation", "Action", "Result"]
 
     def test_body_mind_spirit(self):
-        s = BodyMindSpirit()
+        s = get_spread("body_mind_spirit")
         assert len(s.positions) == 3
-        assert [p.name_zh for p in s.positions] == ["身", "心", "灵"]
+        assert [p.name for p in s.positions] == ["Body", "Mind", "Spirit"]
 
     def test_draw_three(self):
-        spread = PastPresentFuture()
+        spread = get_spread("past_present_future")
         deck = make_deck()
         spread.draw(deck)
         assert len(spread.drawn_cards) == 3
@@ -63,14 +61,14 @@ class TestThreeCardSpreads:
 
 
 def test_draw_populates_drawn_cards():
-    spread = SingleCardSpread()
+    spread = get_spread("single")
     assert len(spread.drawn_cards) == 0
     spread.draw(make_deck())
     assert len(spread.drawn_cards) == 1
 
 
 def test_redraw_clears_previous():
-    spread = SingleCardSpread()
+    spread = get_spread("single")
     deck = make_deck(20)
     spread.draw(deck)
     first = spread.drawn_cards[0].card.id
@@ -81,49 +79,30 @@ def test_redraw_clears_previous():
 
 class TestFiveCardCross:
     def test_position_count(self):
-        assert len(FiveCardCross().positions) == 5
+        assert len(get_spread("five_card_cross").positions) == 5
 
     def test_draw(self):
-        spread = FiveCardCross()
+        spread = get_spread("five_card_cross")
         deck = make_deck(10)
         spread.draw(deck)
         assert len(spread.drawn_cards) == 5
         assert deck.remaining == 5
 
     def test_position_names(self):
-        assert [p.name_zh for p in FiveCardCross().positions] == [
-            "现状", "挑战", "根基", "过去", "指引"
+        assert [p.name for p in get_spread("five_card_cross").positions] == [
+            "Present", "Challenge", "Foundation", "Past", "Guidance"
         ]
-
-
-class TestCelticCross:
-    def test_position_count(self):
-        assert len(CelticCross().positions) == 10
-
-    def test_draw(self):
-        spread = CelticCross()
-        deck = make_deck(15)
-        spread.draw(deck)
-        assert len(spread.drawn_cards) == 10
-        assert deck.remaining == 5
-
-    def test_position_names(self):
-        names = [p.name_zh for p in CelticCross().positions]
-        assert names[0] == "当前处境"
-        assert names[9] == "最终结果"
 
 
 class TestSpreadRegistry:
     def test_registry_has_five_entries(self):
         assert len(SPREAD_REGISTRY) == 5
-        assert all(key != "celtic_cross" for key, _, _ in SPREAD_REGISTRY)
 
     def test_get_spread_returns_correct_type(self):
         assert isinstance(get_spread("single"), SingleCardSpread)
         assert isinstance(get_spread("past_present_future"), PastPresentFuture)
-        import pytest
-        with pytest.raises(KeyError):
-            get_spread("celtic_cross")
+        with __import__("pytest").raises(KeyError):
+            get_spread("nonexistent")
 
     def test_get_spread_raises_for_unknown_key(self):
         import pytest
@@ -131,20 +110,21 @@ class TestSpreadRegistry:
             get_spread("nonexistent")
 
     def test_registry_keys_match_get_spread(self):
-        for key, _, cls in SPREAD_REGISTRY:
+        for key, cls in SPREAD_REGISTRY:
             assert isinstance(get_spread(key), cls)
 
 
 def test_draw_raises_when_deck_too_small():
     """Spread.draw raises IndexError if deck has fewer cards than positions."""
     import pytest
-    spread = CelticCross()  # requires 10 cards
-    deck = make_deck(5)     # only 5 cards
-    with pytest.raises(IndexError, match="Need 10 cards"):
+    spread = get_spread("five_card_cross")
+    deck = make_deck(3)
+    with pytest.raises(IndexError, match="Need 5 cards"):
         spread.draw(deck)
 
 
 def test_get_spread_injects_description():
-    """get_spread sets the description from the registry."""
+    """get_spread sets the description from JSON."""
     spread = get_spread("single")
-    assert spread.description == "每日灵感"
+    assert spread.description
+    assert spread.suitable_for

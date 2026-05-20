@@ -309,7 +309,7 @@ class DrawScreen(Screen):
         # Header
         with Vertical(id="draw-header"):
             yield Static(
-                Text(f"✦ {self._spread.name_zh} ✦", style=f"bold {C_MAUVE}"),
+                Text(f"✦ {self._spread.name} ✦", style=f"bold {C_MAUVE}"),
                 id="draw-title",
             )
             yield Static(
@@ -337,7 +337,7 @@ class DrawScreen(Screen):
                 yield Static("", id="spread-label")
                 with Horizontal(id="spread-grid"):
                     for i, pos in enumerate(self._ordered_positions):
-                        yield SpreadSlot(i, pos.name_zh)
+                        yield SpreadSlot(i, pos.name)
 
         with VerticalScroll(id="card-preview"):
             yield Static("", id="preview-content")
@@ -434,7 +434,7 @@ class DrawScreen(Screen):
             deck_section.styles.offset = (0, 0)
             remaining = self._n_positions - self._pick_index
             if self._pick_index < self._n_positions:
-                pos_name = self._spread.positions[self._pick_index].name_zh
+                pos_name = self._spread.positions[self._pick_index].name
                 spread_label.update(
                     Text(f"── 牌阵 · 还需选 {remaining} 张 · 下一个: {pos_name} ──", style=f"bold {C_LAVENDER}")
                 )
@@ -925,7 +925,7 @@ class DrawScreen(Screen):
             loop = asyncio.get_running_loop()
 
             def _consume_stream():
-                for chunk in interp.interpret_stream(self._drawn_cards, self._question):
+                for chunk in interp.interpret_stream(self._drawn_cards, self._question, self._spread_key):
                     if self._cancelled:
                         return
                     if isinstance(chunk, str):

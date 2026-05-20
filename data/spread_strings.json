@@ -1,0 +1,99 @@
+{
+  "spreads": {
+    "single": {
+      "name": "Single Card",
+      "description": "命运的轻语——抽取一张牌，聆听宇宙此刻给你的启示。",
+      "suitable_for": "每日灵感、快速直觉、心中有一个简单却萦绕不去的疑问时",
+      "positions": [
+        {
+          "name": "Daily Guidance",
+          "description": "星辰为你点亮的此刻之兆"
+        }
+      ]
+    },
+    "past_present_future": {
+      "name": "Past / Present / Future",
+      "description": "时间的三重帷幕——拨开过去的迷雾，凝视当下的真实，窥见命运之河的流向。",
+      "suitable_for": "想知道事情会如何发展、梳理一段关系的走向、看清某个局面的来龙去脉",
+      "positions": [
+        {
+          "name": "Past",
+          "description": "过去播下的种子，仍在暗中影响着此刻"
+        },
+        {
+          "name": "Present",
+          "description": "此刻你正站在命运的哪个路口"
+        },
+        {
+          "name": "Future",
+          "description": "若顺应目前的轨迹，前方将浮现的景象"
+        }
+      ]
+    },
+    "situation_action_result": {
+      "name": "Situation / Action / Result",
+      "description": "洞察困局的钥匙——看清你身处的迷雾，找到破局的行动，预见结果的光芒。",
+      "suitable_for": "面对一个需要做决定的局面、想知道该如何行动、需要看清某个选择可能带来的后果",
+      "positions": [
+        {
+          "name": "Situation",
+          "description": "你身处的局面，可能并非表面所见"
+        },
+        {
+          "name": "Action",
+          "description": "命运暗示你该迈出的那一步"
+        },
+        {
+          "name": "Result",
+          "description": "若循此路而行，终将抵达的彼岸"
+        }
+      ]
+    },
+    "body_mind_spirit": {
+      "name": "Body / Mind / Spirit",
+      "description": "身心灵的三重共鸣——审视你在这三个维度的状态，找回内在的平衡。",
+      "suitable_for": "感觉身心疲惫想要调整、想要更了解自己的内在状态、寻求生活各方面的平衡与方向",
+      "positions": [
+        {
+          "name": "Body",
+          "description": "你的物质世界与身体正在经历什么"
+        },
+        {
+          "name": "Mind",
+          "description": "你的思想与情绪中翻涌的暗流"
+        },
+        {
+          "name": "Spirit",
+          "description": "你的直觉与灵性在低语的真相"
+        }
+      ]
+    },
+    "five_card_cross": {
+      "name": "Five Card Cross",
+      "description": "十字星芒的启示——五张牌交织出困境的全貌：现状、阻碍、根基、来路、指引。",
+      "suitable_for": "面对复杂局面需要多角度分析、想知道问题的根源在哪里、想要全面的指引而非单一答案",
+      "positions": [
+        {
+          "name": "Present",
+          "description": "此刻你正身处漩涡的何处"
+        },
+        {
+          "name": "Challenge",
+          "description": "阻挡你前行的暗影与试炼"
+        },
+        {
+          "name": "Foundation",
+          "description": "隐藏在表象之下的问题根源"
+        },
+        {
+          "name": "Past",
+          "description": "将你带到此处的过往力量"
+        },
+        {
+          "name": "Guidance",
+          "description": "命运之光为你照亮的方向"
+        }
+      ]
+    }
+  }
+}

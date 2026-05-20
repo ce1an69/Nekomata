@@ -83,16 +83,17 @@ def _card_to_dict(card: Card) -> dict:
 
 
 def _spreads_to_list() -> list[dict]:
+    from nekomata.spread import get_spread as _get_spread
     result = []
-    for key, desc, cls in SPREAD_REGISTRY:
-        spread = cls()
+    for key, cls in SPREAD_REGISTRY:
+        spread = _get_spread(key)
         result.append({
             "key": key,
-            "description": desc,
+            "description": spread.description,
+            "suitable_for": spread.suitable_for,
             "name": spread.name,
-            "name_zh": spread.name_zh,
             "positions": [
-                {"name": p.name, "name_zh": p.name_zh, "description": p.description}
+                {"name": p.name, "description": p.description}
                 for p in spread.positions
             ],
             "card_count": len(spread.positions),
@@ -120,6 +121,7 @@ class DrawnCardPayload(BaseModel):
 class InterpretPayload(BaseModel):
     question: str
     cards: list[DrawnCardPayload]
+    spread_key: str = ""
 
 
 # --- App factory ---
@@ -212,7 +214,7 @@ def create_app() -> FastAPI:
         async def _stream():
             loop = asyncio.get_running_loop()
             try:
-                gen = interp.interpret_stream(drawn, req.question)
+                gen = interp.interpret_stream(drawn, req.question, req.spread_key)
                 while True:
                     chunk = await loop.run_in_executor(None, next, gen, None)
                     if chunk is None:
