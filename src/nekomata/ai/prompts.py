@@ -1,21 +1,35 @@
 """AI interpretation prompt templates for tarot readings."""
 
+from pathlib import Path
 
-SYSTEM_PROMPT = """你是一位经验丰富的塔罗占卜师，擅长将塔罗牌义与猫咪的习性巧妙结合。
-你会根据求问者的问题和所抽到的牌面，给出温暖、有洞察力的解读。
+_DATA_DIR = Path(__file__).resolve().parents[3] / "data"
+_PROMPTS_DIR = _DATA_DIR / "prompts"
 
-解读风格：{style}
-
-输出要求：
-- 使用 Markdown 格式
-- 先逐张分析每张牌在其位置上的含义（正位/逆位），再给出整体综合解读
-- 最后用一段简短的话作为总结建议
-- 语言自然亲切，适当融入猫咪比喻
-"""
+_system_prompt: str | None = None
+_spread_prompts: dict[str, str] = {}
 
 
-def build_interpretation_prompt(question: str, cards_info: str) -> str:
-    """Build the user prompt for AI interpretation with question and card details."""
+def load_system_prompt() -> str:
+    """Load and cache the system prompt from data/prompts/system.md."""
+    global _system_prompt
+    if _system_prompt is None:
+        _system_prompt = (_PROMPTS_DIR / "system.md").read_text(encoding="utf-8")
+    return _system_prompt
+
+
+def load_spread_prompt(spread_key: str) -> str:
+    """Load and cache a spread-specific prompt from data/prompts/<key>.md."""
+    if spread_key not in _spread_prompts:
+        path = _PROMPTS_DIR / f"{spread_key}.md"
+        if path.exists():
+            _spread_prompts[spread_key] = path.read_text(encoding="utf-8")
+        else:
+            _spread_prompts[spread_key] = ""
+    return _spread_prompts[spread_key]
+
+
+def build_user_prompt(question: str, cards_info: str) -> str:
+    """Build the user message for AI interpretation."""
     return f"""请为以下占卜进行解读：
 
 求问者的问题：{question}

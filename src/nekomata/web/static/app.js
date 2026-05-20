@@ -311,7 +311,7 @@ function showSpreadPreview(sp) {
     preview.innerHTML = `<h3>${sp.name}</h3>` +
         `<p class="subtext">${sp.description} · ${sp.card_count} 张牌</p>` +
         `<ul class="pos-list">${sp.positions.map((p, i) =>
-            `<li><span class="pos-idx">${i + 1}.</span>${p.name_zh} — ${p.description}</li>`
+            `<li><span class="pos-idx">${i + 1}.</span>${p.name} — ${p.description}</li>`
         ).join('')}</ul>`;
 }
 
@@ -583,7 +583,7 @@ function updateDetailContent() {
 
     panel.innerHTML = imgHtml +
         `<div class="detail-field"><div class="label">${c.name_zh} ${c.name}</div></div>` +
-        `<div class="detail-field"><div class="label">位置</div><div class="value">${dc.position.name_zh} — ${dc.position.description}</div></div>` +
+        `<div class="detail-field"><div class="label">位置</div><div class="value">${dc.position.name} — ${dc.position.description}</div></div>` +
         `<div class="detail-field"><div class="label">状态</div><div class="value">${statusLabel}</div></div>` +
         `<div class="detail-field"><div class="label">关键词</div><div class="value sub">${keywords.join(', ')}</div></div>` +
         `<div class="detail-field"><div class="label">牌义</div><div class="value sub">${meaning}</div></div>` +
@@ -627,7 +627,7 @@ async function startInterpretation() {
     document.getElementById('interp-panel').classList.remove('hidden');
     updateDrawActions();
 
-    await state.interpCtrl.start(state.spread.drawnCards, state.question, state.strings);
+    await state.interpCtrl.start(state.spread.drawnCards, state.question, state.strings, state.spreadKey);
 }
 
 // ---------------------------------------------------------------------------

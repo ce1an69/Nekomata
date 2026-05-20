@@ -18,7 +18,7 @@ from nekomata.render.styles import (
     C_SURFACE0,
     C_TEXT,
 )
-from nekomata.spread import SPREAD_REGISTRY
+from nekomata.spread import SPREAD_REGISTRY, get_spread
 
 
 class SpreadOption(Static):
@@ -161,10 +161,11 @@ class SpreadSelectScreen(Screen):
             yield Static("Choose a spread", id="prompt")
             with Horizontal(id="spread-body"):
                 with Vertical(id="spread-buttons"):
-                    for i, (key, _, cls) in enumerate(SPREAD_REGISTRY, 1):
-                        n_pos = len(cls().positions)
+                    for i, (key, cls) in enumerate(SPREAD_REGISTRY, 1):
+                        spread = get_spread(key)
+                        n_pos = len(spread.positions)
                         yield SpreadOption(
-                            f"{i:02d}  {cls.name:<24s} {n_pos:>2d}",
+                            f"  {spread.name:<28s} {n_pos:>2d}",
                             f"spread-{key}",
                         )
                     yield SpreadOption("Q   Back", "back", back=True)
@@ -206,15 +207,15 @@ class SpreadSelectScreen(Screen):
         title = self.query_one("#preview-title", Static)
         desc_text = self.query_one("#preview-desc", Static)
         positions_text = self.query_one("#preview-positions", Static)
-        for key, desc, cls in SPREAD_REGISTRY:
+        for key, cls in SPREAD_REGISTRY:
             if btn_id == f"spread-{key}":
-                spread = cls()
+                spread = get_spread(key)
                 positions = "\n".join(
                     f"{idx:02d}  {position.name}"
                     for idx, position in enumerate(spread.positions, 1)
                 )
                 title.update(spread.name)
-                desc_text.update(desc)
+                desc_text.update(spread.description)
                 positions_text.update(positions)
                 if self.app.animation_enabled:
                     self.set_timer(
@@ -293,7 +294,7 @@ class SpreadSelectScreen(Screen):
         if option_id == "back":
             self.action_go_back()
             return
-        for key, _, _ in SPREAD_REGISTRY:
+        for key, _ in SPREAD_REGISTRY:
             if option_id == f"spread-{key}":
                 self.dismiss(key)
                 return

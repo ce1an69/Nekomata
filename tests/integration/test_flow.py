@@ -292,7 +292,7 @@ async def test_draw_screen_has_spread_info():
         assert isinstance(app.screen, DrawScreen)
         title = app.screen.query_one("#draw-title")
         rendered = str(title.render())
-        assert "单牌" in rendered
+        assert "Single Card" in rendered
 
 
 @pytest.mark.asyncio

@@ -6,11 +6,16 @@ from nekomata.card.types import DrawnCard, Position
 
 
 class Spread:
-    """Base class for all tarot card spreads."""
+    """Base class for all tarot card spreads.
+
+    Subclasses define ``name`` (used as JSON lookup key) and ``display_order``.
+    All copy (description, positions, suitable_for) is loaded from
+    ``data/spread_strings.json`` by the registry in ``__init__``.
+    """
 
     name: str = ""
-    name_zh: str = ""
     description: str = ""
+    suitable_for: str = ""
 
     def __init__(self) -> None:
         self._drawn_cards: list[DrawnCard] = []
