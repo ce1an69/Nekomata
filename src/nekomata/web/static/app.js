@@ -285,7 +285,7 @@ function initSpreadSelect() {
     state.spreads.forEach((sp) => {
         const opt = document.createElement('div');
         opt.className = 'spread-option';
-        opt.innerHTML = `<span class="sname">${sp.description}</span>` +
+        opt.innerHTML = `<span class="sname">${sp.name}</span>` +
             `<span class="scount">${sp.card_count} 张</span>`;
         opt.addEventListener('mouseenter', () => showSpreadPreview(sp));
         opt.addEventListener('click', () => selectSpread(sp.key));
@@ -356,7 +356,7 @@ function showDrawScreen() {
 
     showScreen('draw');
 
-    document.getElementById('draw-spread-name').textContent = spDef.name_zh || spDef.name;
+    document.getElementById('draw-spread-name').textContent = spDef.name;
     document.getElementById('draw-question').textContent = state.question || '';
 
     document.getElementById('screen-draw').classList.remove('interpreting');
@@ -411,7 +411,7 @@ function renderSpreadSlots() {
         const slot = document.createElement('div');
         slot.className = 'spread-slot empty';
         slot.dataset.index = idx;
-        slot.innerHTML = `<span class="slot-label">${pos.name_zh}</span>`;
+        slot.innerHTML = `<span class="slot-label">${pos.name}</span>`;
         slot.addEventListener('click', () => onSpreadSlotClicked(slot, idx));
         area.appendChild(slot);
     });
@@ -468,7 +468,7 @@ function buildSlotFaceDown(drawnCard) {
         `<div class="slot-face slot-front">` +
         buildCardFaceInner(drawnCard) +
         `</div></div>` +
-        `<span class="slot-label">${drawnCard.position.name_zh}</span>`;
+        `<span class="slot-label">${drawnCard.position.name}</span>`;
 }
 
 function buildCardFaceInner(drawnCard) {
