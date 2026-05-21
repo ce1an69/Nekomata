@@ -34,6 +34,12 @@ const state = {
 document.addEventListener('DOMContentLoaded', async () => {
     await Promise.all([loadConfig(), loadCards(), loadSpreads(), loadStrings()]);
 
+    if (state.cards.length === 0) {
+        document.body.innerHTML = '<div style="padding:2em;color:var(--red);text-align:center">' +
+            '<h2>加载失败</h2><p>无法加载卡牌数据，请刷新页面重试。</p></div>';
+        return;
+    }
+
     if (!state.config.api_key) {
         showScreen('setup');
     } else {
@@ -44,29 +50,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadConfig() {
     try {
         const r = await fetch('/api/config');
+        if (!r.ok) throw new Error(`${r.status}`);
         state.config = await r.json();
-    } catch { /* use defaults */ }
+    } catch (e) {
+        console.warn('Failed to load config:', e);
+    }
 }
 
 async function loadCards() {
     try {
         const r = await fetch('/api/cards');
+        if (!r.ok) throw new Error(`${r.status}`);
         state.cards = await r.json();
-    } catch { /* empty */ }
+    } catch (e) {
+        console.error('Failed to load card data:', e);
+    }
 }
 
 async function loadSpreads() {
     try {
         const r = await fetch('/api/spreads');
+        if (!r.ok) throw new Error(`${r.status}`);
         state.spreads = await r.json();
-    } catch { /* empty */ }
+    } catch (e) {
+        console.error('Failed to load spreads:', e);
+    }
 }
 
 async function loadStrings() {
     try {
         const r = await fetch('/api/strings');
+        if (!r.ok) throw new Error(`${r.status}`);
         state.strings = await r.json();
-    } catch { /* empty */ }
+    } catch (e) {
+        console.warn('Failed to load UI strings:', e);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -158,6 +176,10 @@ async function saveSetup() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ api_url, api_key, model }),
         });
+        if (!r.ok) {
+            const errBody = await r.json().catch(() => ({}));
+            throw new Error(errBody.detail || `保存失败 (${r.status})`);
+        }
         state.config = await r.json();
         showScreen('home');
     } catch (e) {
@@ -642,17 +664,21 @@ function showBrowserScreen() {
     const revBtn = document.getElementById('browser-reverse-btn');
     revBtn.classList.remove('active');
 
-    document.getElementById('browser-back-btn').addEventListener('click', () => {
-        showScreen('home');
-        resumeHome();
-    });
+    if (!showBrowserScreen._done) {
+        showBrowserScreen._done = true;
 
-    revBtn.addEventListener('click', () => {
-        state.browserReversed = !state.browserReversed;
-        revBtn.classList.toggle('active', state.browserReversed);
-        const current = document.querySelector('.card-list-item.selected');
-        if (current) showBrowserDetail(current.dataset.id);
-    });
+        document.getElementById('browser-back-btn').addEventListener('click', () => {
+            showScreen('home');
+            resumeHome();
+        });
+
+        revBtn.addEventListener('click', () => {
+            state.browserReversed = !state.browserReversed;
+            revBtn.classList.toggle('active', state.browserReversed);
+            const current = document.querySelector('.card-list-item.selected');
+            if (current) showBrowserDetail(current.dataset.id);
+        });
+    }
 }
 
 function initBrowser() {

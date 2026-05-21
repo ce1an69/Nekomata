@@ -1,11 +1,8 @@
 """Draw screen — pick cards from a face-down deck, then flip to reveal."""
 
 import asyncio
-from collections import deque
 from enum import Enum, auto
 
-from rich.console import Group
-from rich.markdown import Markdown
 from rich.text import Text
 
 from textual.app import ComposeResult
@@ -16,10 +13,8 @@ from textual.css.query import NoMatches
 from textual.events import DescendantFocus, Key, Resize
 from textual.geometry import Offset
 from textual.screen import Screen
-from textual.timer import Timer
 from textual.widgets import Static
 
-from nekomata.ai.interpreter import InterpretationError, StreamChunk, get_interpreter
 from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
 from nekomata.render.card_renderer import (
@@ -41,6 +36,7 @@ from nekomata.render.styles import (
     C_TEXT,
     EASE,
 )
+from nekomata.screens.box_manager import BoxManager
 from nekomata.screens.draw_widgets import (
     DECK_CARD_WIDTH,
     DECK_HIDE_DELAY,
@@ -55,23 +51,10 @@ from nekomata.screens.draw_widgets import (
     DeckCard,
     SpreadSlot,
 )
+from nekomata.screens.stream_handler import StreamHandler
 from nekomata.screens.widgets import go_home
 from nekomata.spread import get_spread
 
-STREAM_TYPE_INTERVAL = 0.025
-STREAM_CHARS_PER_TICK = 3
-
-# Shared UI strings from data/ui_strings.json
-import json as _json
-from pathlib import Path as _Path
-
-_UI_STRINGS = _json.loads(
-    (_Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
-)
-_LOADING_FRAMES = tuple(_UI_STRINGS["loading_frames"])
-_LOADING_INTERVAL = _UI_STRINGS["loading_interval_ms"] / 1000.0
-_LOADING_MESSAGE_INTERVAL = _UI_STRINGS["loading_message_interval_s"]
-_LOADING_MESSAGES = tuple(_UI_STRINGS["loading_messages"])
 DETAIL_PANEL_WIDTH = 66
 INTERP_PANEL_HEIGHT = "46%"
 INTERP_MIN_HEIGHT = 14
@@ -291,22 +274,70 @@ class DrawScreen(Screen):
         self._detail_visible = False
         self._last_preview_id: str | None = None
         self._deck_exit_started = False
-        self._stream_thinking_text = ""
-        self._stream_content_text = ""
-        self._stream_queue: deque[StreamChunk] = deque()
-        self._stream_timer: Timer | None = None
-        self._stream_source_done = False
-        self._stream_has_thinking = False
-        self._stream_has_content = False
-        self._loading_timer: Timer | None = None
-        self._loading_frame = 0
-        self._active_box: str | None = None
-        self._last_card_widget: DeckCard | SpreadSlot | None = None
         self._display_order = self._spread.display_order
         self._ordered_positions = [self._spread.positions[i] for i in self._display_order]
 
+        self._box = BoxManager(self, self._available_boxes)
+        self._stream = StreamHandler(
+            screen=self,
+            render_content=self._on_stream_render,
+            render_hints=self._on_stream_hints,
+            scroll_to_bottom=self._on_stream_scroll,
+            show_error=self._show_error,
+        )
+
+    # ── Callbacks for StreamHandler ──────────────────────────────────
+
+    def _on_stream_render(self, parts) -> None:
+        content = self.query_one("#interp-dialog-content", Static)
+        if parts is None:
+            content.update("")
+        else:
+            from rich.console import Group
+            content.update(Group(*parts))
+
+    def _on_stream_hints(self, text) -> None:
+        self.query_one("#interp-dialog-hints", Static).update(text)
+
+    def _on_stream_scroll(self) -> None:
+        try:
+            self.query_one("#interp-dialog", VerticalScroll).scroll_end(animate=False)
+        except NoMatches:
+            pass
+
+    # ── Delegation to StreamHandler (for test compatibility) ─────────
+
+    def _append_stream_chunk(self, chunk) -> None:
+        self._stream.append_chunk(chunk)
+
+    @property
+    def _loading_timer(self):
+        return self._stream._loading_timer
+
+    @property
+    def _stream_timer(self):
+        return self._stream._timer
+
+    # ── Box available_boxes callback ─────────────────────────────────
+
+    def _available_boxes(self) -> list[str]:
+        if self._phase == Phase.PICK:
+            return ["deck"]
+        if self._phase == Phase.FLIP:
+            return ["spread"]
+        boxes = ["spread"]
+        if self._detail_visible:
+            boxes.append("detail")
+        if self._interp_is_visible():
+            boxes.append("interp")
+        return boxes
+
+    def _interp_is_visible(self) -> bool:
+        return self.query_one("#interp-dialog").has_class("visible")
+
+    # ── Compose ──────────────────────────────────────────────────────
+
     def compose(self) -> ComposeResult:
-        # Header
         with Vertical(id="draw-header"):
             yield Static(
                 Text(f"✦ {self._spread.name} ✦", style=f"bold {C_MAUVE}"),
@@ -318,7 +349,6 @@ class DrawScreen(Screen):
             )
         yield Static("─── ✦ ───", id="draw-divider")
 
-        # Deck
         with Vertical(id="deck-section"):
             yield Static("", id="deck-label")
             base_cards_per_row, extra_cards = divmod(NUM_DECK_CARDS, DECK_ROW_COUNT)
@@ -331,7 +361,6 @@ class DrawScreen(Screen):
                             yield DeckCard(i)
                     card_index += row_size
 
-        # Main area: spread + detail panel
         with Horizontal(id="main-area"):
             with Vertical(id="spread-area"):
                 yield Static("", id="spread-label")
@@ -342,11 +371,9 @@ class DrawScreen(Screen):
         with VerticalScroll(id="card-preview"):
             yield Static("", id="preview-content")
 
-        # Status + footer
         yield Static("", id="status")
         yield Static("", id="draw-footer")
 
-        # Interpretation dialog (hidden until streaming starts)
         with VerticalScroll(id="interp-dialog"):
             yield Static("解读", id="interp-dialog-title")
             yield Static("", id="interp-dialog-content")
@@ -369,8 +396,8 @@ class DrawScreen(Screen):
         deck_cards = list(self.query(DeckCard))
         if deck_cards:
             deck_cards[0].focus()
-        self._active_box = "deck"
-        self._update_box_highlights()
+        self._box.active_box = "deck"
+        self._box.update_highlights()
 
     def _prepare_drawn_cards(self) -> None:
         if self._planned_cards:
@@ -390,7 +417,7 @@ class DrawScreen(Screen):
 
     def on_unmount(self) -> None:
         self._cancelled = True
-        self._stop_stream_timer()
+        self._stream.stop()
 
     def _hide_deck(self) -> None:
         try:
@@ -526,8 +553,8 @@ class DrawScreen(Screen):
         if self._pick_index >= self._n_positions:
             await asyncio.sleep(PICK_COMPLETE_DELAY)
             self._phase = Phase.FLIP
-            self._active_box = "spread"
-            self._update_box_highlights()
+            self._box.active_box = "spread"
+            self._box.update_highlights()
             self._update_phase_ui()
             unrevealed = [s for s in self.query(SpreadSlot) if not s.is_revealed]
             if unrevealed:
@@ -547,8 +574,8 @@ class DrawScreen(Screen):
             if self.app.animation_enabled:
                 self.run_worker(self._completion_shimmer(slots), exclusive=False)
             self._phase = Phase.DONE
-            self._active_box = "spread"
-            self._update_box_highlights()
+            self._box.active_box = "spread"
+            self._box.update_highlights()
             self._show_detail_panel(slots[0] if slots else None)
             self._update_phase_ui()
             for s in slots:
@@ -561,7 +588,6 @@ class DrawScreen(Screen):
                 unrevealed[0].focus()
 
     async def on_spread_slot_selected(self, event: SpreadSlot.Selected) -> None:
-        """Update detail panel when a revealed card is focused."""
         if self._phase != Phase.DONE:
             return
         event.stop()
@@ -637,8 +663,6 @@ class DrawScreen(Screen):
             main_area = self.query_one("#main-area")
         except NoMatches:
             return
-        # Without interpretation, align with the main area. During interpretation,
-        # extend to the dialog bottom so hide/show keeps both panels aligned.
         bottom = main_area.region.y + main_area.region.height
         try:
             dialog = self.query_one("#interp-dialog")
@@ -653,10 +677,10 @@ class DrawScreen(Screen):
         if self._phase != Phase.DONE:
             return
         if self._detail_visible:
-            if self._active_box == "detail":
-                self._active_box = "spread"
-                self._update_box_highlights()
-                self._focus_box_widget()
+            if self._box.active_box == "detail":
+                self._box.active_box = "spread"
+                self._box.update_highlights()
+                self._box.focus_widget()
             self._hide_detail_panel()
         else:
             self._show_detail_panel()
@@ -739,19 +763,22 @@ class DrawScreen(Screen):
         if not confirmed:
             return
         self._cancelled = True
-        self._stop_stream_timer()
+        self._stream.stop()
         go_home(self)
 
     def _do_interpret(self) -> None:
         self._cancelled = False
         self._show_interp_dialog()
-        self.run_worker(self._run_interpretation(), exclusive=True)
+        self.run_worker(
+            self._stream.run(self._drawn_cards, self._question, lambda: self._cancelled),
+            exclusive=True,
+        )
 
     def _show_interp_dialog(self) -> None:
         self._interp_streaming = True
         dialog = self.query_one("#interp-dialog")
-        self._active_box = "interp"
-        self._update_box_highlights()
+        self._box.active_box = "interp"
+        self._box.update_highlights()
         self._sync_interp_layout()
         self._fit_detail_panel_height()
         dialog.display = True
@@ -767,7 +794,7 @@ class DrawScreen(Screen):
                 duration=0.32,
                 easing=EASE,
             )
-        self._reset_stream_display()
+        self._stream.reset()
         self.query_one("#status", Static).update("")
 
     def on_resize(self, event: Resize) -> None:
@@ -776,9 +803,9 @@ class DrawScreen(Screen):
 
     def _hide_interp_dialog(self) -> None:
         self._interp_streaming = False
-        self._stop_stream_timer()
-        self._active_box = "spread"
-        self._update_box_highlights()
+        self._stream.stop()
+        self._box.active_box = "spread"
+        self._box.update_highlights()
         self._sync_interp_layout()
         self._fit_detail_panel_height()
         dialog = self.query_one("#interp-dialog")
@@ -799,311 +826,42 @@ class DrawScreen(Screen):
         self._hide_interp_dialog()
         self.query_one("#status", Static).update(Text(message, style=C_RED))
 
-    def _reset_stream_display(self) -> None:
-        self._stream_thinking_text = ""
-        self._stream_content_text = ""
-        self._stream_queue.clear()
-        self._stream_source_done = False
-        self._stream_has_thinking = False
-        self._stream_has_content = False
-        self._render_stream_content()
-        self._start_loading_animation()
-
-    def _start_loading_animation(self) -> None:
-        self._loading_frame = 0
-        self._tick_loading_frame()
-        self._loading_timer = self.set_interval(
-            _LOADING_INTERVAL, self._tick_loading_frame
-        )
-
-    def _stop_loading_animation(self) -> None:
-        if self._loading_timer is not None:
-            self._loading_timer.stop()
-            self._loading_timer = None
-
-    def _tick_loading_frame(self) -> None:
-        frame = _LOADING_FRAMES[self._loading_frame % len(_LOADING_FRAMES)]
-        message_index = int(
-            self._loading_frame * _LOADING_INTERVAL / _LOADING_MESSAGE_INTERVAL
-        ) % len(_LOADING_MESSAGES)
-        message = _LOADING_MESSAGES[message_index]
-        self._loading_frame += 1
-        self.query_one("#interp-dialog-hints", Static).update(
-            Text(f"{frame} {message}", style=C_OVERLAY0)
-        )
-
-    def _stop_stream_timer(self, stop_loading: bool = True) -> None:
-        if stop_loading:
-            self._stop_loading_animation()
-        if self._stream_timer is not None:
-            self._stream_timer.stop()
-            self._stream_timer = None
-        self._stream_queue.clear()
-
-    def _append_stream_chunk(self, chunk: StreamChunk) -> None:
-        if not chunk.text:
-            return
-        self._stream_queue.append(chunk)
-        if self._stream_timer is None:
-            self._stream_timer = self.set_interval(
-                STREAM_TYPE_INTERVAL, self._type_stream_tick
-            )
-
-    def _type_stream_tick(self) -> None:
-        if not self._stream_queue:
-            if self._stream_source_done:
-                self._finish_stream_display()
-                return
-            self._stop_stream_timer(stop_loading=False)
-            return
-
-        for _ in range(STREAM_CHARS_PER_TICK):
-            if not self._stream_queue:
-                break
-            chunk = self._stream_queue[0]
-            if not chunk.text:
-                self._stream_queue.popleft()
-                continue
-            self._append_stream_text(chunk.kind, chunk.text[0])
-            rest = chunk.text[1:]
-            if rest:
-                self._stream_queue[0] = StreamChunk(rest, chunk.kind)
-            else:
-                self._stream_queue.popleft()
-
-        self._render_stream_content()
-        self._scroll_interp_to_bottom()
-
-    def _append_stream_text(self, kind: str, text: str) -> None:
-        if kind == "thinking":
-            self._stream_thinking_text += text
-            self._stream_has_thinking = True
-        else:
-            self._stream_content_text += text
-            self._stream_has_content = True
-
-    def _render_stream_content(self) -> None:
-        parts = []
-        if self._stream_thinking_text:
-            thinking_style = f"italic dim {C_OVERLAY0}"
-            parts.append(Text("思考", style=f"bold {thinking_style}"))
-            parts.append(Text(self._stream_thinking_text, style=thinking_style))
-        if self._stream_content_text:
-            if parts:
-                parts.append(Text(""))
-            parts.append(Text("解读", style=f"bold {C_MAUVE}"))
-            parts.append(Markdown(self._stream_content_text, style=C_TEXT))
-        self.query_one("#interp-dialog-content", Static).update(Group(*parts))
-
-    def _scroll_interp_to_bottom(self) -> None:
-        try:
-            self.query_one("#interp-dialog", VerticalScroll).scroll_end(animate=False)
-        except NoMatches:
-            pass
-
-    def _stream_done(self) -> None:
-        self._stream_source_done = True
-        if self._stream_queue and self._stream_timer is None:
-            self._stream_timer = self.set_interval(
-                STREAM_TYPE_INTERVAL, self._type_stream_tick
-            )
-            return
-        if not self._stream_queue:
-            self._finish_stream_display()
-
-    def _finish_stream_display(self) -> None:
-        self._stop_stream_timer()
-        self._interp_streaming = False
-        self.query_one("#interp-dialog-hints", Static).update(
-            Text("── 完成 ──  Q 关闭", style=C_OVERLAY0)
-        )
-
-    async def _run_interpretation(self) -> None:
-        try:
-            config = self.app.config
-            interp = get_interpreter(config)
-            loop = asyncio.get_running_loop()
-
-            def _consume_stream():
-                for chunk in interp.interpret_stream(self._drawn_cards, self._question, self._spread_key):
-                    if self._cancelled:
-                        return
-                    if isinstance(chunk, str):
-                        chunk = StreamChunk(chunk, "content")
-                    self.app.call_from_thread(self._append_stream_chunk, chunk)
-
-            await loop.run_in_executor(None, _consume_stream)
-        except InterpretationError as exc:
-            if not self.is_mounted or self._cancelled:
-                return
-            self._show_error(f"解读失败: {exc}")
-            return
-        except Exception as exc:
-            if not self.is_mounted or self._cancelled:
-                return
-            msg = str(exc)
-            if "api_key" in msg.lower() or "unauthorized" in msg.lower():
-                self._show_error("API key 未配置，请在 .neko/settings.json 中设置 api_key")
-            else:
-                self._show_error(f"解读失败: {exc}")
-            return
-        if not self.is_mounted or self._cancelled:
-            return
-        self._stream_done()
-
     # ── Focus navigation ──────────────────────────────────────────────
 
     def on_key(self, event: Key) -> None:
         if event.key == "shift+tab":
             event.stop()
-            self._cycle_box(-1)
+            self._box.cycle(-1)
 
     def key_tab(self, event: Key) -> None:
         event.stop()
-        self._cycle_box(1)
+        self._box.cycle(1)
 
     def key_left(self) -> None:
-        if self._active_box in ("detail", "interp"):
+        if self._box.active_box in ("detail", "interp"):
             return
-        self._focus_neighbor("left")
+        self._box.focus_neighbor("left", self._phase, self._n_positions)
 
     def key_right(self) -> None:
-        if self._active_box in ("detail", "interp"):
+        if self._box.active_box in ("detail", "interp"):
             return
-        self._focus_neighbor("right")
+        self._box.focus_neighbor("right", self._phase, self._n_positions)
 
     def key_up(self) -> None:
-        if self._active_box == "interp":
+        if self._box.active_box == "interp":
             self.query_one("#interp-dialog", VerticalScroll).scroll_up(animate=True)
-        elif self._active_box == "detail":
+        elif self._box.active_box == "detail":
             self.query_one("#card-preview", VerticalScroll).scroll_up(animate=True)
         else:
-            self._focus_neighbor("up")
+            self._box.focus_neighbor("up", self._phase, self._n_positions)
 
     def key_down(self) -> None:
-        if self._active_box == "interp":
+        if self._box.active_box == "interp":
             self.query_one("#interp-dialog", VerticalScroll).scroll_down(animate=True)
-        elif self._active_box == "detail":
+        elif self._box.active_box == "detail":
             self.query_one("#card-preview", VerticalScroll).scroll_down(animate=True)
         else:
-            self._focus_neighbor("down")
+            self._box.focus_neighbor("down", self._phase, self._n_positions)
 
     def on_descendant_focus(self, event: DescendantFocus) -> None:
-        widget = event.widget
-        if isinstance(widget, DeckCard):
-            new_box = "deck"
-        elif isinstance(widget, SpreadSlot):
-            new_box = "spread"
-        else:
-            return
-        if new_box != self._active_box:
-            self._active_box = new_box
-            self._update_box_highlights()
-
-    # ── Box management ────────────────────────────────────────────────
-
-    _BOX_SELECTORS = {
-        "deck": "#deck-section",
-        "spread": "#spread-area",
-        "detail": "#card-preview",
-        "interp": "#interp-dialog",
-    }
-
-    def _available_boxes(self) -> list[str]:
-        if self._phase == Phase.PICK:
-            return ["deck"]
-        if self._phase == Phase.FLIP:
-            return ["spread"]
-        boxes = ["spread"]
-        if self._detail_visible:
-            boxes.append("detail")
-        if self._interp_is_visible():
-            boxes.append("interp")
-        return boxes
-
-    def _update_box_highlights(self) -> None:
-        for box_id, selector in self._BOX_SELECTORS.items():
-            try:
-                el = self.query_one(selector)
-                el.set_class(box_id == self._active_box, "box-active")
-            except NoMatches:
-                pass
-
-    def _save_last_card(self) -> None:
-        if isinstance(self.focused, (DeckCard, SpreadSlot)):
-            self._last_card_widget = self.focused
-
-    def _focus_box_widget(self) -> None:
-        box = self._active_box
-        if box == "deck":
-            cards = list(self.query(DeckCard))
-            if cards:
-                cards[0].focus()
-        elif box == "spread":
-            if self._last_card_widget and self._last_card_widget.is_mounted:
-                self._last_card_widget.focus()
-            else:
-                slots = list(self.query(SpreadSlot))
-                if slots:
-                    slots[0].focus()
-        elif box == "detail":
-            self.query_one("#card-preview").focus()
-        elif box == "interp":
-            self.query_one("#interp-dialog").focus()
-
-    def _cycle_box(self, delta: int) -> None:
-        boxes = self._available_boxes()
-        if len(boxes) <= 1:
-            return
-        self._save_last_card()
-        current = self._active_box or boxes[0]
-        try:
-            idx = boxes.index(current)
-        except ValueError:
-            idx = 0
-        self._active_box = boxes[(idx + delta) % len(boxes)]
-        self._update_box_highlights()
-        self._focus_box_widget()
-
-    def _interp_is_visible(self) -> bool:
-        return self.query_one("#interp-dialog").has_class("visible")
-
-    def _focus_neighbor(self, direction: str) -> None:
-        if self._phase == Phase.PICK:
-            widgets = list(self.query(DeckCard))
-            row_width = NUM_DECK_CARDS // DECK_ROW_COUNT
-        elif self._phase == Phase.FLIP:
-            widgets = [s for s in self.query(SpreadSlot) if not s.is_revealed]
-            row_width = self._spread_row_width(len(widgets))
-        else:
-            widgets = list(self.query(SpreadSlot))
-            row_width = self._spread_row_width(len(widgets))
-        if not widgets:
-            return
-        try:
-            idx = widgets.index(self.focused)
-        except ValueError:
-            widgets[0].focus()
-            return
-        delta = self._direction_delta(direction, row_width)
-        new_idx = idx + delta
-        if 0 <= new_idx < len(widgets):
-            widgets[new_idx].focus()
-
-    @staticmethod
-    def _direction_delta(direction: str, row_width: int) -> int:
-        if direction == "left":
-            return -1
-        if direction == "right":
-            return 1
-        if direction == "up":
-            return -row_width
-        if direction == "down":
-            return row_width
-        return 0
-
-    @staticmethod
-    def _spread_row_width(count: int) -> int:
-        if count >= 5:
-            return 3
-        return 1
+        self._box.on_focus_change(event.widget)

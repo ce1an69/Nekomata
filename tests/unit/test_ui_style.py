@@ -153,9 +153,10 @@ def test_draw_hiding_detail_recenters_spread_area():
 
 
 def test_draw_stream_uses_app_thread_callback():
-    source = inspect.getsource(DrawScreen._run_interpretation)
+    from nekomata.screens.stream_handler import StreamHandler
+    source = inspect.getsource(StreamHandler.run)
 
-    assert "self.app.call_from_thread" in source
+    assert "call_from_thread" in source
 
 
 def test_draw_interpretation_panel_uses_arrow_scroll():
@@ -169,24 +170,25 @@ def test_draw_interpretation_panel_uses_arrow_scroll():
 
 
 def test_draw_stream_content_renders_markdown():
-    source = inspect.getsource(DrawScreen._render_stream_content)
+    from nekomata.screens.stream_handler import StreamHandler
+    source = inspect.getsource(StreamHandler._render)
 
-    assert "Text(self._stream_thinking_text" in source
-    assert "Markdown(self._stream_content_text" in source
+    assert "Text(self._thinking_text" in source
+    assert "Markdown(self._content_text" in source
     assert "italic dim" in source
     assert "C_OVERLAY0" in source
-    assert "Group(*parts)" in source
+    assert "self._render_content(parts)" in source
 
 
 def test_draw_loading_hint_rotates_cat_tarot_messages():
-    source = inspect.getsource(DrawScreen._tick_loading_frame)
-    from nekomata.screens import draw
+    from nekomata.screens import stream_handler
+    source = inspect.getsource(stream_handler.StreamHandler._tick_loading)
 
     assert "模型正在解读" not in source
     assert "_LOADING_MESSAGE_INTERVAL" in source
-    assert draw._LOADING_MESSAGE_INTERVAL == 2.0
-    assert len(draw._LOADING_MESSAGES) >= 3
-    assert any("猫" in message for message in draw._LOADING_MESSAGES)
+    assert stream_handler._LOADING_MESSAGE_INTERVAL == 2.0
+    assert len(stream_handler._LOADING_MESSAGES) >= 3
+    assert any("猫" in message for message in stream_handler._LOADING_MESSAGES)
 
 
 def test_interpretation_exit_confirm_uses_catppuccin_modal():
