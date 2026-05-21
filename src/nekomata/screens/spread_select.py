@@ -165,7 +165,7 @@ class SpreadSelectScreen(Screen):
                         spread = get_spread(key)
                         n_pos = len(spread.positions)
                         yield SpreadOption(
-                            f"  {spread.name:<28s} {n_pos:>2d}",
+                            f"{i:02d}  {spread.name:<28s} {n_pos:>2d}",
                             f"spread-{key}",
                         )
                     yield SpreadOption("Q   Back", "back", back=True)

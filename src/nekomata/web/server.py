@@ -116,6 +116,8 @@ class ConfigPayload(BaseModel):
 class DrawnCardPayload(BaseModel):
     card_id: str
     position_name: str
+    position_name_zh: str = ""
+    position_description: str = ""
     is_reversed: bool
 
 class InterpretPayload(BaseModel):
@@ -190,8 +192,8 @@ def create_app() -> FastAPI:
                 card=card,
                 position=Position(
                     name=dc.position_name,
-                    name_zh="",
-                    description="",
+                    name_zh=dc.position_name_zh,
+                    description=dc.position_description,
                 ),
                 is_reversed=dc.is_reversed,
             ))

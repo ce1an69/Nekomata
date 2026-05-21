@@ -26,6 +26,8 @@ export class InterpretationController {
                     cards: drawnCards.map(dc => ({
                         card_id: dc.card.id,
                         position_name: dc.position.name,
+                        position_name_zh: dc.position.name_zh || '',
+                        position_description: dc.position.description || '',
                         is_reversed: dc.isReversed,
                     })),
                 }),
