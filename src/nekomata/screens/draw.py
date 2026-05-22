@@ -19,7 +19,7 @@ from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
 from nekomata.render.card_renderer import (
     render_card_detail,
-    render_card_image_detail,
+    render_card_full_detail,
 )
 from nekomata.render.styles import (
     C_CRUST,
@@ -162,23 +162,23 @@ class DrawScreen(Screen):
     #spread-grid.layout-1 {{
         layout: grid;
         grid-size: 1;
-        grid-columns: 12;
+        grid-columns: 20;
     }}
     #spread-grid.layout-3 {{
         layout: grid;
         grid-size: 3 1;
-        grid-columns: 12 12 12;
+        grid-columns: 20 20 20;
     }}
     #spread-grid.layout-5 {{
         layout: grid;
         grid-size: 3 2;
-        grid-columns: 12 12 12;
+        grid-columns: 20 20 20;
         grid-rows: 1fr 1fr;
     }}
     #spread-grid.layout-10 {{
         layout: grid;
         grid-size: 5 2;
-        grid-columns: 12 12 12 12 12;
+        grid-columns: 20 20 20 20 20;
         grid-rows: 1fr 1fr;
     }}
     #card-preview {{
@@ -701,9 +701,9 @@ class DrawScreen(Screen):
 
         content = self.query_one("#preview-content", Static)
         if self.app.render_mode != "text":
-            img_detail = render_card_image_detail(dc)
-            if img_detail:
-                content.update(img_detail)
+            full_detail = render_card_full_detail(dc)
+            if full_detail:
+                content.update(full_detail)
                 return
         content.update(render_card_detail(dc))
 

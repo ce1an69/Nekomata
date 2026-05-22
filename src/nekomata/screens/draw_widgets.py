@@ -39,6 +39,8 @@ NUM_DECK_CARDS = 24
 DECK_ROW_COUNT = 3
 DECK_CARD_WIDTH = 10
 DECK_CARD_HEIGHT = 8
+SPREAD_SLOT_WIDTH = 18
+SPREAD_SLOT_HEIGHT = 14
 
 # Animation timing constants
 DECK_HIDE_DELAY = 0.42
@@ -190,10 +192,10 @@ class SpreadSlot(Static):
 
     DEFAULT_CSS = f"""
     SpreadSlot {{
-        width: {DECK_CARD_WIDTH};
-        height: {DECK_CARD_HEIGHT};
-        min-width: {DECK_CARD_WIDTH};
-        min-height: {DECK_CARD_HEIGHT};
+        width: {SPREAD_SLOT_WIDTH};
+        height: {SPREAD_SLOT_HEIGHT};
+        min-width: {SPREAD_SLOT_WIDTH};
+        min-height: {SPREAD_SLOT_HEIGHT};
         background: {C_CRUST};
         border: round {C_SURFACE0};
         content-align: center middle;
@@ -270,7 +272,8 @@ class SpreadSlot(Static):
         theme = get_theme()
         render_mode = self.app.render_mode
 
-        face = render_card_face(dc, size=render_mode, theme=theme)
+        face_size = "slot" if render_mode != "text" else render_mode
+        face = render_card_face(dc, size=face_size, theme=theme)
         if face is None:
             border_style = C_LAVENDER if dc.is_reversed else C_MAUVE
             status_style = C_PINK if dc.is_reversed else C_MAUVE

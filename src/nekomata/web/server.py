@@ -78,7 +78,7 @@ def _card_to_dict(card: Card) -> dict:
         "keywords_reversed": list(card.keywords_reversed),
         "meaning_upright": card.meaning_upright,
         "meaning_reversed": card.meaning_reversed,
-        "has_image": card.image_path is not None,
+        "has_image": card.image_path is not None and (card.image_path.parent / f"{card.id}_origin.png").exists(),
     }
 
 
