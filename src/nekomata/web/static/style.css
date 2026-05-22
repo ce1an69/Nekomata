@@ -1,18 +1,58 @@
-/* Nekomata Web — layout & component styles. Colors via CSS variables injected by server. */
+/* Nekomata Web — enhanced dark mystical theme: Catppuccin Mocha + gold accents */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+:root {
+    --gold: #d4af37;
+    --gold-glow: rgba(212, 175, 55, 0.6);
+    --gold-dim: rgba(212, 175, 55, 0.25);
+    --cc-w: clamp(100px, 16vw, 160px);
+    --cc-h: calc(var(--cc-w) * 1.5);
+}
+
 body {
-    background: var(--crust);
+    background: linear-gradient(180deg, var(--crust) 0%, #0a0a1e 100%);
     color: var(--text);
     font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
     font-size: 14px;
     line-height: 1.6;
     min-height: 100vh;
     overflow-x: hidden;
+    position: relative;
+    user-select: none;
 }
 
 .hidden { display: none !important; }
+
+/* ---- Starfield & Fog ---- */
+
+#stars-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+#fog-layer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 35%;
+    background: linear-gradient(to top, rgba(10, 10, 30, 0.8), transparent);
+    z-index: 1;
+    pointer-events: none;
+}
+
+#app {
+    position: relative;
+    z-index: 2;
+}
+
+/* ---- Screen ---- */
 
 .screen {
     display: flex;
@@ -20,7 +60,7 @@ body {
     justify-content: center;
     min-height: 100vh;
     padding: 24px 40px;
-    animation: fadeIn 0.3s ease;
+    animation: fadeIn 0.4s ease;
 }
 
 @keyframes fadeIn {
@@ -28,15 +68,17 @@ body {
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* --- Shared Components --- */
+/* ---- Shared ---- */
 
 .card-panel {
-    background: var(--mantle);
-    border: 2px solid var(--surface0);
-    border-radius: 12px;
+    background: rgba(30, 30, 46, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--surface0);
+    border-radius: 16px;
     padding: 32px 40px;
     max-width: 860px;
     width: 100%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .title {
@@ -45,6 +87,7 @@ body {
     font-weight: bold;
     text-align: center;
     margin-bottom: 8px;
+    text-shadow: 0 0 20px rgba(203, 166, 247, 0.3);
 }
 
 .subtitle {
@@ -55,10 +98,17 @@ body {
 }
 
 .ornament {
-    color: var(--surface1);
+    color: var(--gold);
     text-align: center;
     margin: 12px 0;
     font-size: 0.85em;
+    text-shadow: 0 0 8px var(--gold-glow);
+    animation: ornamentGlow 3s ease-in-out infinite;
+}
+
+@keyframes ornamentGlow {
+    0%, 100% { text-shadow: 0 0 8px var(--gold-glow); }
+    50% { text-shadow: 0 0 16px var(--gold-glow), 0 0 30px var(--gold-dim); }
 }
 
 .accent { color: var(--mauve); font-weight: bold; }
@@ -72,7 +122,7 @@ body {
     margin-top: 16px;
 }
 
-/* --- Home Cats --- */
+/* ---- Home ---- */
 
 .home-shell {
     display: flex;
@@ -81,8 +131,7 @@ body {
     width: min(100%, 860px);
 }
 
-
-/* --- Draw Actions --- */
+/* ---- Draw Actions ---- */
 
 .draw-actions {
     display: flex;
@@ -112,7 +161,7 @@ body {
     color: var(--mauve);
 }
 
-/* --- Inputs & Buttons --- */
+/* ---- Inputs & Buttons ---- */
 
 input[type="text"], input[type="password"] {
     width: 100%;
@@ -124,11 +173,12 @@ input[type="text"], input[type="password"] {
     font-family: inherit;
     font-size: 0.95em;
     outline: none;
-    transition: border-color 0.18s;
+    transition: border-color 0.18s, box-shadow 0.18s;
 }
 
 input[type="text"]:focus, input[type="password"]:focus {
     border-color: var(--mauve);
+    box-shadow: 0 0 12px rgba(203, 166, 247, 0.2);
 }
 
 .btn {
@@ -140,21 +190,23 @@ input[type="text"]:focus, input[type="password"]:focus {
     font-family: inherit;
     font-size: 0.9em;
     cursor: pointer;
-    transition: border-color 0.18s, color 0.18s, background 0.18s;
+    transition: border-color 0.18s, color 0.18s, background 0.18s, box-shadow 0.18s;
 }
 
 .btn:hover {
     border-color: var(--mauve);
     color: var(--text);
+    box-shadow: 0 0 8px rgba(203, 166, 247, 0.15);
 }
 
 .btn-primary {
-    border-color: var(--mauve);
-    color: var(--mauve);
+    border-color: var(--gold);
+    color: var(--gold);
 }
 
 .btn-primary:hover {
-    background: var(--surface0);
+    background: rgba(212, 175, 55, 0.1);
+    box-shadow: 0 0 12px var(--gold-dim);
 }
 
 .form-group {
@@ -168,7 +220,7 @@ input[type="text"]:focus, input[type="password"]:focus {
     font-size: 0.85em;
 }
 
-/* --- Suggestions --- */
+/* ---- Suggestions ---- */
 
 .suggestions {
     background: var(--base);
@@ -199,7 +251,7 @@ input[type="text"]:focus, input[type="password"]:focus {
     font-size: 0.85em;
 }
 
-/* --- Setup --- */
+/* ---- Setup ---- */
 
 .setup-panel {
     max-width: 560px;
@@ -213,14 +265,15 @@ input[type="text"]:focus, input[type="password"]:focus {
     text-align: center;
 }
 
-/* --- Spread Select --- */
+/* ---- Spread Select ---- */
 
 .spread-panel {
     max-width: 1100px;
 }
 
 .question-bar {
-    background: var(--base);
+    background: rgba(17, 17, 27, 0.6);
+    border: 1px solid var(--surface0);
     border-radius: 8px;
     padding: 8px 14px;
     margin-bottom: 12px;
@@ -246,17 +299,18 @@ input[type="text"]:focus, input[type="password"]:focus {
     align-items: center;
     gap: 10px;
     padding: 12px 16px;
-    background: var(--base);
+    background: rgba(17, 17, 27, 0.6);
     border: 2px solid var(--surface0);
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: border-color 0.18s, background 0.18s, color 0.18s;
+    transition: border-color 0.18s, background 0.18s, color 0.18s, box-shadow 0.18s;
 }
 
 .spread-option:hover, .spread-option.active {
-    border-color: var(--mauve);
-    background: var(--surface0);
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.05);
     color: var(--text);
+    box-shadow: 0 0 12px var(--gold-dim);
 }
 
 .spread-option .sname {
@@ -270,15 +324,16 @@ input[type="text"]:focus, input[type="password"]:focus {
 
 .spread-preview {
     flex: 1;
-    background: var(--base);
-    border: 2px solid var(--surface0);
-    border-radius: 8px;
+    background: rgba(17, 17, 27, 0.6);
+    border: 1px solid var(--surface0);
+    border-radius: 10px;
     padding: 20px;
     min-height: 180px;
+    backdrop-filter: blur(8px);
 }
 
 .spread-preview h3 {
-    color: var(--mauve);
+    color: var(--gold);
     margin-bottom: 8px;
 }
 
@@ -293,7 +348,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 .spread-preview .pos-list li .pos-idx {
-    color: var(--mauve);
+    color: var(--gold);
     font-weight: bold;
     margin-right: 6px;
 }
@@ -312,7 +367,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 
 .spread-back:hover { border-color: var(--mauve); }
 
-/* --- Draw Screen --- */
+/* ---- Draw Screen ---- */
 
 #screen-draw {
     flex-direction: column;
@@ -344,61 +399,152 @@ input[type="text"]:focus, input[type="password"]:focus {
 .draw-header .accent { font-size: 1.1em; }
 .draw-header .subtext { margin-left: 12px; font-size: 0.9em; }
 
-/* Deck grid */
-.deck-section {
+/* ---- 3D Carousel ---- */
+
+.carousel-section {
     display: flex;
     justify-content: center;
-    padding: 16px 0;
+    align-items: center;
+    height: 320px;
+    position: relative;
+    overflow: hidden;
     transition: opacity 0.4s ease, max-height 0.4s ease;
+}
+
+.carousel-section.exiting {
+    opacity: 0;
+    max-height: 0 !important;
+    height: 0;
     overflow: hidden;
 }
 
-.deck-section.exiting {
-    opacity: 0;
-    max-height: 0 !important;
-    padding: 0;
+#carousel-scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    perspective: 1200px;
+    transform-style: preserve-3d;
+    cursor: grab;
 }
 
-.deck-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-    max-width: 720px;
+.cc-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--cc-w);
+    height: var(--cc-h);
+    margin-left: calc(var(--cc-w) / -2);
+    margin-top: calc(var(--cc-h) / -2);
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s;
+    transform-style: preserve-3d;
+    will-change: transform;
 }
 
-.deck-card {
-    width: 56px;
-    height: 78px;
-    background: var(--base);
-    border: 2px solid var(--surface0);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: border-color 0.18s, transform 0.18s, opacity 0.25s;
+.cc-card.cc-active {
+    filter: drop-shadow(0 0 8px var(--gold-dim));
+}
+
+.cc-card.cc-active .cc-back {
+    border-color: var(--gold);
+    box-shadow: 0 0 12px var(--gold-dim);
+}
+
+.cc-card.cc-active .cc-sym {
+    animation: symbolPulse 2s ease-in-out infinite;
+}
+
+@keyframes symbolPulse {
+    0%, 100% { opacity: 0.5; text-shadow: 0 0 10px var(--gold-glow); }
+    50% { opacity: 0.9; text-shadow: 0 0 20px var(--gold-glow), 0 0 40px var(--gold-dim); }
+}
+
+.cc-card.cc-picked-out {
+    opacity: 0 !important;
+    transform: scale(0.5) translateY(-60px) !important;
+    transition: all 0.5s ease;
+}
+
+/* Flying card from carousel to slot */
+.cc-fly {
+    position: fixed;
+    background: linear-gradient(135deg, var(--surface0), var(--mantle));
+    border: 2px solid var(--gold);
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--surface1);
-    font-size: 1.4em;
-}
-
-.deck-card:hover {
-    border-color: var(--mauve);
-    transform: translateY(-2px);
-}
-
-.deck-card.picked {
-    border-color: var(--pink);
-    opacity: 0.3;
+    z-index: 9999;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 0 20px var(--gold-glow);
     pointer-events: none;
 }
 
-.deck-card.exiting {
-    opacity: 0;
-    transform: translateY(-8px);
+.cc-fly .cc-sym {
+    font-size: 1.8em;
+    color: var(--gold);
 }
 
-/* Main area */
+.cc-inner {
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+}
+
+.cc-back {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--surface0), var(--mantle));
+    border: 2px solid var(--surface1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.cc-sym {
+    font-size: 2em;
+    color: var(--gold);
+    text-shadow: 0 0 10px var(--gold-glow);
+    opacity: 0.7;
+}
+
+/* Charge particle */
+.cc-particle {
+    position: fixed;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.8);
+    pointer-events: none;
+    z-index: 9999;
+    animation: riseAndFade 0.8s ease-out forwards;
+}
+
+/* Selection ring */
+.cc-ring {
+    position: fixed;
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%) scale(0.5);
+    animation: pulseRing 0.6s ease-out forwards;
+    box-shadow: 0 0 20px var(--gold-glow);
+}
+
+@keyframes riseAndFade {
+    0%   { transform: translateY(0) scale(1); opacity: 0.8; }
+    100% { transform: translateY(-80px) scale(0.2); opacity: 0; }
+}
+
+@keyframes pulseRing {
+    0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 1; border-width: 3px; }
+    100% { transform: translate(-50%, -50%) scale(3); opacity: 0; border-width: 0px; }
+}
+
+/* ---- Main area ---- */
+
 .main-area {
     display: flex;
     gap: 20px;
@@ -411,7 +557,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 
 #screen-draw.interpreting .draw-header,
 #screen-draw.interpreting .ornament,
-#screen-draw.interpreting .deck-section,
+#screen-draw.interpreting .carousel-section,
 #screen-draw.interpreting .draw-actions {
     grid-column: 1 / -1;
 }
@@ -460,13 +606,15 @@ input[type="text"]:focus, input[type="password"]:focus {
     transition: all 0.3s ease;
 }
 
-/* Spread slots */
+/* ---- Spread Slots ---- */
+
 .spread-slot {
     width: 110px;
     height: 160px;
     border: 2px solid var(--surface0);
-    border-radius: 8px;
-    background: var(--base);
+    border-radius: 10px;
+    background: rgba(17, 17, 27, 0.6);
+    backdrop-filter: blur(8px);
     cursor: pointer;
     position: relative;
     perspective: 600px;
@@ -484,8 +632,24 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 .spread-slot.waiting {
-    border-color: var(--mauve);
+    border-color: var(--gold);
     border-style: solid;
+    box-shadow: 0 0 12px var(--gold-dim);
+}
+
+.spread-slot.waiting::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 14px;
+    border: 1px solid var(--gold);
+    opacity: 0;
+    animation: waitPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes waitPulse {
+    0%, 100% { opacity: 0; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.03); }
 }
 
 .spread-slot.face-down {
@@ -494,13 +658,14 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 .spread-slot.face-down:hover {
-    border-color: var(--mauve);
+    border-color: var(--gold);
     transform: translateY(-3px);
+    box-shadow: 0 0 12px var(--gold-dim);
 }
 
 .spread-slot.revealed {
     border-color: var(--lavender);
-    background: var(--mantle);
+    background: rgba(30, 30, 46, 0.85);
 }
 
 .spread-slot.selected {
@@ -509,15 +674,15 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 .spread-slot.glow {
-    border-color: var(--pink);
-    box-shadow: 0 0 16px rgba(245, 194, 231, 0.4);
+    border-color: var(--gold);
+    box-shadow: 0 0 20px var(--gold-glow);
     transition: border-color 0.08s, box-shadow 0.08s;
 }
 
 .slot-inner {
     width: 100%;
     height: 100%;
-    transition: transform 0.4s ease;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     transform-style: preserve-3d;
     position: relative;
 }
@@ -537,21 +702,22 @@ input[type="text"]:focus, input[type="password"]:focus {
     justify-content: center;
     padding: 6px;
     text-align: center;
-    border-radius: 6px;
+    border-radius: 8px;
     overflow: hidden;
 }
 
 .slot-back {
-    background: var(--base);
+    background: linear-gradient(135deg, var(--surface0), var(--mantle));
 }
 
 .slot-back-pattern {
-    color: var(--surface1);
+    color: var(--gold);
     font-size: 2.2em;
+    text-shadow: 0 0 10px var(--gold-glow);
 }
 
 .slot-front {
-    background: var(--mantle);
+    background: rgba(30, 30, 46, 0.9);
     transform: rotateY(180deg);
 }
 
@@ -586,16 +752,19 @@ input[type="text"]:focus, input[type="password"]:focus {
     pointer-events: none;
 }
 
-/* Detail panel */
+/* ---- Detail Panel ---- */
+
 .detail-panel {
     width: 320px;
-    background: var(--mantle);
-    border: 2px solid var(--surface0);
-    border-radius: 8px;
+    background: rgba(30, 30, 46, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--surface0);
+    border-radius: 12px;
     padding: 18px;
     overflow-y: auto;
     max-height: 460px;
     animation: slideInRight 0.25s ease;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes slideInRight {
@@ -619,7 +788,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 .detail-field .label {
-    color: var(--mauve);
+    color: var(--gold);
     font-size: 0.85em;
     font-weight: bold;
 }
@@ -634,17 +803,20 @@ input[type="text"]:focus, input[type="password"]:focus {
     font-size: 0.85em;
 }
 
-/* Interpretation panel */
+/* ---- Interpretation Panel ---- */
+
 .interp-panel {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    background: var(--mantle);
-    border: 2px solid var(--surface0);
-    border-radius: 8px;
+    background: rgba(30, 30, 46, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--surface0);
+    border-radius: 12px;
     max-height: 340px;
     overflow-y: auto;
     animation: slideUp 0.3s ease;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes slideUp {
@@ -674,7 +846,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 .interp-text .thinking {
     color: var(--subtext0);
     font-style: italic;
-    border-left: 2px solid var(--surface1);
+    border-left: 2px solid var(--gold-dim);
     padding-left: 10px;
     margin: 8px 0;
 }
@@ -685,12 +857,12 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 .interp-text .content p { margin: 6px 0; }
-.interp-text .content strong { color: var(--mauve); }
+.interp-text .content strong { color: var(--gold); }
 .interp-text .content em { color: var(--lavender); }
 .interp-text .content h1,
 .interp-text .content h2,
 .interp-text .content h3 {
-    color: var(--mauve);
+    color: var(--gold);
     margin: 12px 0 6px;
 }
 
@@ -701,7 +873,7 @@ input[type="text"]:focus, input[type="password"]:focus {
     text-align: center;
 }
 
-/* --- Browser Screen --- */
+/* ---- Browser Screen ---- */
 
 #screen-browser {
     flex-direction: column;
@@ -753,8 +925,8 @@ input[type="text"]:focus, input[type="password"]:focus {
     transition: border-color 0.18s, color 0.18s;
 }
 
-.filter-btn:hover { border-color: var(--mauve); color: var(--text); }
-.filter-btn.active { border-color: var(--mauve); color: var(--mauve); font-weight: bold; }
+.filter-btn:hover { border-color: var(--gold); color: var(--text); }
+.filter-btn.active { border-color: var(--gold); color: var(--gold); font-weight: bold; }
 
 .browser-area {
     display: flex;
@@ -767,9 +939,10 @@ input[type="text"]:focus, input[type="password"]:focus {
 .card-list {
     flex: 0 0 300px;
     overflow-y: auto;
-    background: var(--mantle);
-    border: 2px solid var(--surface0);
-    border-radius: 8px;
+    background: rgba(30, 30, 46, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--surface0);
+    border-radius: 10px;
     padding: 8px;
 }
 
@@ -798,14 +971,15 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 .card-list-item.selected .item-name {
-    color: var(--mauve);
+    color: var(--gold);
 }
 
 .browser-detail {
     flex: 1;
-    background: var(--mantle);
-    border: 2px solid var(--surface0);
-    border-radius: 8px;
+    background: rgba(30, 30, 46, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--surface0);
+    border-radius: 10px;
     padding: 20px;
     overflow-y: auto;
 }
@@ -828,4 +1002,19 @@ input[type="text"]:focus, input[type="password"]:focus {
     padding: 2px 8px;
     font-size: 0.8em;
     margin-left: 8px;
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 768px) {
+    :root {
+        --cc-w: clamp(80px, 22vw, 130px);
+    }
+
+    .screen { padding: 16px 20px; }
+    .card-panel { padding: 24px 20px; }
+    .spread-layout { flex-direction: column; }
+    .spread-buttons { flex: none; }
+    .browser-area { flex-direction: column; }
+    .card-list { flex: none; max-height: 200px; }
 }
