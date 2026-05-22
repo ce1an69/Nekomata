@@ -7,7 +7,8 @@ import yaml
 
 from nekomata.card.types import Arcana, Card
 
-ASSETS_DIR = Path(__file__).resolve().parents[3] / "assets" / "cards"
+_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+ASSETS_DIR = _PROJECT_ROOT / "assets" / "cards"
 
 # Module-level cache to avoid re-parsing YAML on repeated calls
 _cards_cache: list[Card] | None = None
@@ -16,7 +17,7 @@ _cards_cache: list[Card] | None = None
 def _load_card_meanings(path: Path | None = None) -> list[dict]:
     """Parse the YAML card meanings file into raw dicts."""
     if path is None:
-        path = Path(__file__).resolve().parents[3] / "data" / "card_meanings.yaml"
+        path = _PROJECT_ROOT / "data" / "card_meanings.yaml"
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 

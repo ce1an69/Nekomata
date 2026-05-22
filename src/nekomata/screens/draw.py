@@ -18,8 +18,10 @@ from textual.widgets import Static
 from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
 from nekomata.render.card_renderer import (
+    clear_cache,
+    preload_card_image_async,
     render_card_detail,
-    render_card_full_detail,
+    render_card_full_detail_widgets,
 )
 from nekomata.render.styles import (
     C_CRUST,
@@ -162,24 +164,23 @@ class DrawScreen(Screen):
     #spread-grid.layout-1 {{
         layout: grid;
         grid-size: 1;
-        grid-columns: 20;
+        grid-columns: 18;
     }}
     #spread-grid.layout-3 {{
         layout: grid;
         grid-size: 3 1;
-        grid-columns: 20 20 20;
+        grid-columns: 18 18 18;
     }}
     #spread-grid.layout-5 {{
         layout: grid;
-        grid-size: 3 2;
-        grid-columns: 20 20 20;
-        grid-rows: 1fr 1fr;
+        grid-size: 5 1;
+        grid-columns: 18 18 18 18 18;
     }}
     #spread-grid.layout-10 {{
         layout: grid;
         grid-size: 5 2;
-        grid-columns: 20 20 20 20 20;
-        grid-rows: 1fr 1fr;
+        grid-columns: 18 18 18 18 18;
+        grid-rows: auto auto;
     }}
     #card-preview {{
         dock: right;
@@ -189,6 +190,7 @@ class DrawScreen(Screen):
         border: round {C_SURFACE0};
         background: {C_MANTLE};
         padding: 1 1;
+        align: center top;
         opacity: 0;
         display: none;
         offset: 4 0;
@@ -197,7 +199,18 @@ class DrawScreen(Screen):
     #card-preview.box-active {{
         border: round {C_MAUVE};
     }}
-    #preview-content {{
+    #card-preview .card-origin {{
+        width: 50%;
+        height: auto;
+        background: {C_MANTLE};
+    }}
+    #card-preview .card-origin-frame {{
+        width: 100%;
+        height: auto;
+        align: center top;
+        background: {C_MANTLE};
+    }}
+    #card-preview Static {{
         background: {C_MANTLE};
     }}
     #card-preview.visible {{
@@ -369,7 +382,7 @@ class DrawScreen(Screen):
                         yield SpreadSlot(i, pos.name)
 
         with VerticalScroll(id="card-preview"):
-            yield Static("", id="preview-content")
+            pass
 
         yield Static("", id="status")
         yield Static("", id="draw-footer")
@@ -390,7 +403,10 @@ class DrawScreen(Screen):
             grid.remove_class(cls)
         grid.add_class(f"layout-{self._n_positions}")
 
-        self._mark_waiting_slot()
+        # Hide spread area during PICK phase
+        main_area = self.query_one("#main-area")
+        main_area.display = False
+
         self._update_phase_ui()
         self._animate_deck_entrance()
         deck_cards = list(self.query(DeckCard))
@@ -408,16 +424,10 @@ class DrawScreen(Screen):
                 DrawnCard(card=card, position=position, is_reversed=is_reversed)
             )
 
-    def _mark_waiting_slot(self) -> None:
-        for slot in self.query(SpreadSlot):
-            slot.remove_class("waiting")
-        if self._phase == Phase.PICK and self._pick_index < self._n_positions:
-            slot = self._slot_for_position(self._pick_index)
-            slot.add_class("waiting")
-
     def on_unmount(self) -> None:
         self._cancelled = True
         self._stream.stop()
+        clear_cache()
 
     def _hide_deck(self) -> None:
         try:
@@ -542,23 +552,41 @@ class DrawScreen(Screen):
 
         card_widget.add_class("picked")
 
-        slot = self._slot_for_position(self._pick_index)
-        slot.place_card(dc)
-        self._animate_slot_entrance(slot, delay=0.08)
+        # Preload the runtime image in the background for a smoother flip.
+        self.run_worker(
+            preload_card_image_async(dc.card, dc.is_reversed),
+            exclusive=False,
+        )
 
         self._pick_index += 1
-        self._mark_waiting_slot()
         self._update_phase_ui()
 
         if self._pick_index >= self._n_positions:
             await asyncio.sleep(PICK_COMPLETE_DELAY)
-            self._phase = Phase.FLIP
-            self._box.active_box = "spread"
-            self._box.update_highlights()
-            self._update_phase_ui()
-            unrevealed = [s for s in self.query(SpreadSlot) if not s.is_revealed]
-            if unrevealed:
-                unrevealed[0].focus()
+            self._reveal_spread()
+
+    def _reveal_spread(self) -> None:
+        """Show spread area and place all picked cards, then enter FLIP phase."""
+        # Hide deck
+        deck_section = self.query_one("#deck-section")
+        deck_section.display = False
+
+        # Show spread area
+        main_area = self.query_one("#main-area")
+        main_area.display = True
+
+        # Place all cards in slots
+        for i, dc in enumerate(self._drawn_cards):
+            slot = self._slot_for_position(i)
+            slot.place_card(dc)
+
+        self._phase = Phase.FLIP
+        self._box.active_box = "spread"
+        self._box.update_highlights()
+        self._update_phase_ui()
+        unrevealed = [s for s in self.query(SpreadSlot) if not s.is_revealed]
+        if unrevealed:
+            unrevealed[0].focus()
 
     # ── Flip phase ────────────────────────────────────────────────────
 
@@ -699,13 +727,18 @@ class DrawScreen(Screen):
             return
         self._last_preview_id = preview_id
 
-        content = self.query_one("#preview-content", Static)
+        container = self.query_one("#card-preview")
+        container.remove_children()
+
         if self.app.render_mode != "text":
-            full_detail = render_card_full_detail(dc)
-            if full_detail:
-                content.update(full_detail)
+            result = render_card_full_detail_widgets(dc)
+            if result is not None:
+                img_widget, text_panel = result
+                container.mount(Horizontal(img_widget, classes="card-origin-frame"))
+                container.mount(Static(text_panel))
                 return
-        content.update(render_card_detail(dc))
+
+        container.mount(Static(render_card_detail(dc)))
 
     # ── Interpretation ────────────────────────────────────────────────
 

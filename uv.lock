@@ -154,8 +154,8 @@ dependencies = [
     { name = "pillow" },
     { name = "pyyaml" },
     { name = "rich" },
-    { name = "rich-pixels" },
     { name = "textual" },
+    { name = "textual-image" },
 ]
 
 [package.optional-dependencies]
@@ -178,8 +178,8 @@ requires-dist = [
     { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.12" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "rich", specifier = ">=13.0" },
-    { name = "rich-pixels", specifier = ">=1.0" },
     { name = "textual", specifier = ">=0.50" },
+    { name = "textual-image", specifier = ">=0.12" },
     { name = "uvicorn", marker = "extra == 'web'", specifier = ">=0.30" },
 ]
 provides-extras = ["web", "dev"]
@@ -389,19 +389,6 @@ wheels = [
 ]
 
 [[package]]
-name = "rich-pixels"
-version = "3.0.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pillow" },
-    { name = "rich" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/31/71/6d5cd4b8d67cd49366eda19aaf37f20094ce562223a91166109202590237/rich_pixels-3.0.1.tar.gz", hash = "sha256:4a81977d45437ce5009cdcaf70af80256c3bdfab870e87ab802c577ba4133235", size = 24631, upload-time = "2024-03-30T09:37:52.834Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/08/72/7264494bc0944db1166b73c88f19d9ddfc584dbbc77c210cd0f52f59c511/rich_pixels-3.0.1-py3-none-any.whl", hash = "sha256:e82c5aa0d00885609675494f16e1ef814c68fa795634f1d6917cae9159b755e1", size = 6004, upload-time = "2024-03-30T09:37:51.169Z" },
-]
-
-[[package]]
 name = "starlette"
 version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -428,6 +415,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/1c/b3/b62658f6cf808d28e4d16a07509728a7b17824f55a6d3533f017fd4566b0/textual-8.2.6.tar.gz", hash = "sha256:cef3714498a120a99278b98d4c165c278844e73db50f1db039aaabd89f2d1b63", size = 1856990, upload-time = "2026-05-13T09:56:12.281Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b8/b4/c2b876f445e52522824cb900f2c7db3a7c24f89d20449ef278b4195d0ecb/textual-8.2.6-py3-none-any.whl", hash = "sha256:17c92bec7ff1617bd7db2a3d9734b0c3b7d2c274c67d5eba94371ea2f99a63fd", size = 729855, upload-time = "2026-05-13T09:56:14.687Z" },
+]
+
+[[package]]
+name = "textual-image"
+version = "0.12.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pillow" },
+    { name = "rich" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c2/e7/c82ea0604874b6d51d5717a0911061ae5810e36dad2e4d2b11fa7d54cdaa/textual_image-0.12.0.tar.gz", hash = "sha256:fdd0b5ff9c8a99740bc360a99ce014d563fa97d07a5b49b472470809f57c0a74", size = 116403, upload-time = "2026-04-12T17:37:44.696Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/67/2c/38ac586a3834a3bd8cbcf0c8ea1ae23bf68b9cc13b96a67f47a825479dd3/textual_image-0.12.0-py3-none-any.whl", hash = "sha256:0b13f62fe6a29f4ed6dfd641f2779ffe92dde41f16163fa1de69158477aa50aa", size = 115626, upload-time = "2026-04-12T17:37:41.238Z" },
 ]
 
 [[package]]

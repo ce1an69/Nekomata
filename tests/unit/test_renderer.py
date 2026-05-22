@@ -4,17 +4,16 @@ from rich.panel import Panel
 
 from nekomata.card.types import Arcana, Card, DrawnCard, Position
 from nekomata.render.card_renderer import (
-    SIZES,
     render_card_text,
     render_card_detail,
     get_preview_path,
     get_origin_path,
-    render_card_image,
-    render_card_image_detail,
-    render_card_image_origin,
-    _load_card_image,
-    _load_card_detail_image,
-    _load_card_origin_image,
+    create_card_face_widget,
+    create_card_origin_widget,
+    _load_origin_image,
+    preload_card_image,
+    get_cached_image,
+    clear_cache,
 )
 
 
@@ -108,15 +107,15 @@ def test_get_origin_path():
     assert get_origin_path(card) == Path("assets/cards/major/major_00_origin.png")
 
 
-def test_render_card_image_no_image():
+def test_create_card_face_widget_no_image():
     """Cards without image_path should return None."""
     dc = make_drawn()
     assert dc.card.image_path is None
-    assert render_card_image(dc) is None
+    assert create_card_face_widget(dc) is None
 
 
-def test_render_card_image_with_png():
-    """Cards with a real PNG should return a Panel."""
+def test_create_card_face_widget_with_png():
+    """Cards with a real PNG should return an Image widget."""
     card = Card(
         id="major_02", name="The High Priestess", name_zh="女祭司",
         arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
@@ -126,41 +125,12 @@ def test_render_card_image_with_png():
     )
     pos = Position(name="Test", name_zh="测试", description="test")
     dc = DrawnCard(card=card, position=pos, is_reversed=False)
-    result = render_card_image(dc, size="compact")
-    assert isinstance(result, Panel)
+    result = create_card_face_widget(dc)
+    assert result is not None
+    assert result.has_class("card-face")
 
 
-def test_render_card_image_reversed():
-    """Reversed card image should still render."""
-    card = Card(
-        id="major_02", name="The High Priestess", name_zh="女祭司",
-        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
-        image_path=Path("assets/cards/major/major_02.png"),
-    )
-    pos = Position(name="Test", name_zh="测试", description="test")
-    dc = DrawnCard(card=card, position=pos, is_reversed=True)
-    result = render_card_image(dc, size="compact")
-    assert isinstance(result, Panel)
-    assert "↕" in str(result.title)
-
-
-def test_load_card_image_resizes():
-    """_load_card_image should resize to the requested size."""
-    card = Card(
-        id="major_02", name="The High Priestess", name_zh="女祭司",
-        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
-        image_path=Path("assets/cards/major/major_02.png"),
-    )
-    img = _load_card_image(card, size="compact")
-    assert img is not None
-    assert img.size == (32, 48)
-
-
-def test_load_card_image_reversed_rotates():
+def test_load_origin_image_reversed_rotates():
     """Reversed card should have rotated image."""
     card = Card(
         id="major_02", name="The High Priestess", name_zh="女祭司",
@@ -169,13 +139,15 @@ def test_load_card_image_reversed_rotates():
         meaning_upright="up", meaning_reversed="down",
         image_path=Path("assets/cards/major/major_02.png"),
     )
-    img_normal = _load_card_image(card, size="full", upside_down=False)
-    img_reversed = _load_card_image(card, size="full", upside_down=True)
+    img_normal = _load_origin_image(card, upside_down=False)
+    img_reversed = _load_origin_image(card, upside_down=True)
+    assert img_normal is not None
+    assert img_reversed is not None
     assert img_normal.tobytes() != img_reversed.tobytes()
 
 
-def test_render_card_image_detail_with_png():
-    """Detail preview should render with 128x192 PNG."""
+def test_load_origin_image_applies_size_cap():
+    """_load_origin_image should cap dimensions."""
     card = Card(
         id="major_02", name="The High Priestess", name_zh="女祭司",
         arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
@@ -183,67 +155,20 @@ def test_render_card_image_detail_with_png():
         meaning_upright="up", meaning_reversed="down",
         image_path=Path("assets/cards/major/major_02.png"),
     )
-    pos = Position(name="Test", name_zh="测试", description="test")
-    dc = DrawnCard(card=card, position=pos, is_reversed=False)
-    result = render_card_image_detail(dc)
-    assert isinstance(result, Panel)
-
-
-def test_load_card_detail_image_resizes_to_preview_size():
-    """Detail preview should be resized before rich-pixels renders it."""
-    card = Card(
-        id="major_02", name="The High Priestess", name_zh="女祭司",
-        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
-        image_path=Path("assets/cards/major/major_02.png"),
-    )
-    img = _load_card_detail_image(card)
+    img = _load_origin_image(card)
     assert img is not None
-    assert img.size == (56, 84)
+    assert img.size[0] <= 1024
+    assert img.size[1] <= 1536
 
 
-def test_render_card_image_detail_uses_constrained_detail_size():
-    """Spread/detail previews should use the detail PNG at a constrained size."""
-    card = Card(
-        id="major_02", name="The High Priestess", name_zh="女祭司",
-        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
-        image_path=Path("assets/cards/major/major_02.png"),
-    )
-    img = _load_card_detail_image(card, size="detail_panel")
-    assert img is not None
-    assert img.size == SIZES["detail_panel"]
-
-
-def test_render_card_image_origin_uses_constrained_origin_size():
-    """The right detail panel should render from the origin PNG without overflowing."""
-    card = Card(
-        id="major_02", name="The High Priestess", name_zh="女祭司",
-        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
-        image_path=Path("assets/cards/major/major_02.png"),
-    )
-    pos = Position(name="Test", name_zh="测试", description="test")
-    dc = DrawnCard(card=card, position=pos, is_reversed=False)
-    img = _load_card_origin_image(card)
-    result = render_card_image_origin(dc)
-
-    assert img is not None
-    assert img.size == SIZES["origin_panel"]
-    assert isinstance(result, Panel)
-
-
-def test_render_card_image_detail_no_image():
-    """Cards without preview PNG should return None."""
+def test_create_card_origin_widget_no_image():
+    """Cards without origin PNG should return None."""
     dc = make_drawn()
-    assert render_card_image_detail(dc) is None
+    assert create_card_origin_widget(dc) is None
 
 
-def test_render_card_image_detail_reversed():
-    """Detail preview of a reversed card shows 'reversed' in title."""
+def test_create_card_origin_widget_with_png():
+    """Cards with a real PNG should return an Image widget."""
     card = Card(
         id="major_02", name="The High Priestess", name_zh="女祭司",
         arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
@@ -252,12 +177,26 @@ def test_render_card_image_detail_reversed():
         image_path=Path("assets/cards/major/major_02.png"),
     )
     pos = Position(name="Test", name_zh="测试", description="test")
-    dc_upright = DrawnCard(card=card, position=pos, is_reversed=False)
-    dc_reversed = DrawnCard(card=card, position=pos, is_reversed=True)
+    dc = DrawnCard(card=card, position=pos, is_reversed=False)
+    result = create_card_origin_widget(dc)
+    assert result is not None
+    assert result.has_class("card-origin")
 
-    result_up = render_card_image_detail(dc_upright)
-    result_rev = render_card_image_detail(dc_reversed)
 
-    assert isinstance(result_up, Panel)
-    assert isinstance(result_rev, Panel)
-    assert "reversed" in result_rev.title
+def test_preload_and_cache():
+    """preload_card_image should populate the cache."""
+    clear_cache()
+    card = Card(
+        id="major_02", name="The High Priestess", name_zh="女祭司",
+        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
+        keywords_upright=("a",), keywords_reversed=("b",),
+        meaning_upright="up", meaning_reversed="down",
+        image_path=Path("assets/cards/major/major_02.png"),
+    )
+    assert get_cached_image(card, is_reversed=False) is None
+    preload_card_image(card, is_reversed=False)
+    cached = get_cached_image(card, is_reversed=False)
+    assert cached is not None
+    assert cached.size[0] <= 256
+    assert cached.size[1] <= 384
+    clear_cache()

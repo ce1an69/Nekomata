@@ -126,7 +126,7 @@ async def test_draw_screen_candidate_grid_uses_all_arrow_keys():
         assert app.screen.focused is cards[1]
         await pilot.press("down")
         await pilot.pause()
-        assert app.screen.focused is cards[9]
+        assert app.screen.focused is cards[13]
         await pilot.press("up")
         await pilot.pause()
         assert app.screen.focused is cards[1]
@@ -180,11 +180,10 @@ async def test_draw_screen_ignores_repeated_pick_on_same_card():
         await pilot.press("enter")
         await pilot.pause()
 
-        slots = list(app.screen.query(SpreadSlot))
         assert cards[0].has_class("picked")
         assert app.screen._pick_index == 1
         assert len(app.screen._drawn_cards) == 1
-        assert sum(slot.drawn_card is not None for slot in slots) == 1
+        # Cards are placed in slots only after all picks complete (FLIP phase)
 
 
 @pytest.mark.asyncio
@@ -440,10 +439,35 @@ async def test_detail_panel_has_content_after_first_flip():
 
         preview = app.screen.query_one("#card-preview")
         spread_area = app.screen.query_one("#spread-area")
-        content = app.screen.query_one("#preview-content")
         assert preview.has_class("visible")
         assert preview.region.y + preview.region.height == spread_area.region.y + spread_area.region.height
-        assert str(content.render()).strip()
+        assert len(preview.children) > 0
+
+
+@pytest.mark.asyncio
+async def test_detail_card_image_is_centered():
+    """The detail panel card image should be horizontally centered."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "detail image centered"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+        await pilot.press("enter")
+        await pilot.pause(1.2)
+
+        preview = app.screen.query_one("#card-preview")
+        frame = preview.query_one(".card-origin-frame")
+        image = preview.query_one(".card-origin")
+
+        frame_center = frame.region.x + frame.region.width / 2
+        image_center = image.region.x + image.region.width / 2
+        assert abs(frame_center - image_center) <= 1
 
 
 @pytest.mark.asyncio

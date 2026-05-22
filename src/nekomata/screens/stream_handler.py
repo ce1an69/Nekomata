@@ -10,6 +10,7 @@ from rich.markdown import Markdown
 from rich.text import Text
 
 from nekomata.ai.interpreter import InterpretationError, StreamChunk, get_interpreter
+from nekomata.render.styles import C_MAUVE, C_OVERLAY0, C_TEXT
 
 STREAM_TYPE_INTERVAL = 0.025
 STREAM_CHARS_PER_TICK = 3
@@ -48,8 +49,8 @@ class StreamHandler:
         self._show_error = show_error
 
         self.streaming = False
-        self._thinking_text = ""
-        self._content_text = ""
+        self._thinking_chars: list[str] = []
+        self._content_chars: list[str] = []
         self._queue: deque[StreamChunk] = deque()
         self._timer = None
         self._source_done = False
@@ -59,8 +60,8 @@ class StreamHandler:
         self._loading_frame = 0
 
     def reset(self) -> None:
-        self._thinking_text = ""
-        self._content_text = ""
+        self._thinking_chars.clear()
+        self._content_chars.clear()
         self._queue.clear()
         self._source_done = False
         self._has_thinking = False
@@ -81,8 +82,6 @@ class StreamHandler:
             self._loading_timer = None
 
     def _tick_loading(self) -> None:
-        from nekomata.render.styles import C_OVERLAY0
-
         frame = _LOADING_FRAMES[self._loading_frame % len(_LOADING_FRAMES)]
         msg_idx = int(
             self._loading_frame * _LOADING_INTERVAL / _LOADING_MESSAGE_INTERVAL
@@ -134,25 +133,23 @@ class StreamHandler:
 
     def _append_char(self, kind: str, char: str) -> None:
         if kind == "thinking":
-            self._thinking_text += char
+            self._thinking_chars.append(char)
             self._has_thinking = True
         else:
-            self._content_text += char
+            self._content_chars.append(char)
             self._has_content = True
 
     def _render(self) -> None:
-        from nekomata.render.styles import C_MAUVE, C_OVERLAY0, C_TEXT
-
         parts = []
-        if self._thinking_text:
+        if self._thinking_chars:
             style = f"italic dim {C_OVERLAY0}"
             parts.append(Text("思考", style=f"bold {style}"))
-            parts.append(Text(self._thinking_text, style=style))
-        if self._content_text:
+            parts.append(Text("".join(self._thinking_chars), style=style))
+        if self._content_chars:
             if parts:
                 parts.append(Text(""))
             parts.append(Text("解读", style=f"bold {C_MAUVE}"))
-            parts.append(Markdown(self._content_text, style=C_TEXT))
+            parts.append(Markdown("".join(self._content_chars), style=C_TEXT))
         self._render_content(parts)
 
     def on_done(self) -> None:
@@ -166,8 +163,6 @@ class StreamHandler:
             self._finish()
 
     def _finish(self) -> None:
-        from nekomata.render.styles import C_OVERLAY0
-
         self.stop()
         self.streaming = False
         self._render_hints(Text("── 完成 ──  Q 关闭", style=C_OVERLAY0))

@@ -1,27 +1,47 @@
-"""Card rendering pipeline: PNG images via rich-pixels with text fallback."""
+"""Card rendering pipeline: PNG images via textual-image with async preloading."""
 
+from __future__ import annotations
 
+import asyncio
+import os
 from pathlib import Path
 
-from PIL import Image
-from rich.console import Group
+from PIL import Image as PILImage
 from rich.panel import Panel
 from rich.text import Text
-from rich_pixels import Pixels
 
 from nekomata.card.types import Card, DrawnCard
-from nekomata.render.themes import CardTheme, get_theme
+from nekomata.render.themes import get_theme
 
-# Card pixel sizes by layout mode
-SIZES = {
-    "full": (64, 96),
-    "medium": (48, 72),
-    "compact": (32, 48),
-    "preview": (56, 84),
-    "slot": (16, 24),
-    "detail_panel": (40, 60),
-    "origin_panel": (128, 192),
-}
+_ORIGIN_MAX_SIZE = (1024, 1536)
+_DETAIL_MAX_SIZE = (256, 384)
+
+# Cache: card_id → PIL Image (face-sized, with rotation applied)
+_image_cache: dict[str, PILImage.Image] = {}
+# Cache: card_id → PIL Image (origin-sized, with rotation applied)
+_origin_cache: dict[str, PILImage.Image] = {}
+
+
+# Terminals with working TGP (Kitty Graphics Protocol) diacritic support.
+# WezTerm/Konsole report TGP but have broken diacritic rendering —
+# textual-image falls back to Sixel for those, handled by AutoImage.
+_TGP_TERMINALS = {"kitty", "ghostty", "contour"}
+
+
+def _get_tui_image_class():
+    """Lazy import to select the best image widget for the current terminal.
+
+    Uses Kitty Graphics Protocol (TGP) for known TGP-capable terminals,
+    detected via environment variables since textual-image's escape-sequence
+    probing relies on isatty() which fails inside a running Textual app.
+    Falls back to AutoImage for Sixel/half-block auto-detection.
+    """
+    from textual_image.widget import Image as AutoImage, TGPImage
+
+    term_program = os.environ.get("TERM_PROGRAM", "").lower()
+    if term_program in _TGP_TERMINALS or os.environ.get("KITTY_WINDOW_ID"):
+        return TGPImage
+    return AutoImage
 
 
 def get_preview_path(card: Card) -> Path | None:
@@ -32,155 +52,124 @@ def get_preview_path(card: Card) -> Path | None:
 
 
 def get_origin_path(card: Card) -> Path | None:
-    """Return the path to the high-resolution origin PNG for a card, or None."""
+    """Return the path to the origin PNG for a card, or None."""
     if card.image_path is None:
         return None
     return card.image_path.with_name(card.image_path.stem + "_origin.png")
 
 
-def _load_card_image(card: Card, size: str = "compact", upside_down: bool = False) -> Image.Image | None:
-    """Load and resize a card PNG. Returns None if no image available."""
-    if card.image_path is None or not card.image_path.exists():
+def _load_image(path: Path | None, upside_down: bool, max_size: tuple[int, int]) -> PILImage.Image | None:
+    if path is None or not path.exists():
         return None
-    img = Image.open(card.image_path)
+    with PILImage.open(path) as source:
+        img = source.copy()
     if upside_down:
         img = img.rotate(180)
-    w, h = SIZES.get(size, SIZES["compact"])
-    img = img.resize((w, h), Image.Resampling.NEAREST)
+    img.thumbnail(max_size, PILImage.Resampling.LANCZOS)
     return img
 
 
-def _load_card_detail_image(
+def _load_origin_image(
     card: Card,
     upside_down: bool = False,
-    size: str = "preview",
-) -> Image.Image | None:
-    """Load and resize the detail preview PNG. Returns None if no preview exists."""
-    preview_path = get_preview_path(card)
-    if preview_path is None or not preview_path.exists():
-        return None
-    img = Image.open(preview_path)
-    if upside_down:
-        img = img.rotate(180)
-    w, h = SIZES.get(size, SIZES["preview"])
-    return img.resize((w, h), Image.Resampling.NEAREST)
-
-
-def _load_card_face_image(card: Card, size: str = "compact", upside_down: bool = False) -> Image.Image | None:
-    """Load detail variant for spread face. Falls back to base image."""
-    detail_path = get_preview_path(card)
-    if detail_path is not None and detail_path.exists():
-        img = Image.open(detail_path)
-        if upside_down:
-            img = img.rotate(180)
-        w, h = SIZES.get(size, SIZES["compact"])
-        return img.resize((w, h), Image.Resampling.NEAREST)
-    return _load_card_image(card, size, upside_down)
-
-
-def _load_card_origin_image(
-    card: Card,
-    upside_down: bool = False,
-    size: str = "origin_panel",
-) -> Image.Image | None:
-    """Load and resize the high-resolution origin PNG. Returns None if no origin exists."""
+    max_size: tuple[int, int] = _ORIGIN_MAX_SIZE,
+    resample: PILImage.Resampling = PILImage.Resampling.LANCZOS,
+) -> PILImage.Image | None:
+    """Load origin PNG with size cap. Returns None if no origin exists."""
     origin_path = get_origin_path(card)
     if origin_path is None or not origin_path.exists():
         return None
-    img = Image.open(origin_path)
+    with PILImage.open(origin_path) as source:
+        img = source.copy()
     if upside_down:
         img = img.rotate(180)
-    w, h = SIZES.get(size, SIZES["origin_panel"])
-    return img.resize((w, h), Image.Resampling.LANCZOS)
+    img.thumbnail(max_size, resample)
+    return img
 
 
-def _image_to_renderable(img: Image.Image) -> Pixels:
-    """Convert PIL Image to a Rich renderable via rich-pixels."""
-    return Pixels.from_image(img)
+def _load_runtime_image(card: Card, upside_down: bool = False) -> PILImage.Image | None:
+    """Load the smaller runtime image, falling back to capped origin if needed."""
+    img = _load_image(get_preview_path(card), upside_down, _DETAIL_MAX_SIZE)
+    if img is not None:
+        return img
+    return _load_origin_image(card, upside_down=upside_down, max_size=_DETAIL_MAX_SIZE)
 
 
-def render_card_image(drawn: DrawnCard, size: str = "compact", theme: CardTheme | None = None) -> Panel | None:
-    """Render a card as a pixel image panel. Returns None if no PNG available."""
-    theme = theme or get_theme()
-    img = _load_card_image(drawn.card, size, upside_down=drawn.is_reversed)
+def _cache_key(card: Card, is_reversed: bool) -> str:
+    """Return a cache key for a card + reversal state."""
+    suffix = ":rev" if is_reversed else ""
+    return f"{card.id}{suffix}"
+
+
+# ── Preload API ──────────────────────────────────────────────────────
+
+
+def preload_card_image(card: Card, is_reversed: bool = False) -> None:
+    """Load and cache the runtime image for a card. Call from a worker thread."""
+    key = _cache_key(card, is_reversed)
+    if key in _image_cache:
+        return
+    img = _load_runtime_image(card, upside_down=is_reversed)
+    if img is not None:
+        _image_cache[key] = img
+
+
+async def preload_card_image_async(card: Card, is_reversed: bool = False) -> None:
+    """Async wrapper for preload_card_image. Runs in a thread pool."""
+    await asyncio.to_thread(preload_card_image, card, is_reversed)
+
+
+def get_cached_image(card: Card, is_reversed: bool = False) -> PILImage.Image | None:
+    """Return a cached PIL image, or None if not yet loaded."""
+    return _image_cache.get(_cache_key(card, is_reversed))
+
+
+def clear_cache() -> None:
+    """Clear all image caches (e.g., on screen unmount)."""
+    _image_cache.clear()
+    _origin_cache.clear()
+
+
+# ── Widget-based API (textual-image) ─────────────────────────────────
+
+
+def create_card_face_widget(drawn: DrawnCard):
+    """Return an Image widget for the spread slot face, or None if no image.
+
+    Uses preloaded cache; falls back to synchronous load if cache miss.
+    """
+    img = get_cached_image(drawn.card, drawn.is_reversed)
+    if img is None:
+        img = _load_runtime_image(drawn.card, upside_down=drawn.is_reversed)
     if img is None:
         return None
-    border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
-    label = " ↕" if drawn.is_reversed else ""
-    title = f"[{drawn.position.name}] {drawn.card.name}{label}"
-    return Panel(
-        _image_to_renderable(img),
-        title=title,
-        border_style=border_style,
-        padding=(0, 1),
-    )
+    TUIImage = _get_tui_image_class()
+    return TUIImage(img, classes="card-face")
 
 
-def render_card_face(drawn: DrawnCard, size: str = "compact", theme: CardTheme | None = None) -> Panel | None:
-    """Render only the card face for spread layouts (detail variant). Returns None if no PNG exists."""
-    theme = theme or get_theme()
-    img = _load_card_face_image(drawn.card, size, upside_down=drawn.is_reversed)
+def create_card_origin_widget(drawn: DrawnCard):
+    """Return an Image widget for the origin detail image, or None if no PNG.
+
+    Always shows the upright (non-reversed) orientation regardless of
+    the drawn card's reversed state.
+    """
+    key = _cache_key(drawn.card, is_reversed=False)
+    img = _origin_cache.get(key)
+    if img is None:
+        img = _load_runtime_image(drawn.card, upside_down=False)
+        if img is not None:
+            _origin_cache[key] = img
     if img is None:
         return None
-    border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
-    return Panel(
-        _image_to_renderable(img),
-        border_style=border_style,
-        padding=(0, 0),
-    )
+    TUIImage = _get_tui_image_class()
+    return TUIImage(img, classes="card-origin")
 
 
-def render_card_image_detail(
-    drawn: DrawnCard,
-    theme: CardTheme | None = None,
-    size: str = "detail_panel",
-) -> Panel | None:
-    """Render a card detail preview from _detail.png variant. Returns None if no PNG."""
-    theme = theme or get_theme()
-    img = _load_card_detail_image(drawn.card, upside_down=drawn.is_reversed, size=size)
-    if img is None:
-        return None
-    border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
-    title = f"[{drawn.position.name}] — {drawn.card.name_zh} ({drawn.status_label})"
-    return Panel(
-        _image_to_renderable(img),
-        title=title,
-        border_style=border_style,
-        padding=(0, 0),
-    )
-
-
-def render_card_image_origin(
-    drawn: DrawnCard,
-    theme: CardTheme | None = None,
-    size: str = "origin_panel",
-) -> Panel | None:
-    """Render a card detail preview from _origin.png variant. Returns None if no PNG."""
-    theme = theme or get_theme()
-    img = _load_card_origin_image(drawn.card, upside_down=drawn.is_reversed, size=size)
-    if img is None:
-        return None
-    border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
-    title = f"[{drawn.position.name}] — {drawn.card.name_zh} ({drawn.status_label})"
-    return Panel(
-        _image_to_renderable(img),
-        title=title,
-        border_style=border_style,
-        padding=(0, 1),
-    )
-
-
-def render_card_full_detail(drawn: DrawnCard, theme: CardTheme | None = None) -> Group | None:
-    """Render origin image + text description for the detail panel."""
-    theme = theme or get_theme()
+def _build_detail_text(drawn: DrawnCard) -> Text:
+    """Build the rich Text content for a card's full detail view."""
     card = drawn.card
-
-    img_panel = render_card_image_origin(drawn, theme)
-    if img_panel is None:
-        return None
-
     text = Text()
-    text.append(f"{card.name_zh} ({card.name})  [{drawn.status_label}]\n", style="bold")
+    text.append(f"[{drawn.position.name}] {card.name_zh} ({card.name})  [{drawn.status_label}]\n", style="bold")
     text.append(f"Element: {card.element}  ·  Astrology: {card.astrology}\n\n")
 
     text.append("Upright: ", style="bold")
@@ -193,18 +182,29 @@ def render_card_full_detail(drawn: DrawnCard, theme: CardTheme | None = None) ->
     text.append(", ".join(card.keywords_reversed))
     text.append("\n")
     text.append(card.meaning_reversed)
+    return text
+
+
+def render_card_full_detail_widgets(drawn: DrawnCard) -> tuple[object, Panel] | None:
+    """Return (image_widget, text_panel) for the detail view, or None if no image."""
+    img_widget = create_card_origin_widget(drawn)
+    if img_widget is None:
+        return None
 
     text_panel = Panel(
-        text,
+        _build_detail_text(drawn),
         border_style="none",
         padding=(0, 0),
     )
-    return Group(img_panel, text_panel)
+    return (img_widget, text_panel)
 
 
-def render_card_text(drawn: DrawnCard, width: int = 40, theme: CardTheme | None = None) -> Panel:
+# ── Text fallback ────────────────────────────────────────────────────
+
+
+def render_card_text(drawn: DrawnCard, width: int = 40) -> Panel:
     """Render a card as a text panel (fallback when no PNG is available)."""
-    theme = theme or get_theme()
+    theme = get_theme()
     card = drawn.card
     border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
 
@@ -225,30 +225,14 @@ def render_card_text(drawn: DrawnCard, width: int = 40, theme: CardTheme | None 
     )
 
 
-def render_card_detail(drawn: DrawnCard, width: int = 60, theme: CardTheme | None = None) -> Panel:
+def render_card_detail(drawn: DrawnCard, width: int = 60) -> Panel:
     """Text-based detail view showing both upright and reversed meanings."""
-    theme = theme or get_theme()
-    card = drawn.card
+    theme = get_theme()
     border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
 
-    content = Text()
-    content.append(f"{card.name_zh} ({card.name})  [{drawn.status_label}]\n", style="bold")
-    content.append(f"Element: {card.element}  ·  Astrology: {card.astrology}\n\n")
-
-    content.append("Upright: ", style="bold")
-    content.append(", ".join(card.keywords_upright))
-    content.append("\n")
-    content.append(card.meaning_upright)
-    content.append("\n\n")
-
-    content.append("Reversed: ", style="bold")
-    content.append(", ".join(card.keywords_reversed))
-    content.append("\n")
-    content.append(card.meaning_reversed)
-
     return Panel(
-        content,
-        title=f"[{drawn.position.name}] — {card.name_zh}",
+        _build_detail_text(drawn),
+        title=f"[{drawn.position.name}] — {drawn.card.name_zh}",
         border_style=border_style,
         width=width,
         padding=(1, 2),

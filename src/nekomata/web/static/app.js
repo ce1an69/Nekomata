@@ -117,7 +117,7 @@ function getVisibleScreen() {
 
 function cardImgUrl(card, reversed = false) {
     const style = reversed ? ' style="transform: rotate(180deg)"' : '';
-    return `<div class="detail-card-img"><img src="/assets/cards/${card.arcana}/${card.id}_origin.png" alt="${card.name}"${style}></div>`;
+    return `<div class="detail-card-img"><img src="/assets/cards/${card.arcana}/${card.id}_detail.png" alt="${card.name}"${style}></div>`;
 }
 
 function makeBtn(label, cls, onClick) {
