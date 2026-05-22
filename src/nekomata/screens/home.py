@@ -10,7 +10,9 @@ from textual.screen import Screen
 from textual.timer import Timer
 from textual.widgets import Input, Static
 
+from nekomata.render.animations import animate_entrance, animate_exit
 from nekomata.render.styles import (
+    C_BASE,
     C_CRUST,
     C_MANTLE,
     C_MAUVE,
@@ -19,6 +21,7 @@ from nekomata.render.styles import (
     C_SURFACE0,
     C_SURFACE1,
     C_TEXT,
+    EASE,
 )
 
 SLASH_COMMANDS = {
@@ -57,7 +60,7 @@ class HomeScreen(Screen):
         border: round {C_SURFACE0};
         background: {C_MANTLE};
         padding: 1 2;
-        transition: opacity 300ms out_cubic;
+        transition: opacity 300ms out_quint;
     }}
     HomeScreen #title {{
         margin-bottom: 1;
@@ -86,7 +89,7 @@ class HomeScreen(Screen):
         width: 100%;
         height: 3;
         border: round {C_SURFACE1};
-        background: #1e1e2e;
+        background: {C_BASE};
         color: {C_TEXT};
         padding: 0 1;
     }}
@@ -102,7 +105,7 @@ class HomeScreen(Screen):
         border: round {C_SURFACE0};
         color: {C_SUBTEXT0};
         background: {C_CRUST};
-        transition: opacity 250ms out_cubic, offset 250ms out_cubic;
+        transition: opacity 250ms out_quint, offset 250ms out_quint;
     }}
     HomeScreen .command-highlight {{
         color: {C_MAUVE};
@@ -171,11 +174,7 @@ class HomeScreen(Screen):
             self._suggestions_hide_timer = None
         suggestions.display = True
         suggestions.update(text)
-        if self.app.animation_enabled:
-            suggestions.styles.opacity = 0
-            suggestions.styles.offset = (0, -1)
-            suggestions.styles.animate("opacity", 1.0, duration=0.2, easing="out_cubic")
-            suggestions.styles.animate("offset", ScalarOffset.from_offset(Offset(0, 0)), duration=0.2, easing="out_cubic")
+        animate_entrance(suggestions, duration=0.2, dy=-1)
         self.query_one("#prompt-input", Input).focus()
 
     def on_mount(self) -> None:
@@ -266,18 +265,10 @@ class HomeScreen(Screen):
             rest = cmd[prefix_len:]
             lines.append(f"[command-highlight]{typed}[/]{rest}  {SLASH_COMMANDS[cmd][1]}")
         suggestions.update("\n".join(lines))
-        if self.app.animation_enabled:
-            if was_hidden:
-                suggestions.styles.opacity = 0
-                suggestions.styles.offset = (0, -1)
-                suggestions.styles.animate("opacity", 1.0, duration=0.16, easing="out_cubic")
-                suggestions.styles.animate(
-                    "offset",
-                    ScalarOffset.from_offset(Offset(0, 0)),
-                    duration=0.16,
-                    easing="out_cubic",
-                )
-            else:
+        if was_hidden:
+            animate_entrance(suggestions, duration=0.16, dy=-1)
+        else:
+            if self.app.animation_enabled:
                 suggestions.styles.opacity = 1.0
                 suggestions.styles.offset = (0, 0)
 
@@ -293,12 +284,12 @@ class HomeScreen(Screen):
             suggestions.display = False
             suggestions.update("")
             return
-        suggestions.styles.animate("opacity", 0.0, duration=0.12, easing="out_cubic")
+        suggestions.styles.animate("opacity", 0.0, duration=0.12, easing=EASE)
         suggestions.styles.animate(
             "offset",
             ScalarOffset.from_offset(Offset(0, -1)),
             duration=0.12,
-            easing="out_cubic",
+            easing=EASE,
         )
         self._suggestions_hide_timer = self.set_timer(0.13, self._finish_hide_suggestions)
 

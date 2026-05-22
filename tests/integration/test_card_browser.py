@@ -65,7 +65,7 @@ async def test_card_browser_filter_by_suit():
         await pilot.click("#filter-cups")
         await pilot.pause()
         items = app.screen.query("CardListItem")
-        assert len(items) == 14
+        assert len(items) == 78  # all items mounted; filtered ones are display:none
 
 
 @pytest.mark.asyncio

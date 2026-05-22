@@ -3,13 +3,13 @@
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
-from textual.css.scalar import ScalarOffset
-from textual.geometry import Offset
 from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import Input, Static
 
+from nekomata.render.animations import animate_entrance
 from nekomata.render.styles import (
+    C_BASE,
     C_MANTLE,
     C_MAUVE,
     C_OVERLAY0,
@@ -98,7 +98,7 @@ class SetupScreen(Screen):
         height: 3;
         margin-bottom: 1;
         border: round {C_SURFACE1};
-        background: #1e1e2e;
+        background: {C_BASE};
         color: {C_TEXT};
         padding: 0 1;
     }}
@@ -111,7 +111,7 @@ class SetupScreen(Screen):
         height: 3;
         margin-bottom: 1;
         border: round {C_SURFACE1};
-        background: #1e1e2e;
+        background: {C_BASE};
         color: {C_TEXT};
         padding: 0 1;
     }}
@@ -124,7 +124,7 @@ class SetupScreen(Screen):
         height: 3;
         margin-bottom: 1;
         border: round {C_SURFACE1};
-        background: #1e1e2e;
+        background: {C_BASE};
         color: {C_TEXT};
         padding: 0 1;
     }}
@@ -137,7 +137,7 @@ class SetupScreen(Screen):
         height: 3;
         margin-top: 1;
         padding: 0 2;
-        background: #1e1e2e;
+        background: {C_BASE};
         border: round {C_MAUVE};
         color: {C_MAUVE};
         content-align: center middle;
@@ -198,17 +198,7 @@ class SetupScreen(Screen):
 
     def on_mount(self) -> None:
         self.query_one("#api-url-input", Input).focus()
-        if self.app.animation_enabled:
-            stack = self.query_one("#setup-stack")
-            stack.styles.opacity = 0
-            stack.styles.offset = (0, 1)
-            stack.styles.animate("opacity", 1.0, duration=0.35, easing="out_cubic")
-            stack.styles.animate(
-                "offset",
-                ScalarOffset.from_offset(Offset(0, 0)),
-                duration=0.35,
-                easing="out_cubic",
-            )
+        animate_entrance(self.query_one("#setup-stack"), duration=0.35)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         if event.input.id == "api-url-input":

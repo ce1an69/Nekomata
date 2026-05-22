@@ -1,6 +1,10 @@
 """Shared Catppuccin Mocha color palette and animation easing."""
 
+# Easing curves
 EASE = "out_cubic"
+EASE_OUT = "out_quint"
+EASE_SPRING = "out_back"
+EASE_GENTLE = "in_out_cubic"
 
 # Catppuccin Mocha
 C_CRUST = "#11111b"
@@ -17,3 +21,5 @@ C_MAUVE = "#cba6f7"
 C_LAVENDER = "#b4befe"
 C_PINK = "#f5c2e7"
 C_RED = "#f38ba8"
+C_PEACH = "#fab387"
+C_TEAL = "#94e2d5"

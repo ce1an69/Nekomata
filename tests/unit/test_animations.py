@@ -160,7 +160,7 @@ def test_spread_slot_flip_uses_smooth_two_phase_motion():
     css = SpreadSlot.DEFAULT_CSS
 
     assert "offset 220ms" in css
-    assert 0.12 in constants
+    assert 0.0 in constants  # fade-out to fully invisible (no flash)
     assert SLOT_FLIP_FADE_OUT == pytest.approx(0.10)
     assert SLOT_FLIP_SWAP_PAUSE == pytest.approx(0.015)
     assert SLOT_FLIP_FADE_IN == pytest.approx(0.18)

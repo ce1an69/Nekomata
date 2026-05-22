@@ -28,20 +28,22 @@ _origin_cache: dict[str, PILImage.Image] = {}
 _TGP_TERMINALS = {"kitty", "ghostty", "contour"}
 
 
-def _get_tui_image_class():
-    """Lazy import to select the best image widget for the current terminal.
+_CACHED_TUI_CLASS = None
 
-    Uses Kitty Graphics Protocol (TGP) for known TGP-capable terminals,
-    detected via environment variables since textual-image's escape-sequence
-    probing relies on isatty() which fails inside a running Textual app.
-    Falls back to AutoImage for Sixel/half-block auto-detection.
-    """
+
+def _get_tui_image_class():
+    """Select the best image widget for the current terminal (cached)."""
+    global _CACHED_TUI_CLASS
+    if _CACHED_TUI_CLASS is not None:
+        return _CACHED_TUI_CLASS
     from textual_image.widget import Image as AutoImage, TGPImage
 
     term_program = os.environ.get("TERM_PROGRAM", "").lower()
     if term_program in _TGP_TERMINALS or os.environ.get("KITTY_WINDOW_ID"):
-        return TGPImage
-    return AutoImage
+        _CACHED_TUI_CLASS = TGPImage
+    else:
+        _CACHED_TUI_CLASS = AutoImage
+    return _CACHED_TUI_CLASS
 
 
 def get_preview_path(card: Card) -> Path | None:
@@ -58,7 +60,12 @@ def get_origin_path(card: Card) -> Path | None:
     return card.image_path.with_name(card.image_path.stem + "_origin.png")
 
 
-def _load_image(path: Path | None, upside_down: bool, max_size: tuple[int, int]) -> PILImage.Image | None:
+def _load_image(
+    path: Path | None,
+    upside_down: bool = False,
+    max_size: tuple[int, int] = _ORIGIN_MAX_SIZE,
+) -> PILImage.Image | None:
+    """Load a PNG, optionally rotate for reversal, and thumbnail to max_size."""
     if path is None or not path.exists():
         return None
     with PILImage.open(path) as source:
@@ -69,30 +76,12 @@ def _load_image(path: Path | None, upside_down: bool, max_size: tuple[int, int])
     return img
 
 
-def _load_origin_image(
-    card: Card,
-    upside_down: bool = False,
-    max_size: tuple[int, int] = _ORIGIN_MAX_SIZE,
-    resample: PILImage.Resampling = PILImage.Resampling.LANCZOS,
-) -> PILImage.Image | None:
-    """Load origin PNG with size cap. Returns None if no origin exists."""
-    origin_path = get_origin_path(card)
-    if origin_path is None or not origin_path.exists():
-        return None
-    with PILImage.open(origin_path) as source:
-        img = source.copy()
-    if upside_down:
-        img = img.rotate(180)
-    img.thumbnail(max_size, resample)
-    return img
-
-
 def _load_runtime_image(card: Card, upside_down: bool = False) -> PILImage.Image | None:
     """Load the smaller runtime image, falling back to capped origin if needed."""
     img = _load_image(get_preview_path(card), upside_down, _DETAIL_MAX_SIZE)
     if img is not None:
         return img
-    return _load_origin_image(card, upside_down=upside_down, max_size=_DETAIL_MAX_SIZE)
+    return _load_image(get_origin_path(card), upside_down, _DETAIL_MAX_SIZE)
 
 
 def _cache_key(card: Card, is_reversed: bool) -> str:
@@ -117,6 +106,11 @@ def preload_card_image(card: Card, is_reversed: bool = False) -> None:
 async def preload_card_image_async(card: Card, is_reversed: bool = False) -> None:
     """Async wrapper for preload_card_image. Runs in a thread pool."""
     await asyncio.to_thread(preload_card_image, card, is_reversed)
+
+
+async def preload_all_async(cards: list[tuple[Card, bool]]) -> None:
+    """Preload multiple images in parallel. Returns when all are cached."""
+    await asyncio.gather(*(preload_card_image_async(c, rev) for c, rev in cards))
 
 
 def get_cached_image(card: Card, is_reversed: bool = False) -> PILImage.Image | None:

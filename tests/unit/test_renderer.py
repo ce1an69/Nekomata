@@ -10,7 +10,7 @@ from nekomata.render.card_renderer import (
     get_origin_path,
     create_card_face_widget,
     create_card_origin_widget,
-    _load_origin_image,
+    _load_image,
     preload_card_image,
     get_cached_image,
     clear_cache,
@@ -130,7 +130,7 @@ def test_create_card_face_widget_with_png():
     assert result.has_class("card-face")
 
 
-def test_load_origin_image_reversed_rotates():
+def test_load_image_reversed_rotates():
     """Reversed card should have rotated image."""
     card = Card(
         id="major_02", name="The High Priestess", name_zh="女祭司",
@@ -139,15 +139,16 @@ def test_load_origin_image_reversed_rotates():
         meaning_upright="up", meaning_reversed="down",
         image_path=Path("assets/cards/major/major_02.png"),
     )
-    img_normal = _load_origin_image(card, upside_down=False)
-    img_reversed = _load_origin_image(card, upside_down=True)
+    origin_path = get_origin_path(card)
+    img_normal = _load_image(origin_path, upside_down=False)
+    img_reversed = _load_image(origin_path, upside_down=True)
     assert img_normal is not None
     assert img_reversed is not None
     assert img_normal.tobytes() != img_reversed.tobytes()
 
 
-def test_load_origin_image_applies_size_cap():
-    """_load_origin_image should cap dimensions."""
+def test_load_image_applies_size_cap():
+    """_load_image should cap dimensions."""
     card = Card(
         id="major_02", name="The High Priestess", name_zh="女祭司",
         arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
@@ -155,7 +156,7 @@ def test_load_origin_image_applies_size_cap():
         meaning_upright="up", meaning_reversed="down",
         image_path=Path("assets/cards/major/major_02.png"),
     )
-    img = _load_origin_image(card)
+    img = _load_image(get_origin_path(card))
     assert img is not None
     assert img.size[0] <= 1024
     assert img.size[1] <= 1536

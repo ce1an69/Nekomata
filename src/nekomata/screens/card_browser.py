@@ -2,17 +2,16 @@
 
 from textual.app import ComposeResult
 from textual.containers import Center, Horizontal, Vertical, VerticalScroll
-from textual.css.scalar import ScalarOffset
 from textual.events import Key
-from textual.geometry import Offset
 from textual.screen import Screen
 from textual.widgets import Button, Static
 
 from nekomata.card.data import load_all_cards
 from nekomata.card.types import Arcana, ARCANA_ZH, Card, DrawnCard, Position
-from nekomata.render.animations import animate_fade_in
+from nekomata.render.animations import animate_entrance
 from nekomata.render.card_renderer import render_card_detail, render_card_full_detail_widgets
 from nekomata.render.styles import (
+    C_BASE,
     C_CRUST,
     C_MANTLE,
     C_MAUVE,
@@ -63,7 +62,7 @@ class CardBrowserScreen(Screen):
         border: round {C_SURFACE0};
         background: {C_MANTLE};
         padding: 0 1;
-        transition: opacity 300ms out_cubic, offset 300ms out_cubic;
+        transition: opacity 300ms out_quint, offset 300ms out_quint;
     }}
     CardBrowserScreen #filter-bar Button {{
         width: auto;
@@ -84,7 +83,7 @@ class CardBrowserScreen(Screen):
     }}
     CardBrowserScreen #browser-area {{
         height: 1fr;
-        transition: opacity 300ms out_cubic, offset 300ms out_cubic;
+        transition: opacity 300ms out_quint, offset 300ms out_quint;
     }}
     CardBrowserScreen #card-list {{
         width: 1fr;
@@ -92,7 +91,7 @@ class CardBrowserScreen(Screen):
         border: round {C_SURFACE0};
         background: {C_CRUST};
         padding: 1 1;
-        transition: opacity 220ms out_cubic;
+        transition: opacity 220ms out_quint;
     }}
     CardBrowserScreen #card-detail {{
         width: 1fr;
@@ -102,7 +101,7 @@ class CardBrowserScreen(Screen):
         padding: 1 2;
         margin-left: 1;
         align: center top;
-        transition: opacity 250ms out_cubic;
+        transition: opacity 250ms out_quint;
     }}
     CardBrowserScreen #card-detail .card-origin {{
         width: 50%;
@@ -152,36 +151,30 @@ class CardBrowserScreen(Screen):
 
     def on_mount(self) -> None:
         """Populate card list, focus the first item, and animate entrance."""
-        self._show_cards(self._cards)
-        if self.app.animation_enabled:
-            filter_bar = self.query_one("#filter-bar")
-            filter_bar.styles.opacity = 0
-            filter_bar.styles.offset = (0, -1)
-            filter_bar.styles.animate("opacity", 1.0, duration=0.3, easing="out_cubic")
-            filter_bar.styles.animate("offset", ScalarOffset.from_offset(Offset(0, 0)), duration=0.3, easing="out_cubic")
-            browser_area = self.query_one("#browser-area")
-            browser_area.styles.opacity = 0
-            browser_area.styles.offset = (0, 1)
-            browser_area.styles.animate("opacity", 1.0, duration=0.35, easing="out_cubic")
-            browser_area.styles.animate("offset", ScalarOffset.from_offset(Offset(0, 0)), duration=0.35, easing="out_cubic")
-        self.set_timer(0.1, self._focus_first_card)
+        container = self.query_one("#card-list")
+        container.mount(*(CardListItem(card) for card in self._cards))
+        animate_entrance(self.query_one("#filter-bar"), duration=0.3, dy=-1)
+        animate_entrance(self.query_one("#browser-area"), duration=0.35)
+        self.set_timer(0.1, self._focus_first_visible_card)
 
-    def _focus_first_card(self) -> None:
-        items = list(self.query(CardListItem))
-        if items:
-            items[0].focus()
+    def _focus_first_visible_card(self) -> None:
+        for item in self.query(CardListItem):
+            if item.display:
+                item.focus()
+                return
 
-    def _show_cards(self, cards: list[Card], *, animate: bool = False) -> None:
-        """Replace the card list with the given cards."""
+    def _apply_filter(self, arcana: Arcana | None) -> None:
+        """Toggle visibility of card items to match the selected suit filter."""
+        self._active_arcana = arcana
         self._update_card_count_display()
         container = self.query_one("#card-list")
-        if animate and self.app.animation_enabled:
+        if self.app.animation_enabled:
             container.styles.opacity = 0.2
-        container.remove_children()
-        items = [CardListItem(card) for card in cards]
-        container.mount(*items)
-        if animate and self.app.animation_enabled:
-            container.styles.animate("opacity", 1.0, duration=0.18, easing="out_cubic")
+        for item in self.query(CardListItem):
+            item.display = arcana is None or item._card.arcana == arcana
+        if self.app.animation_enabled:
+            container.styles.animate("opacity", 1.0, duration=0.18, easing="out_quint")
+        self.set_timer(0.05, self._focus_first_visible_card)
 
     def _update_filter_highlight(self, active_btn_id: str) -> None:
         """Highlight the active filter button and dim all others."""
@@ -222,30 +215,42 @@ class CardBrowserScreen(Screen):
 
     def key_down(self) -> None:
         if isinstance(self.focused, CardListItem):
-            focus_sibling(self, CardListItem, 1)
+            self._focus_next_visible_card(1)
 
     def key_up(self) -> None:
         if isinstance(self.focused, CardListItem):
-            focus_sibling(self, CardListItem, -1)
+            self._focus_next_visible_card(-1)
 
     def key_left(self) -> None:
-        """Move left across filters or upward through cards."""
         if isinstance(self.focused, CardListItem):
-            focus_sibling(self, CardListItem, -1)
+            self._focus_next_visible_card(-1)
         elif isinstance(self.focused, Button) and (self.focused.id or "").startswith("filter-"):
             focus_sibling(self, Button, -1)
 
     def key_right(self) -> None:
-        """Move right across filters or downward through cards."""
         if isinstance(self.focused, CardListItem):
-            focus_sibling(self, CardListItem, 1)
+            self._focus_next_visible_card(1)
         elif isinstance(self.focused, Button) and (self.focused.id or "").startswith("filter-"):
             focus_sibling(self, Button, 1)
+
+    def _focus_next_visible_card(self, delta: int) -> None:
+        items = [i for i in self.query(CardListItem) if i.display]
+        if not items or not isinstance(self.focused, CardListItem):
+            return
+        try:
+            idx = items.index(self.focused)
+        except ValueError:
+            items[0].focus()
+            return
+        new_idx = idx + delta
+        if 0 <= new_idx < len(items):
+            items[new_idx].focus()
 
     def key_tab(self, event: Key) -> None:
         """Cycle focus: cards → filter buttons → back button → cards."""
         event.stop()
         filter_buttons = list(self.query("#filter-bar Button"))
+        visible_items = [i for i in self.query(CardListItem) if i.display]
 
         if isinstance(self.focused, CardListItem):
             if filter_buttons:
@@ -257,9 +262,8 @@ class CardBrowserScreen(Screen):
 
         focused_id = self.focused.id or ""
         if focused_id == "back":
-            items = list(self.query(CardListItem))
-            if items:
-                items[0].focus()
+            if visible_items:
+                visible_items[0].focus()
         elif focused_id.startswith("filter-"):
             try:
                 idx = filter_buttons.index(self.focused)
@@ -270,21 +274,17 @@ class CardBrowserScreen(Screen):
             else:
                 self.query_one("#back", Button).focus()
         else:
-            items = list(self.query(CardListItem))
-            if items:
-                items[0].focus()
+            if visible_items:
+                visible_items[0].focus()
 
     def _apply_filter_by_index(self, index: int) -> None:
         """Apply a suit filter by index into SUIT_FILTERS."""
         if 0 <= index < len(SUIT_FILTERS):
             _, arcana = SUIT_FILTERS[index]
-            self._active_arcana = arcana
             filter_id = f"filter-{arcana.value}" if arcana else "filter-all"
-            filtered = [c for c in self._cards if c.arcana == arcana] if arcana else self._cards
             self._update_filter_highlight(filter_id)
             self._show_placeholder_detail()
-            self._show_cards(filtered, animate=True)
-            self.set_timer(0.1, self._focus_first_card)
+            self._apply_filter(arcana)
 
     def _show_placeholder_detail(self) -> None:
         """Reset the detail panel with the same soft swap used for card previews."""
@@ -294,7 +294,7 @@ class CardBrowserScreen(Screen):
         detail.remove_children()
         detail.mount(Static("Select a card"))
         if self.app.animation_enabled:
-            detail.styles.animate("opacity", 1.0, duration=0.18, easing="out_cubic")
+            detail.styles.animate("opacity", 1.0, duration=0.18, easing="out_quint")
 
 
 class CardListItem(Static):
@@ -308,23 +308,23 @@ class CardListItem(Static):
         height: auto;
         border: round {C_CRUST};
         background: {C_CRUST};
-        transition: background 180ms, border 180ms, color 180ms, opacity 250ms out_cubic;
+        transition: background 180ms, border 180ms, color 180ms, opacity 250ms out_quint;
     }}
     CardListItem:focus {{
-        background: #1e1e2e;
+        background: {C_BASE};
         color: {C_MAUVE};
         text-style: bold;
         border: round {C_MAUVE};
     }}
     CardListItem:hover {{
-        background: #1e1e2e;
+        background: {C_BASE};
     }}
     CardListItem.selected {{
         background: {C_MANTLE};
         border: round {C_MAUVE};
     }}
     CardListItem.selected:focus {{
-        background: #1e1e2e;
+        background: {C_BASE};
         color: {C_MAUVE};
         text-style: bold;
     }}
@@ -366,11 +366,11 @@ class CardListItem(Static):
                 detail_panel.mount(text_widget)
                 detail_panel.scroll_home(animate=False)
                 if self.app.animation_enabled:
-                    detail_panel.styles.animate("opacity", 1.0, duration=0.18, easing="out_cubic")
+                    detail_panel.styles.animate("opacity", 1.0, duration=0.18, easing="out_quint")
                 return
 
         widget = Static(render_card_detail(drawn))
         detail_panel.mount(widget)
         if self.app.animation_enabled:
-            animate_fade_in(widget)
-            detail_panel.styles.animate("opacity", 1.0, duration=0.18, easing="out_cubic")
+            animate_entrance(widget, duration=0.18)
+            detail_panel.styles.animate("opacity", 1.0, duration=0.18, easing="out_quint")

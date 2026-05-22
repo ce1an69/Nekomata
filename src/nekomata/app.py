@@ -4,6 +4,7 @@ from textual.app import App
 from textual.events import Resize
 
 from nekomata.render.styles import (
+    C_BASE,
     C_CRUST,
     C_LAVENDER,
     C_MANTLE,
@@ -40,18 +41,18 @@ class NekomataApp(App):
         transition: background 180ms, border 180ms, color 180ms;
     }}
     Button:hover {{
-        background: #1e1e2e;
+        background: {C_BASE};
         color: {C_TEXT};
         border: round {C_SURFACE1};
     }}
     Button:focus {{
-        background: #1e1e2e;
+        background: {C_BASE};
         border: round {C_MAUVE};
         color: {C_TEXT};
         text-style: bold;
     }}
     Button.-primary {{
-        background: #1e1e2e;
+        background: {C_BASE};
         border: round {C_MAUVE};
         color: {C_MAUVE};
     }}
@@ -63,7 +64,7 @@ class NekomataApp(App):
         text-style: bold;
     }}
     Button.-success {{
-        background: #1e1e2e;
+        background: {C_BASE};
         border: round {C_LAVENDER};
         color: {C_LAVENDER};
     }}
@@ -74,7 +75,7 @@ class NekomataApp(App):
         opacity: 0.5;
     }}
     Input {{
-        background: #1e1e2e;
+        background: {C_BASE};
         color: {C_TEXT};
         border: round {C_SURFACE1};
         transition: background 180ms, border 180ms;
