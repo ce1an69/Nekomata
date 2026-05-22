@@ -17,6 +17,7 @@ from textual.widget import Widget
 from textual.widgets import Static
 
 from nekomata.card.types import DrawnCard
+from nekomata.render.animations import animate_entrance
 from nekomata.render.card_renderer import create_card_face_widget
 from nekomata.render.styles import (
     C_CRUST,
@@ -31,6 +32,8 @@ from nekomata.render.styles import (
     C_SURFACE2,
     C_TEXT,
     EASE,
+    EASE_SPRING,
+    EASE_OUT,
 )
 from nekomata.render.themes import get_theme
 
@@ -99,17 +102,7 @@ class ConfirmExitInterpretation(ModalScreen[bool]):
             yield Static(content, id="confirm-content")
 
     def on_mount(self) -> None:
-        card = self.query_one("#confirm-card")
-        if self.app.animation_enabled:
-            card.styles.opacity = 0
-            card.styles.offset = (0, 1)
-            card.styles.animate("opacity", 1.0, duration=0.22, easing=EASE)
-            card.styles.animate(
-                "offset",
-                ScalarOffset.from_offset(Offset(0, 0)),
-                duration=0.26,
-                easing=EASE,
-            )
+        animate_entrance(self.query_one("#confirm-card"), duration=0.24)
 
     def action_confirm(self) -> None:
         self.dismiss(True)
@@ -139,7 +132,7 @@ class DeckCard(Static):
         content-align: center middle;
         padding: 0 0;
         margin: 0 1;
-        transition: offset 300ms {EASE}, border 260ms {EASE}, background 260ms {EASE}, opacity 320ms {EASE};
+        transition: offset 300ms {EASE_OUT}, border 260ms {EASE_OUT}, background 260ms {EASE_OUT}, opacity 320ms {EASE_OUT};
     }}
     DeckCard:focus {{
         border: round {C_MAUVE};
@@ -201,7 +194,7 @@ class SpreadSlot(Widget):
         content-align: center middle;
         padding: 0 0;
         margin: 0 1;
-        transition: opacity 280ms {EASE}, offset 220ms {EASE}, border 260ms {EASE}, background 260ms {EASE};
+        transition: opacity 280ms {EASE_OUT}, offset 220ms {EASE_SPRING}, border 260ms {EASE_OUT}, background 260ms {EASE_OUT};
     }}
     SpreadSlot:focus {{
         border: round {C_PINK};
@@ -272,31 +265,20 @@ class SpreadSlot(Widget):
         )
         yield Static(content, classes="slot-content")
 
-    def _render_face_down(self) -> None:
-        self.remove_children()
-        label = Text(self.position_name_zh, style=C_SUBTEXT0, justify="center")
-        self.mount(Static(label, classes="slot-content"))
-
-    def _render_revealed(self) -> None:
+    def _build_reveal_content(self):
+        """Build the Rich renderable for the revealed state."""
         if not self.drawn_card:
-            return
+            return None
         dc = self.drawn_card
-        self.remove_children()
-
-        if dc.is_reversed:
-            self.add_class("reversed")
-        else:
-            self.remove_class("reversed")
 
         if self.app.render_mode != "text":
             img_widget = create_card_face_widget(dc)
             if img_widget is not None:
-                self.mount(img_widget)
-                return
+                return img_widget
 
         border_style = C_LAVENDER if dc.is_reversed else C_MAUVE
         status_style = C_PINK if dc.is_reversed else C_MAUVE
-        fallback = Panel(
+        return Panel(
             Group(
                 Text(dc.card.name_zh, style=f"bold {C_TEXT}", justify="center"),
                 Text(dc.status_label, style=status_style, justify="center"),
@@ -306,18 +288,51 @@ class SpreadSlot(Widget):
             width=8,
             height=5,
         )
-        self.mount(Static(fallback, classes="slot-content"))
 
     def place_card(self, drawn_card: DrawnCard) -> None:
         self.drawn_card = drawn_card
         self.remove_class("empty")
         self.add_class("face-down")
-        self._render_face_down()
+        # Pre-build and pre-mount the reveal widget (hidden) for zero-latency flip
+        reveal = self._build_reveal_content()
+        if reveal is not None:
+            if isinstance(reveal, Widget):
+                reveal.display = False
+                self._mount_reveal(reveal)
+            else:
+                self._mount_reveal(Static(reveal, classes="slot-reveal", display=False))
+        # Show face-down label
+        label = self.query_one(".slot-content", Static)
+        label.display = True
+        label.update(Text(self.position_name_zh, style=C_SUBTEXT0, justify="center"))
+
+    def _mount_reveal(self, widget: Widget) -> None:
+        """Mount the pre-built reveal widget (called from place_card)."""
+        self.mount(widget)
+
+    def _render_revealed(self) -> None:
+        """Swap to revealed content: hide face-down, show pre-mounted reveal."""
+        if not self.drawn_card:
+            return
+        dc = self.drawn_card
+        if dc.is_reversed:
+            self.add_class("reversed")
+        else:
+            self.remove_class("reversed")
+        # Hide face-down content
+        try:
+            self.query_one(".slot-content").display = False
+        except Exception:
+            pass
+        # Show pre-mounted reveal widget
+        for child in self.children:
+            if not child.has_class("slot-content"):
+                child.display = True
+                return
 
     async def flip(self) -> None:
-        """Animate a card flip: soften → swap → settle with glow."""
-        self.styles.offset = (0, -1)
-        self.styles.animate("opacity", 0.12, duration=SLOT_FLIP_FADE_OUT, easing=EASE)
+        """Animate a card flip: fade-out → swap content → spring fade-in with glow."""
+        self.styles.animate("opacity", 0.0, duration=SLOT_FLIP_FADE_OUT, easing=EASE)
         self.styles.animate(
             "offset",
             ScalarOffset.from_offset(Offset(0, -1)),
@@ -330,7 +345,7 @@ class SpreadSlot(Widget):
         self.remove_class("face-down")
         self.add_class("revealed")
         self._render_revealed()
-        self.styles.opacity = 0.12
+        self.styles.opacity = 0
         self.styles.offset = (0, 1)
 
         await asyncio.sleep(SLOT_FLIP_SWAP_PAUSE)
@@ -339,7 +354,7 @@ class SpreadSlot(Widget):
             "offset",
             ScalarOffset.from_offset(Offset(0, 0)),
             duration=SLOT_FLIP_FADE_IN,
-            easing=EASE,
+            easing=EASE_SPRING,
         )
         self.add_class("glow")
 

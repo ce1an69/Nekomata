@@ -9,7 +9,6 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.css.scalar import ScalarOffset
-from textual.css.query import NoMatches
 from textual.events import DescendantFocus, Key, Resize
 from textual.geometry import Offset
 from textual.screen import Screen
@@ -19,6 +18,7 @@ from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
 from nekomata.render.card_renderer import (
     clear_cache,
+    preload_all_async,
     preload_card_image_async,
     render_card_detail,
     render_card_full_detail_widgets,
@@ -37,6 +37,8 @@ from nekomata.render.styles import (
     C_SURFACE2,
     C_TEXT,
     EASE,
+    EASE_OUT,
+    EASE_SPRING,
 )
 from nekomata.screens.box_manager import BoxManager
 from nekomata.screens.draw_widgets import (
@@ -111,12 +113,13 @@ class DrawScreen(Screen):
         min-height: 32;
         padding: 0 1;
         margin: 0 0;
-        border-bottom: solid {C_SURFACE0};
+        border: round transparent;
+        border-bottom: round {C_SURFACE0};
         background: {C_CRUST};
-        transition: opacity 420ms {EASE}, offset 420ms {EASE}, border 180ms {EASE};
+        transition: opacity 420ms {EASE_OUT}, offset 420ms {EASE_OUT}, border 180ms {EASE_OUT};
     }}
     #deck-section.box-active {{
-        border-bottom: tall {C_MAUVE};
+        border-bottom: round {C_MAUVE};
     }}
     #deck-label {{
         background: {C_CRUST};
@@ -138,16 +141,14 @@ class DrawScreen(Screen):
     #main-area {{
         height: 1fr;
         margin-top: 0;
-        transition: offset 280ms {EASE};
-    }}
+        transition: offset 280ms {EASE_SPRING};    }}
     #spread-area {{
         width: 1fr;
         height: 1fr;
         padding: 1 0;
         align: center middle;
         border: round transparent;
-        transition: border 180ms {EASE};
-    }}
+        transition: border 180ms {EASE_OUT};    }}
     #spread-area.box-active {{
         border: round {C_MAUVE};
     }}
@@ -194,7 +195,7 @@ class DrawScreen(Screen):
         opacity: 0;
         display: none;
         offset: 4 0;
-        transition: opacity 240ms {EASE}, offset 320ms {EASE}, border 180ms {EASE};
+        transition: opacity 240ms {EASE_OUT}, offset 320ms {EASE_SPRING}, border 180ms {EASE_OUT};
     }}
     #card-preview.box-active {{
         border: round {C_MAUVE};
@@ -238,7 +239,7 @@ class DrawScreen(Screen):
         margin: 0 1 1 1;
         opacity: 0;
         offset: 0 2;
-        transition: opacity 240ms {EASE}, offset 320ms {EASE}, width 220ms {EASE}, border 180ms {EASE};
+        transition: opacity 240ms {EASE_OUT}, offset 320ms {EASE_SPRING}, width 220ms {EASE_OUT}, border 180ms {EASE_OUT};
     }}
     #interp-dialog.box-active {{
         border: round {C_MAUVE};
@@ -302,19 +303,18 @@ class DrawScreen(Screen):
     # ── Callbacks for StreamHandler ──────────────────────────────────
 
     def _on_stream_render(self, parts) -> None:
-        content = self.query_one("#interp-dialog-content", Static)
         if parts is None:
-            content.update("")
+            self._w_interp_content.update("")
         else:
             from rich.console import Group
-            content.update(Group(*parts))
+            self._w_interp_content.update(Group(*parts))
 
     def _on_stream_hints(self, text) -> None:
-        self.query_one("#interp-dialog-hints", Static).update(text)
+        self._w_interp_hints.update(text)
 
     def _on_stream_scroll(self) -> None:
         try:
-            self.query_one("#interp-dialog", VerticalScroll).scroll_end(animate=False)
+            self._w_interp.scroll_end(animate=False)
         except NoMatches:
             pass
 
@@ -346,7 +346,7 @@ class DrawScreen(Screen):
         return boxes
 
     def _interp_is_visible(self) -> bool:
-        return self.query_one("#interp-dialog").has_class("visible")
+        return self._w_interp.has_class("visible")
 
     # ── Compose ──────────────────────────────────────────────────────
 
@@ -398,14 +398,27 @@ class DrawScreen(Screen):
 
     def on_mount(self) -> None:
         self._prepare_drawn_cards()
-        grid = self.query_one("#spread-grid")
+
+        # Cache frequently queried widgets
+        self._w_deck_section = self.query_one("#deck-section")
+        self._w_deck_label = self.query_one("#deck-label", Static)
+        self._w_main_area = self.query_one("#main-area")
+        self._w_spread_label = self.query_one("#spread-label", Static)
+        self._w_spread_grid = self.query_one("#spread-grid")
+        self._w_preview = self.query_one("#card-preview")
+        self._w_interp = self.query_one("#interp-dialog")
+        self._w_interp_content = self.query_one("#interp-dialog-content", Static)
+        self._w_interp_hints = self.query_one("#interp-dialog-hints", Static)
+        self._w_status = self.query_one("#status", Static)
+        self._w_footer = self.query_one("#draw-footer", Static)
+
+        grid = self._w_spread_grid
         for cls in ("layout-1", "layout-3", "layout-5", "layout-10"):
             grid.remove_class(cls)
         grid.add_class(f"layout-{self._n_positions}")
 
         # Hide spread area during PICK phase
-        main_area = self.query_one("#main-area")
-        main_area.display = False
+        self._w_main_area.display = False
 
         self._update_phase_ui()
         self._animate_deck_entrance()
@@ -430,19 +443,15 @@ class DrawScreen(Screen):
         clear_cache()
 
     def _hide_deck(self) -> None:
-        try:
-            self.query_one("#deck-section").display = False
-            self._animate_spread_recenter()
-        except Exception:
-            pass
+        self._w_deck_section.display = False
+        self._animate_spread_recenter()
 
     def _animate_spread_recenter(self) -> None:
-        main_area = self.query_one("#main-area")
-        main_area.styles.offset = (0, SPREAD_RECENTER_OFFSET)
+        self._w_main_area.styles.offset = (0, SPREAD_RECENTER_OFFSET)
         if not self.app.animation_enabled:
-            main_area.styles.offset = (0, 0)
+            self._w_main_area.styles.offset = (0, 0)
             return
-        main_area.styles.animate(
+        self._w_main_area.styles.animate(
             "offset",
             ScalarOffset.from_offset(Offset(0, 0)),
             duration=SPREAD_RECENTER_DURATION,
@@ -450,9 +459,8 @@ class DrawScreen(Screen):
         )
 
     def _animate_deck_exit(self) -> None:
-        deck_section = self.query_one("#deck-section")
-        deck_section.styles.opacity = 0
-        deck_section.styles.offset = (0, -2)
+        self._w_deck_section.styles.opacity = 0
+        self._w_deck_section.styles.offset = (0, -2)
         for i, card in enumerate(c for c in self.query(DeckCard) if not c.has_class("picked")):
             self.set_timer(0.01 + i * 0.008, lambda c=card: c.add_class("exiting"))
         self.set_timer(DECK_HIDE_DELAY, self._hide_deck)
@@ -460,46 +468,41 @@ class DrawScreen(Screen):
     # ── Phase UI ──────────────────────────────────────────────────────
 
     def _update_phase_ui(self) -> None:
-        deck_label = self.query_one("#deck-label", Static)
-        spread_label = self.query_one("#spread-label", Static)
-        footer = self.query_one("#draw-footer", Static)
-        deck_section = self.query_one("#deck-section")
-
         if self._phase == Phase.PICK:
             self._deck_exit_started = False
-            deck_section.styles.opacity = 1.0
-            deck_section.styles.offset = (0, 0)
+            self._w_deck_section.styles.opacity = 1.0
+            self._w_deck_section.styles.offset = (0, 0)
             remaining = self._n_positions - self._pick_index
             if self._pick_index < self._n_positions:
                 pos_name = self._spread.positions[self._pick_index].name
-                spread_label.update(
+                self._w_spread_label.update(
                     Text(f"── 牌阵 · 还需选 {remaining} 张 · 下一个: {pos_name} ──", style=f"bold {C_LAVENDER}")
                 )
             else:
-                spread_label.update(
+                self._w_spread_label.update(
                     Text("── 牌阵 · 选牌完成 ──", style=f"bold {C_LAVENDER}")
                 )
-            deck_label.update(
+            self._w_deck_label.update(
                 Text(f"── 选牌 ({self._pick_index}/{self._n_positions}) ──", style=f"bold {C_LAVENDER}")
             )
-            footer.update(Text("← → 选牌  Enter 抽牌", style=C_OVERLAY0))
-            deck_section.display = True
+            self._w_footer.update(Text("← → 选牌  Enter 抽牌", style=C_OVERLAY0))
+            self._w_deck_section.display = True
         elif self._phase == Phase.FLIP:
             if not self._deck_exit_started:
                 self._deck_exit_started = True
                 self._animate_deck_exit()
             unrevealed = sum(1 for s in self.query(SpreadSlot) if not s.is_revealed)
-            spread_label.update(
+            self._w_spread_label.update(
                 Text(f"── 翻牌 · 剩余 {unrevealed} 张 ──", style=f"bold {C_LAVENDER}")
             )
-            footer.update(Text("← → 选择  Enter 翻牌", style=C_OVERLAY0))
+            self._w_footer.update(Text("← → 选择  Enter 翻牌", style=C_OVERLAY0))
         elif self._phase == Phase.DONE:
-            deck_section.display = False
-            spread_label.update(
+            self._w_deck_section.display = False
+            self._w_spread_label.update(
                 Text("── ✦ 牌阵已就绪 ✦ ──", style=f"bold {C_LAVENDER}")
             )
             d_hint = "D 隐藏详情" if self._detail_visible else "D 详情"
-            footer.update(Text(f"← → 选牌  {d_hint}  I 解读  Q 返回", style=C_OVERLAY0))
+            self._w_footer.update(Text(f"← → 选牌  {d_hint}  I 解读  Q 返回", style=C_OVERLAY0))
 
     # ── Deck entrance animation ──────────────────────────────────────
 
@@ -563,17 +566,17 @@ class DrawScreen(Screen):
 
         if self._pick_index >= self._n_positions:
             await asyncio.sleep(PICK_COMPLETE_DELAY)
-            self._reveal_spread()
+            await self._reveal_spread()
 
-    def _reveal_spread(self) -> None:
-        """Show spread area and place all picked cards, then enter FLIP phase."""
-        # Hide deck
-        deck_section = self.query_one("#deck-section")
-        deck_section.display = False
+    async def _reveal_spread(self) -> None:
+        """Show spread area, ensure all images cached, then enter FLIP phase."""
+        # Ensure all card images are preloaded before any flip can happen
+        await preload_all_async(
+            [(dc.card, dc.is_reversed) for dc in self._drawn_cards]
+        )
 
-        # Show spread area
-        main_area = self.query_one("#main-area")
-        main_area.display = True
+        self._w_deck_section.display = False
+        self._w_main_area.display = True
 
         # Place all cards in slots
         for i, dc in enumerate(self._drawn_cards):
@@ -641,17 +644,16 @@ class DrawScreen(Screen):
     def _show_detail_panel(self, slot: SpreadSlot | None = None) -> None:
         self._detail_visible = True
         self._sync_interp_layout()
-        preview = self.query_one("#card-preview")
-        preview.display = True
+        self._w_preview.display = True
         self._fit_detail_panel_height()
         self.call_after_refresh(self._fit_detail_panel_height)
         if self.app.animation_enabled:
-            preview.styles.opacity = 0
-            preview.styles.offset = (4, 0)
-        preview.add_class("visible")
+            self._w_preview.styles.opacity = 0
+            self._w_preview.styles.offset = (4, 0)
+        self._w_preview.add_class("visible")
         if self.app.animation_enabled:
-            preview.styles.animate("opacity", 1.0, duration=0.24, easing=EASE)
-            preview.styles.animate(
+            self._w_preview.styles.animate("opacity", 1.0, duration=0.24, easing=EASE)
+            self._w_preview.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 0)),
                 duration=0.32,
@@ -665,10 +667,9 @@ class DrawScreen(Screen):
         self._detail_visible = False
         self._sync_interp_layout()
         self._center_spread_area()
-        preview = self.query_one("#card-preview")
         if self.app.animation_enabled:
-            preview.styles.animate("opacity", 0.0, duration=0.18, easing=EASE)
-            preview.styles.animate(
+            self._w_preview.styles.animate("opacity", 0.0, duration=0.18, easing=EASE)
+            self._w_preview.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(4, 0)),
                 duration=0.24,
@@ -679,27 +680,16 @@ class DrawScreen(Screen):
             self._finish_hide_detail_panel()
 
     def _finish_hide_detail_panel(self) -> None:
-        preview = self.query_one("#card-preview")
-        preview.remove_class("visible")
-        preview.display = False
-        preview.styles.height = "1fr"
+        self._w_preview.remove_class("visible")
+        self._w_preview.display = False
+        self._w_preview.styles.height = "1fr"
         self._center_spread_area()
 
     def _fit_detail_panel_height(self) -> None:
-        try:
-            preview = self.query_one("#card-preview")
-            main_area = self.query_one("#main-area")
-        except NoMatches:
-            return
-        bottom = main_area.region.y + main_area.region.height
-        try:
-            dialog = self.query_one("#interp-dialog")
-        except NoMatches:
-            pass
-        else:
-            if dialog.has_class("visible"):
-                bottom = max(bottom, dialog.region.y + dialog.region.height)
-        preview.styles.height = max(1, bottom - 1)
+        bottom = self._w_main_area.region.y + self._w_main_area.region.height
+        if self._w_interp.has_class("visible"):
+            bottom = max(bottom, self._w_interp.region.y + self._w_interp.region.height)
+        self._w_preview.styles.height = max(1, bottom - 1)
 
     def action_toggle_detail(self) -> None:
         if self._phase != Phase.DONE:
@@ -727,30 +717,25 @@ class DrawScreen(Screen):
             return
         self._last_preview_id = preview_id
 
-        container = self.query_one("#card-preview")
-        container.remove_children()
+        self._w_preview.remove_children()
 
         if self.app.render_mode != "text":
             result = render_card_full_detail_widgets(dc)
             if result is not None:
                 img_widget, text_panel = result
-                container.mount(Horizontal(img_widget, classes="card-origin-frame"))
-                container.mount(Static(text_panel))
+                self._w_preview.mount(Horizontal(img_widget, classes="card-origin-frame"))
+                self._w_preview.mount(Static(text_panel))
                 return
 
-        container.mount(Static(render_card_detail(dc)))
+        self._w_preview.mount(Static(render_card_detail(dc)))
 
     # ── Interpretation ────────────────────────────────────────────────
 
     def _sync_interp_layout(self) -> None:
-        try:
-            dialog = self.query_one("#interp-dialog")
-        except NoMatches:
-            return
         if self._detail_visible:
-            dialog.add_class("detail-visible")
-            dialog.styles.margin = (0, 1, 2, 1)
-            dialog.styles.width = max(
+            self._w_interp.add_class("detail-visible")
+            self._w_interp.styles.margin = (0, 1, 2, 1)
+            self._w_interp.styles.width = max(
                 40,
                 self.size.width
                 - DETAIL_PANEL_WIDTH
@@ -758,9 +743,9 @@ class DrawScreen(Screen):
                 - INTERP_DETAIL_GAP,
             )
         else:
-            dialog.remove_class("detail-visible")
-            dialog.styles.margin = (0, 1, 1, 1)
-            dialog.styles.width = max(
+            self._w_interp.remove_class("detail-visible")
+            self._w_interp.styles.margin = (0, 1, 1, 1)
+            self._w_interp.styles.width = max(
                 40,
                 self.size.width
                 - INTERP_FULL_SIDE_MARGIN * 2
@@ -768,23 +753,22 @@ class DrawScreen(Screen):
             )
 
     def _center_spread_area(self) -> None:
-        main_area = self.query_one("#main-area")
         if self.app.animation_enabled:
-            main_area.styles.animate(
+            self._w_main_area.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 0)),
                 duration=0.22,
                 easing=EASE,
             )
         else:
-            main_area.styles.offset = (0, 0)
+            self._w_main_area.styles.offset = (0, 0)
 
     def action_interpret(self) -> None:
         if self._phase == Phase.DONE and not self._interp_streaming:
             self._do_interpret()
 
     def action_handle_back(self) -> None:
-        if self.query_one("#interp-dialog").has_class("visible"):
+        if self._w_interp.has_class("visible"):
             self.app.push_screen(
                 ConfirmExitInterpretation(),
                 callback=self._on_exit_interpretation_confirmed,
@@ -809,26 +793,25 @@ class DrawScreen(Screen):
 
     def _show_interp_dialog(self) -> None:
         self._interp_streaming = True
-        dialog = self.query_one("#interp-dialog")
         self._box.active_box = "interp"
         self._box.update_highlights()
         self._sync_interp_layout()
         self._fit_detail_panel_height()
-        dialog.display = True
+        self._w_interp.display = True
         if self.app.animation_enabled:
-            dialog.styles.opacity = 0
-            dialog.styles.offset = (0, 2)
-        dialog.add_class("visible")
+            self._w_interp.styles.opacity = 0
+            self._w_interp.styles.offset = (0, 2)
+        self._w_interp.add_class("visible")
         if self.app.animation_enabled:
-            dialog.styles.animate("opacity", 1.0, duration=0.24, easing=EASE)
-            dialog.styles.animate(
+            self._w_interp.styles.animate("opacity", 1.0, duration=0.24, easing=EASE)
+            self._w_interp.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 0)),
                 duration=0.32,
                 easing=EASE,
             )
         self._stream.reset()
-        self.query_one("#status", Static).update("")
+        self._w_status.update("")
 
     def on_resize(self, event: Resize) -> None:
         self._fit_detail_panel_height()
@@ -841,23 +824,22 @@ class DrawScreen(Screen):
         self._box.update_highlights()
         self._sync_interp_layout()
         self._fit_detail_panel_height()
-        dialog = self.query_one("#interp-dialog")
         if self.app.animation_enabled:
-            dialog.styles.animate("opacity", 0.0, duration=0.18, easing=EASE)
-            dialog.styles.animate(
+            self._w_interp.styles.animate("opacity", 0.0, duration=0.18, easing=EASE)
+            self._w_interp.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 2)),
                 duration=0.24,
                 easing=EASE,
             )
-            self.set_timer(0.24, lambda: dialog.remove_class("visible"))
+            self.set_timer(0.24, lambda: self._w_interp.remove_class("visible"))
         else:
-            dialog.remove_class("visible")
+            self._w_interp.remove_class("visible")
         self._update_phase_ui()
 
     def _show_error(self, message: str) -> None:
         self._hide_interp_dialog()
-        self.query_one("#status", Static).update(Text(message, style=C_RED))
+        self._w_status.update(Text(message, style=C_RED))
 
     # ── Focus navigation ──────────────────────────────────────────────
 
@@ -882,17 +864,17 @@ class DrawScreen(Screen):
 
     def key_up(self) -> None:
         if self._box.active_box == "interp":
-            self.query_one("#interp-dialog", VerticalScroll).scroll_up(animate=True)
+            self._w_interp.scroll_up(animate=True)
         elif self._box.active_box == "detail":
-            self.query_one("#card-preview", VerticalScroll).scroll_up(animate=True)
+            self._w_preview.scroll_up(animate=True)
         else:
             self._box.focus_neighbor("up", self._phase, self._n_positions)
 
     def key_down(self) -> None:
         if self._box.active_box == "interp":
-            self.query_one("#interp-dialog", VerticalScroll).scroll_down(animate=True)
+            self._w_interp.scroll_down(animate=True)
         elif self._box.active_box == "detail":
-            self.query_one("#card-preview", VerticalScroll).scroll_down(animate=True)
+            self._w_preview.scroll_down(animate=True)
         else:
             self._box.focus_neighbor("down", self._phase, self._n_positions)
 

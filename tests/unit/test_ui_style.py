@@ -136,7 +136,7 @@ def test_draw_interpretation_panel_fills_bottom_flow_space():
 def test_draw_interpretation_panel_width_tracks_detail_space():
     source = inspect.getsource(DrawScreen._sync_interp_layout)
 
-    assert "dialog.styles.width = max(" in source
+    assert "_w_interp.styles.width = max(" in source
     assert "self.size.width" in source
     assert "DETAIL_PANEL_WIDTH" in source
     assert "INTERP_FULL_SIDE_MARGIN * 2" in source
@@ -208,8 +208,7 @@ def test_interpretation_exit_confirm_uses_catppuccin_modal():
 def test_interpretation_exit_confirm_animates_in():
     source = inspect.getsource(ConfirmExitInterpretation.on_mount)
 
-    assert "styles.animate" in source
-    assert "ScalarOffset.from_offset" in source
+    assert "animate_entrance" in source
 
 
 def test_draw_recentering_spread_uses_animation():
