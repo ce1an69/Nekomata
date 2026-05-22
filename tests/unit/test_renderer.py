@@ -4,13 +4,17 @@ from rich.panel import Panel
 
 from nekomata.card.types import Arcana, Card, DrawnCard, Position
 from nekomata.render.card_renderer import (
+    SIZES,
     render_card_text,
     render_card_detail,
     get_preview_path,
+    get_origin_path,
     render_card_image,
     render_card_image_detail,
+    render_card_image_origin,
     _load_card_image,
     _load_card_detail_image,
+    _load_card_origin_image,
 )
 
 
@@ -91,6 +95,17 @@ def test_get_preview_path_no_image():
         meaning_upright="up", meaning_reversed="down",
     )
     assert get_preview_path(card) is None
+
+
+def test_get_origin_path():
+    card = Card(
+        id="major_00", name="The Fool", name_zh="愚者",
+        arcana=Arcana.MAJOR, number=0, element="air", astrology="Uranus",
+        keywords_upright=("a",), keywords_reversed=("b",),
+        meaning_upright="up", meaning_reversed="down",
+        image_path=Path("assets/cards/major/major_00.png"),
+    )
+    assert get_origin_path(card) == Path("assets/cards/major/major_00_origin.png")
 
 
 def test_render_card_image_no_image():
@@ -186,6 +201,39 @@ def test_load_card_detail_image_resizes_to_preview_size():
     img = _load_card_detail_image(card)
     assert img is not None
     assert img.size == (56, 84)
+
+
+def test_render_card_image_detail_uses_constrained_detail_size():
+    """Spread/detail previews should use the detail PNG at a constrained size."""
+    card = Card(
+        id="major_02", name="The High Priestess", name_zh="女祭司",
+        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
+        keywords_upright=("a",), keywords_reversed=("b",),
+        meaning_upright="up", meaning_reversed="down",
+        image_path=Path("assets/cards/major/major_02.png"),
+    )
+    img = _load_card_detail_image(card, size="detail_panel")
+    assert img is not None
+    assert img.size == SIZES["detail_panel"]
+
+
+def test_render_card_image_origin_uses_constrained_origin_size():
+    """The right detail panel should render from the origin PNG without overflowing."""
+    card = Card(
+        id="major_02", name="The High Priestess", name_zh="女祭司",
+        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
+        keywords_upright=("a",), keywords_reversed=("b",),
+        meaning_upright="up", meaning_reversed="down",
+        image_path=Path("assets/cards/major/major_02.png"),
+    )
+    pos = Position(name="Test", name_zh="测试", description="test")
+    dc = DrawnCard(card=card, position=pos, is_reversed=False)
+    img = _load_card_origin_image(card)
+    result = render_card_image_origin(dc)
+
+    assert img is not None
+    assert img.size == SIZES["origin_panel"]
+    assert isinstance(result, Panel)
 
 
 def test_render_card_image_detail_no_image():

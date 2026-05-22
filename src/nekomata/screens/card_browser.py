@@ -11,7 +11,7 @@ from textual.widgets import Button, Static
 from nekomata.card.data import load_all_cards
 from nekomata.card.types import Arcana, ARCANA_ZH, Card, DrawnCard, Position
 from nekomata.render.animations import animate_fade_in
-from nekomata.render.card_renderer import render_card_detail, render_card_image_detail
+from nekomata.render.card_renderer import render_card_detail, render_card_full_detail
 from nekomata.render.styles import (
     C_CRUST,
     C_MANTLE,
@@ -138,7 +138,7 @@ class CardBrowserScreen(Screen):
         with Horizontal(id="browser-area"):
             with VerticalScroll(id="card-list"):
                 pass
-            with Vertical(id="card-detail"):
+            with VerticalScroll(id="card-detail"):
                 yield Static("Select a card", id="detail-placeholder")
         with Center(id="back-bar"):
             yield Button("Back", id="back")
@@ -351,10 +351,11 @@ class CardListItem(Static):
             detail_panel.styles.opacity = 0.2
         detail_panel.remove_children()
         if self.app.render_mode != "text":
-            img_detail = render_card_image_detail(drawn)
-            if img_detail:
-                widget = Static(img_detail)
+            full_detail = render_card_full_detail(drawn)
+            if full_detail:
+                widget = Static(full_detail)
                 detail_panel.mount(widget)
+                detail_panel.scroll_home(animate=False)
                 if self.app.animation_enabled:
                     animate_fade_in(widget)
                     detail_panel.styles.animate("opacity", 1.0, duration=0.18, easing="out_cubic")

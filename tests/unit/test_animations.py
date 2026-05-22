@@ -7,6 +7,8 @@ from nekomata.screens.draw_widgets import (
     DeckCard,
     DECK_ROW_COUNT,
     NUM_DECK_CARDS,
+    SPREAD_SLOT_HEIGHT,
+    SPREAD_SLOT_WIDTH,
     SLOT_FLIP_FADE_IN,
     SLOT_FLIP_FADE_OUT,
     SLOT_FLIP_GLOW_HOLD,
@@ -67,8 +69,8 @@ def test_deck_card_motion_stays_subtle():
     assert "border: round" in picked_css
 
 
-def test_spread_slot_matches_deck_card_ratio_and_rounding():
-    """Placed cards should keep the same compact shape as selectable cards."""
+def test_spread_slot_has_room_for_complete_face_preview():
+    """Placed cards should fit the complete rendered face instead of clipping it."""
     deck_css = DeckCard.DEFAULT_CSS
     slot_css = SpreadSlot.DEFAULT_CSS
 
@@ -77,7 +79,9 @@ def test_spread_slot_matches_deck_card_ratio_and_rounding():
     slot_width = int(slot_css.split("width: ")[1].split(";")[0])
     slot_height = int(slot_css.split("height: ")[1].split(";")[0])
 
-    assert (slot_width, slot_height) == (deck_width, deck_height)
+    assert slot_width > deck_width
+    assert slot_height > deck_height
+    assert (slot_width, slot_height) == (SPREAD_SLOT_WIDTH, SPREAD_SLOT_HEIGHT)
     assert "border: round" in deck_css
     assert "border: round" in slot_css
     assert "border: dashed" not in slot_css
@@ -89,8 +93,8 @@ def test_spread_grid_uses_compact_columns():
     css = DrawScreen.DEFAULT_CSS
 
     assert "grid-columns: 1fr 1fr 1fr;" not in css
-    assert "grid-columns: 12 12 12;" in css
-    assert "grid-columns: 12 12 12 12 12;" in css
+    assert "grid-columns: 20 20 20;" in css
+    assert "grid-columns: 20 20 20 20 20;" in css
 
 
 def test_deck_cards_have_light_spacing():
