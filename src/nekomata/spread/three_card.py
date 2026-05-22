@@ -4,12 +4,12 @@ from nekomata.spread.base import Spread
 
 
 class PastPresentFuture(Spread):
-    name = "Past / Present / Future"
+    pass
 
 
 class BodyMindSpirit(Spread):
-    name = "Body / Mind / Spirit"
+    pass
 
 
 class SituationActionResult(Spread):
-    name = "Situation / Action / Result"
+    pass

@@ -37,8 +37,8 @@ async def test_draw_screen_mounts_deck():
         from nekomata.screens.draw_widgets import DeckCard, SpreadSlot
         assert isinstance(app.screen, DrawScreen)
         deck_rows = app.screen.query(".deck-row-line")
-        assert len(deck_rows) == 3
-        assert [len(list(row.query(DeckCard))) for row in deck_rows] == [8, 8, 8]
+        assert len(deck_rows) == 4
+        assert [len(list(row.query(DeckCard))) for row in deck_rows] == [12, 12, 12, 12]
         deck_cards = app.screen.query(DeckCard)
         assert len(deck_cards) > 0
         slots = app.screen.query(SpreadSlot)
@@ -93,8 +93,8 @@ def test_spread_grid_uses_compact_columns():
     css = DrawScreen.DEFAULT_CSS
 
     assert "grid-columns: 1fr 1fr 1fr;" not in css
-    assert "grid-columns: 20 20 20;" in css
-    assert "grid-columns: 20 20 20 20 20;" in css
+    assert "grid-columns: 18 18 18;" in css
+    assert "grid-columns: 18 18 18 18 18;" in css
 
 
 def test_deck_cards_have_light_spacing():
@@ -117,7 +117,7 @@ def test_deck_section_has_room_for_three_rows():
 
 def test_draw_screen_offers_more_candidate_cards():
     """The selectable row should feel like a fuller deck."""
-    assert NUM_DECK_CARDS == 24
+    assert NUM_DECK_CARDS == 48
 
 
 def test_pick_complete_transition_is_gentle():

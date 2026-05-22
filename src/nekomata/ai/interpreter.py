@@ -82,19 +82,26 @@ class OpenAIInterpreter:
         self._url = f"{base_url.rstrip('/')}/chat/completions"
         self._api_key = api_key
 
-    def interpret(self, drawn_cards: list[DrawnCard], question: str, spread_key: str = "") -> str:
-        """Send cards and question to the API and return the interpretation."""
-        payload = json.dumps({
-            "model": self._model,
-            "messages": _build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key),
-            "stream": False,
-        }).encode()
-
+    def _build_headers(self) -> dict[str, str]:
         headers = {"Content-Type": "application/json"}
         if self._api_key:
             headers["Authorization"] = f"Bearer {self._api_key}"
+        return headers
 
-        req = urllib.request.Request(self._url, data=payload, headers=headers)
+    def _make_request(self, payload: dict) -> urllib.request.Request:
+        return urllib.request.Request(
+            self._url,
+            data=json.dumps(payload).encode(),
+            headers=self._build_headers(),
+        )
+
+    def interpret(self, drawn_cards: list[DrawnCard], question: str, spread_key: str = "") -> str:
+        """Send cards and question to the API and return the interpretation."""
+        req = self._make_request({
+            "model": self._model,
+            "messages": _build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key),
+            "stream": False,
+        })
         try:
             with urllib.request.urlopen(req, timeout=_DEFAULT_TIMEOUT) as resp:
                 data = json.loads(resp.read())
@@ -111,17 +118,11 @@ class OpenAIInterpreter:
         self, drawn_cards: list[DrawnCard], question: str, spread_key: str = ""
     ) -> Generator[StreamChunk, None, None]:
         """Yield text chunks from the streaming API (SSE)."""
-        payload = json.dumps({
+        req = self._make_request({
             "model": self._model,
             "messages": _build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key),
             "stream": True,
-        }).encode()
-
-        headers = {"Content-Type": "application/json"}
-        if self._api_key:
-            headers["Authorization"] = f"Bearer {self._api_key}"
-
-        req = urllib.request.Request(self._url, data=payload, headers=headers)
+        })
         try:
             with urllib.request.urlopen(req, timeout=_DEFAULT_TIMEOUT) as resp:
                 for raw_line in resp:

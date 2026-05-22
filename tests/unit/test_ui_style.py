@@ -173,8 +173,8 @@ def test_draw_stream_content_renders_markdown():
     from nekomata.screens.stream_handler import StreamHandler
     source = inspect.getsource(StreamHandler._render)
 
-    assert "Text(self._thinking_text" in source
-    assert "Markdown(self._content_text" in source
+    assert 'Text("".join(self._thinking_chars)' in source
+    assert 'Markdown("".join(self._content_chars)' in source
     assert "italic dim" in source
     assert "C_OVERLAY0" in source
     assert "self._render_content(parts)" in source

@@ -2,7 +2,6 @@
 
 import asyncio
 
-from rich.align import Align
 from rich.console import Group
 from rich.panel import Panel
 from rich.text import Text
@@ -14,10 +13,11 @@ from textual.css.scalar import ScalarOffset
 from textual.geometry import Offset
 from textual.message import Message
 from textual.screen import ModalScreen
+from textual.widget import Widget
 from textual.widgets import Static
 
 from nekomata.card.types import DrawnCard
-from nekomata.render.card_renderer import render_card_face
+from nekomata.render.card_renderer import create_card_face_widget
 from nekomata.render.styles import (
     C_CRUST,
     C_LAVENDER,
@@ -35,12 +35,12 @@ from nekomata.render.styles import (
 from nekomata.render.themes import get_theme
 
 # Deck layout constants
-NUM_DECK_CARDS = 24
-DECK_ROW_COUNT = 3
-DECK_CARD_WIDTH = 10
-DECK_CARD_HEIGHT = 8
-SPREAD_SLOT_WIDTH = 18
-SPREAD_SLOT_HEIGHT = 14
+NUM_DECK_CARDS = 48
+DECK_ROW_COUNT = 4
+DECK_CARD_WIDTH = 9
+DECK_CARD_HEIGHT = 7
+SPREAD_SLOT_WIDTH = 16
+SPREAD_SLOT_HEIGHT = 12
 
 # Animation timing constants
 DECK_HIDE_DELAY = 0.42
@@ -173,7 +173,7 @@ class DeckCard(Static):
         self.post_message(self.Picked(self))
 
 
-class SpreadSlot(Static):
+class SpreadSlot(Widget):
     """A position slot in the spread: empty → face-down → revealed."""
 
     can_focus = True
@@ -226,6 +226,12 @@ class SpreadSlot(Static):
         background: {C_MANTLE};
         border: round {C_LAVENDER};
     }}
+    SpreadSlot.reversed {{
+        border: round {C_MAUVE};
+    }}
+    SpreadSlot.reversed:focus {{
+        border: round {C_PINK};
+    }}
     SpreadSlot.revealed:focus {{
         border: round {C_PINK};
         background: {C_SURFACE1};
@@ -241,6 +247,15 @@ class SpreadSlot(Static):
         border: round {C_PINK};
         background: {C_SURFACE0};
     }}
+    SpreadSlot .card-face {{
+        width: 100%;
+        height: 100%;
+    }}
+    SpreadSlot .slot-content {{
+        width: auto;
+        height: auto;
+        background: transparent;
+    }}
     """
 
     def __init__(self, position_index: int, position_name_zh: str) -> None:
@@ -249,45 +264,49 @@ class SpreadSlot(Static):
         self.drawn_card: DrawnCard | None = None
         self.is_revealed = False
         super().__init__()
-        self._render_empty()
 
-    def _render_empty(self) -> None:
-        self.update(
-            Align.center(
-                Group(
-                    Text("?", style=f"bold {C_SURFACE1}", justify="center"),
-                    Text(self.position_name_zh, style=C_SURFACE2, justify="center"),
-                )
-            )
+    def compose(self) -> ComposeResult:
+        content = Group(
+            Text("?", style=f"bold {C_SURFACE1}", justify="center"),
+            Text(self.position_name_zh, style=C_SURFACE2, justify="center"),
         )
+        yield Static(content, classes="slot-content")
 
     def _render_face_down(self) -> None:
+        self.remove_children()
         label = Text(self.position_name_zh, style=C_SUBTEXT0, justify="center")
-        self.update(Align.center(label))
+        self.mount(Static(label, classes="slot-content"))
 
     def _render_revealed(self) -> None:
         if not self.drawn_card:
             return
         dc = self.drawn_card
-        theme = get_theme()
-        render_mode = self.app.render_mode
+        self.remove_children()
 
-        face_size = "slot" if render_mode != "text" else render_mode
-        face = render_card_face(dc, size=face_size, theme=theme)
-        if face is None:
-            border_style = C_LAVENDER if dc.is_reversed else C_MAUVE
-            status_style = C_PINK if dc.is_reversed else C_MAUVE
-            face = Panel(
-                Group(
-                    Text(dc.card.name_zh, style=f"bold {C_TEXT}", justify="center"),
-                    Text(dc.status_label, style=status_style, justify="center"),
-                ),
-                border_style=border_style,
-                padding=(0, 0),
-                width=8,
-                height=5,
-            )
-        self.update(Align.center(face))
+        if dc.is_reversed:
+            self.add_class("reversed")
+        else:
+            self.remove_class("reversed")
+
+        if self.app.render_mode != "text":
+            img_widget = create_card_face_widget(dc)
+            if img_widget is not None:
+                self.mount(img_widget)
+                return
+
+        border_style = C_LAVENDER if dc.is_reversed else C_MAUVE
+        status_style = C_PINK if dc.is_reversed else C_MAUVE
+        fallback = Panel(
+            Group(
+                Text(dc.card.name_zh, style=f"bold {C_TEXT}", justify="center"),
+                Text(dc.status_label, style=status_style, justify="center"),
+            ),
+            border_style=border_style,
+            padding=(0, 0),
+            width=8,
+            height=5,
+        )
+        self.mount(Static(fallback, classes="slot-content"))
 
     def place_card(self, drawn_card: DrawnCard) -> None:
         self.drawn_card = drawn_card

@@ -44,6 +44,8 @@ _DATA_DIR = Path(__file__).resolve().parents[3] / "data"
 _CACHED_HTML: str | None = None
 _CACHED_STRINGS: dict | None = None
 _CACHED_SPREADS: list[dict] | None = None
+_CACHED_CARDS_DICT: list[dict] | None = None
+_CACHED_CARDS_BY_ID: dict[str, Card] | None = None
 
 # Catppuccin Mocha colors mapped to CSS variable names
 _THEME_COLORS = {
@@ -64,7 +66,7 @@ _THEME_COLORS = {
 }
 
 
-def _card_to_dict(card: Card) -> dict:
+def _card_to_dict(card: Card, has_origin: bool = False) -> dict:
     return {
         "id": card.id,
         "name": card.name,
@@ -78,8 +80,25 @@ def _card_to_dict(card: Card) -> dict:
         "keywords_reversed": list(card.keywords_reversed),
         "meaning_upright": card.meaning_upright,
         "meaning_reversed": card.meaning_reversed,
-        "has_image": card.image_path is not None and (card.image_path.parent / f"{card.id}_origin.png").exists(),
+        "has_image": has_origin,
     }
+
+
+def _get_cached_cards() -> tuple[list[dict], dict[str, Card]]:
+    """Return cached (card_dicts, cards_by_id). Loads once from disk."""
+    global _CACHED_CARDS_DICT, _CACHED_CARDS_BY_ID
+    if _CACHED_CARDS_DICT is None:
+        cards = load_all_cards()
+        _CACHED_CARDS_BY_ID = {c.id: c for c in cards}
+        _CACHED_CARDS_DICT = [
+            _card_to_dict(
+                c,
+                has_origin=c.image_path is not None
+                and (c.image_path.parent / f"{c.id}_detail.png").exists(),
+            )
+            for c in cards
+        ]
+    return _CACHED_CARDS_DICT, _CACHED_CARDS_BY_ID
 
 
 def _spreads_to_list() -> list[dict]:
@@ -156,8 +175,8 @@ def create_app() -> FastAPI:
 
     @app.get("/api/cards")
     async def get_cards():
-        cards = load_all_cards()
-        return [_card_to_dict(c) for c in cards]
+        card_dicts, _ = _get_cached_cards()
+        return card_dicts
 
     @app.get("/api/spreads")
     async def get_spreads():
@@ -181,7 +200,7 @@ def create_app() -> FastAPI:
     @app.post("/api/interpret")
     async def interpret(req: InterpretPayload):
         config = AppConfig.load()
-        cards_by_id = {c.id: c for c in load_all_cards()}
+        _, cards_by_id = _get_cached_cards()
 
         drawn: list[DrawnCard] = []
         for dc in req.cards:

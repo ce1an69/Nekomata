@@ -11,7 +11,7 @@ from textual.widgets import Button, Static
 from nekomata.card.data import load_all_cards
 from nekomata.card.types import Arcana, ARCANA_ZH, Card, DrawnCard, Position
 from nekomata.render.animations import animate_fade_in
-from nekomata.render.card_renderer import render_card_detail, render_card_full_detail
+from nekomata.render.card_renderer import render_card_detail, render_card_full_detail_widgets
 from nekomata.render.styles import (
     C_CRUST,
     C_MANTLE,
@@ -101,7 +101,13 @@ class CardBrowserScreen(Screen):
         background: {C_MANTLE};
         padding: 1 2;
         margin-left: 1;
+        align: center top;
         transition: opacity 250ms out_cubic;
+    }}
+    CardBrowserScreen #card-detail .card-origin {{
+        width: 50%;
+        height: auto;
+        background: {C_MANTLE};
     }}
     CardBrowserScreen #card-detail Static {{
         background: {C_MANTLE};
@@ -350,16 +356,19 @@ class CardListItem(Static):
         if self.app.animation_enabled:
             detail_panel.styles.opacity = 0.2
         detail_panel.remove_children()
+
         if self.app.render_mode != "text":
-            full_detail = render_card_full_detail(drawn)
-            if full_detail:
-                widget = Static(full_detail)
-                detail_panel.mount(widget)
+            result = render_card_full_detail_widgets(drawn)
+            if result is not None:
+                img_widget, text_panel = result
+                detail_panel.mount(img_widget)
+                text_widget = Static(text_panel)
+                detail_panel.mount(text_widget)
                 detail_panel.scroll_home(animate=False)
                 if self.app.animation_enabled:
-                    animate_fade_in(widget)
                     detail_panel.styles.animate("opacity", 1.0, duration=0.18, easing="out_cubic")
                 return
+
         widget = Static(render_card_detail(drawn))
         detail_panel.mount(widget)
         if self.app.animation_enabled:
