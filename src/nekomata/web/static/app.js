@@ -1,7 +1,9 @@
-/** Nekomata Web — main application entry, screen management, all UI logic. */
+/** Nekomata Web — main application entry. */
 
 import { Deck } from './cards.js';
 import { InterpretationController } from './interpret.js';
+import { Starfield } from './particles.js';
+import { CardCarousel } from './carousel.js';
 
 // ---------------------------------------------------------------------------
 // State
@@ -17,6 +19,7 @@ const state = {
     spread: null,
     phase: 'pick',   // pick | flip | done
     deck: null,
+    carousel: null,
     pickIndex: 0,
     flipIndex: 0,
     selectedSlotIdx: -1,
@@ -27,11 +30,19 @@ const state = {
     browserReversed: false,
 };
 
+let starfield = null;
+
 // ---------------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const canvas = document.getElementById('stars-canvas');
+    if (canvas) {
+        starfield = new Starfield(canvas);
+        starfield.start();
+    }
+
     await Promise.all([loadConfig(), loadCards(), loadSpreads(), loadStrings()]);
 
     if (state.cards.length === 0) {
@@ -100,15 +111,6 @@ function showScreen(id) {
         el.offsetHeight;
         el.style.animation = '';
     }
-}
-
-function getVisibleScreen() {
-    for (const s of document.querySelectorAll('.screen')) {
-        if (!s.classList.contains('hidden')) {
-            return s.id.replace('screen-', '');
-        }
-    }
-    return '';
 }
 
 // ---------------------------------------------------------------------------
@@ -314,7 +316,6 @@ function initSpreadSelect() {
         btnContainer.appendChild(opt);
     });
 
-    // Back button
     const back = document.createElement('button');
     back.className = 'spread-back';
     back.textContent = '← 返回';
@@ -324,7 +325,6 @@ function initSpreadSelect() {
     });
     btnContainer.appendChild(back);
 
-    // Show first preview
     if (state.spreads.length > 0) showSpreadPreview(state.spreads[0]);
 }
 
@@ -343,7 +343,7 @@ function selectSpread(key) {
 }
 
 // ---------------------------------------------------------------------------
-// Draw Screen
+// Draw Screen — Carousel
 // ---------------------------------------------------------------------------
 
 function showDrawScreen() {
@@ -356,7 +356,6 @@ function showDrawScreen() {
         key: spDef.key,
         positions: spDef.positions,
         drawnCards: [],
-        plannedCards: [],
     };
     state.phase = 'pick';
     state.pickIndex = 0;
@@ -364,17 +363,6 @@ function showDrawScreen() {
     state.selectedSlotIdx = -1;
     state.showDetail = true;
     state.showInterp = false;
-
-    for (let i = 0; i < spDef.positions.length; i++) {
-        const draw = state.deck.draw(state.reversalProb);
-        if (draw) {
-            state.spread.plannedCards.push({
-                card: draw.card,
-                position: spDef.positions[i],
-                isReversed: draw.isReversed,
-            });
-        }
-    }
 
     showScreen('draw');
 
@@ -387,7 +375,7 @@ function showDrawScreen() {
     document.getElementById('interp-panel').classList.add('hidden');
     document.getElementById('interp-text').innerHTML = '';
 
-    renderDeck();
+    renderCarousel();
     renderSpreadSlots();
     updateDrawActions();
 
@@ -400,30 +388,95 @@ function showDrawScreen() {
     );
 }
 
-function renderDeck() {
-    const grid = document.getElementById('deck-grid');
-    const section = document.getElementById('deck-section');
+function renderCarousel() {
+    const section = document.getElementById('carousel-section');
     section.classList.remove('exiting');
-    section.style.maxHeight = '300px';
-    grid.innerHTML = '';
+    section.style.display = '';
 
-    const count = 24;
-    for (let i = 0; i < count; i++) {
-        const card = document.createElement('div');
-        card.className = 'deck-card';
-        card.textContent = '✦';
-        card.dataset.index = i;
-        card.addEventListener('click', () => onDeckCardPicked(card));
-        grid.appendChild(card);
+    if (state.carousel) state.carousel.destroy();
 
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(10px)';
-        setTimeout(() => {
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, i * 30);
-    }
+    const scene = document.getElementById('carousel-scene');
+    state.carousel = new CardCarousel(scene, {
+        onSelect: onCarouselSelect,
+        onReady: () => { updateDrawActions(); },
+    });
+
+    state.carousel.loadCards(state.deck.remaining);
+    state.carousel.start();
 }
+
+function onCarouselSelect(carouselIdx) {
+    if (state.phase !== 'pick') return;
+
+    const card = state.deck.remaining[carouselIdx];
+    if (!card) return;
+
+    const isReversed = Math.random() < state.reversalProb;
+    const posIdx = state.pickIndex;
+    const position = state.spread.positions[posIdx];
+
+    // Get positions for flying animation before removing card
+    const carouselEl = state.carousel.els[carouselIdx];
+    const slot = document.querySelectorAll('.spread-slot')[posIdx];
+
+    if (carouselEl && slot) {
+        const fromRect = carouselEl.getBoundingClientRect();
+        const toRect = slot.getBoundingClientRect();
+
+        const flyEl = document.createElement('div');
+        flyEl.className = 'cc-fly';
+        flyEl.innerHTML = '<span class="cc-sym">✦</span>';
+        flyEl.style.left = fromRect.left + 'px';
+        flyEl.style.top = fromRect.top + 'px';
+        flyEl.style.width = fromRect.width + 'px';
+        flyEl.style.height = fromRect.height + 'px';
+        document.body.appendChild(flyEl);
+
+        requestAnimationFrame(() => {
+            flyEl.style.left = toRect.left + 'px';
+            flyEl.style.top = toRect.top + 'px';
+            flyEl.style.width = toRect.width + 'px';
+            flyEl.style.height = toRect.height + 'px';
+            flyEl.style.opacity = '0.7';
+        });
+
+        setTimeout(() => flyEl.remove(), 500);
+    }
+
+    // Remove card from carousel
+    state.carousel.removeCard(carouselIdx);
+
+    // Place card in spread slot
+    state.spread.drawnCards.push({ card, position, isReversed });
+
+    if (slot) {
+        slot.classList.remove('empty', 'waiting');
+        slot.classList.add('face-down');
+        slot.innerHTML = buildSlotFaceDown(state.spread.drawnCards[posIdx]);
+
+        slot.style.opacity = '0';
+        slot.style.transform = 'scale(0.8)';
+        setTimeout(() => {
+            slot.style.transition = 'opacity 0.3s, transform 0.3s';
+            slot.style.opacity = '1';
+            slot.style.transform = 'scale(1)';
+        }, 300);
+    }
+
+    state.pickIndex++;
+
+    if (state.pickIndex >= state.spread.positions.length) {
+        setTimeout(() => transitionToFlip(), 600);
+    } else {
+        markWaitingSlot(state.pickIndex);
+    }
+
+    updateDrawActions();
+}
+
+// ---------------------------------------------------------------------------
+// Spread Slots
+// ---------------------------------------------------------------------------
 
 function renderSpreadSlots() {
     const area = document.getElementById('spread-area');
@@ -449,41 +502,6 @@ function markWaitingSlot(idx) {
     if (idx < slots.length) slots[idx].classList.add('waiting');
 }
 
-function onDeckCardPicked(deckCardEl) {
-    if (state.phase !== 'pick') return;
-    if (deckCardEl.classList.contains('picked')) return;
-
-    const planned = state.spread.plannedCards[state.pickIndex];
-    if (!planned) return;
-
-    deckCardEl.classList.add('picked');
-
-    state.spread.drawnCards.push(planned);
-    const slotIdx = state.pickIndex;
-    const slot = document.querySelectorAll('.spread-slot')[slotIdx];
-
-    slot.classList.remove('empty', 'waiting');
-    slot.classList.add('face-down');
-    slot.innerHTML = buildSlotFaceDown(planned);
-
-    slot.style.opacity = '0';
-    slot.style.transform = 'translateY(-12px)';
-    requestAnimationFrame(() => {
-        slot.style.opacity = '1';
-        slot.style.transform = 'translateY(0)';
-    });
-
-    state.pickIndex++;
-
-    if (state.pickIndex >= state.spread.positions.length) {
-        setTimeout(() => transitionToFlip(), 400);
-    } else {
-        markWaitingSlot(state.pickIndex);
-    }
-
-    updateDrawActions();
-}
-
 function buildSlotFaceDown(drawnCard) {
     return `<div class="slot-inner">` +
         `<div class="slot-face slot-back"><span class="slot-back-pattern">✦</span></div>` +
@@ -506,16 +524,15 @@ function buildCardFaceInner(drawnCard) {
 
 function transitionToFlip() {
     state.phase = 'flip';
-    const section = document.getElementById('deck-section');
-    const deckCards = section.querySelectorAll('.deck-card');
 
-    deckCards.forEach((dc, i) => {
-        setTimeout(() => dc.classList.add('exiting'), i * 25);
-    });
+    // Collapse carousel
+    const section = document.getElementById('carousel-section');
+    section.classList.add('exiting');
 
-    setTimeout(() => {
-        section.classList.add('exiting');
-    }, deckCards.length * 25 + 200);
+    if (state.carousel) {
+        state.carousel.destroy();
+        state.carousel = null;
+    }
 
     updateDrawActions();
 }
@@ -537,13 +554,13 @@ function flipSlot(slotEl, idx) {
     setTimeout(() => {
         slotEl.classList.add('revealed');
         slotEl.classList.add('glow');
-        setTimeout(() => slotEl.classList.remove('glow'), 300);
-    }, 400);
+        setTimeout(() => slotEl.classList.remove('glow'), 400);
+    }, 500);
 
     state.flipIndex++;
 
     if (state.flipIndex >= state.spread.positions.length) {
-        setTimeout(() => completionShimmer(), 500);
+        setTimeout(() => completionShimmer(), 600);
     }
 
     updateDrawActions();
@@ -556,16 +573,40 @@ function completionShimmer() {
     slots.forEach((s, i) => {
         setTimeout(() => {
             s.classList.add('glow');
-            setTimeout(() => s.classList.remove('glow'), 400);
-        }, i * 120);
+            setTimeout(() => s.classList.remove('glow'), 500);
+        }, i * 150);
     });
+
+    // Spawn gold particles
+    for (let i = 0; i < 15; i++) {
+        setTimeout(() => spawnInterpParticle(), i * 80);
+    }
 
     setTimeout(() => {
         showDetailPanel();
         selectSlot(0);
-    }, slots.length * 120 + 200);
+    }, slots.length * 150 + 300);
 
     updateDrawActions();
+}
+
+function spawnInterpParticle() {
+    const p = document.createElement('div');
+    p.className = 'cc-particle';
+    p.style.left = (Math.random() * window.innerWidth) + 'px';
+    p.style.top = (Math.random() * window.innerHeight) + 'px';
+    const sz = 3 + Math.random() * 8;
+    p.style.width = sz + 'px';
+    p.style.height = sz + 'px';
+    p.style.background = '#d4af37';
+    p.style.boxShadow = '0 0 10px #d4af37';
+    p.style.zIndex = '9999';
+    p.animate([
+        { transform: 'translateY(0) scale(1)', opacity: 0.8 },
+        { transform: `translateY(-100px) scale(0)`, opacity: 0 },
+    ], { duration: 1000 + Math.random() * 1000, easing: 'ease-out' });
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 2000);
 }
 
 function selectSlot(idx) {
@@ -618,8 +659,12 @@ function updateDrawActions() {
     btnsEl.innerHTML = '';
 
     if (state.phase === 'pick') {
-        hintEl.textContent = `点击牌堆抽牌 (${state.pickIndex}/${state.spread.positions.length})`;
-        btnsEl.appendChild(makeBtn('← 返回', '', () => { showScreen('home'); resumeHome(); }));
+        hintEl.textContent = `点击选牌 (${state.pickIndex}/${state.spread.positions.length}) · 拖拽浏览`;
+        btnsEl.appendChild(makeBtn('← 返回', '', () => {
+            if (state.carousel) state.carousel.destroy();
+            showScreen('home');
+            resumeHome();
+        }));
     } else if (state.phase === 'flip') {
         hintEl.textContent = `点击牌面翻开 (${state.flipIndex}/${state.spread.positions.length})`;
         btnsEl.appendChild(makeBtn('← 返回', '', () => { showScreen('home'); resumeHome(); }));
