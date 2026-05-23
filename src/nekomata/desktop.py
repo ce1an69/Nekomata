@@ -6,10 +6,6 @@ import sys
 import threading
 import time
 
-# Force edgechromium backend on Windows — avoids pythonnet/clr dependency
-# which doesn't work in PyInstaller bundles.
-_FORCE_GUI = "edgechromium" if sys.platform == "win32" else None
-
 
 def find_free_port() -> int:
     """Find an available port on localhost."""
@@ -39,8 +35,6 @@ def main() -> None:
     if debug:
         print("[debug] starting Nekomata desktop...")
 
-    import webview
-
     from nekomata.web.server import create_app
     import uvicorn
 
@@ -65,7 +59,6 @@ def main() -> None:
 
     url = f"http://127.0.0.1:{port}"
     if debug:
-        # Test that the server actually responds
         import urllib.request
         try:
             resp = urllib.request.urlopen(url, timeout=2)
@@ -73,11 +66,23 @@ def main() -> None:
         except Exception as e:
             print(f"[debug] GET {url} → ERROR: {e}")
 
-    if debug:
-        print(f"[debug] opening webview window → {url}")
+    # Try native webview; fall back to system browser (pythonnet can't
+    # initialize inside PyInstaller bundles on some Windows setups).
+    try:
+        import webview
 
-    webview.create_window("Nekomata 猫又", url, width=1200, height=800, min_size=(800, 600))
-    webview.start(debug=debug, gui=_FORCE_GUI)
+        if debug:
+            print(f"[debug] opening webview window → {url}")
+        webview.create_window("Nekomata 猫又", url, width=1200, height=800, min_size=(800, 600))
+        webview.start(debug=debug)
+    except Exception:
+        import webbrowser
+
+        if debug:
+            print(f"[debug] webview unavailable, opening browser → {url}")
+        webbrowser.open(url)
+        # Keep process alive — server runs until killed.
+        server_thread.join()
 
 
 if __name__ == "__main__":
