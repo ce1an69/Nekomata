@@ -142,13 +142,11 @@ async function saveSetup() {
 function slashDesc(cmd) {
     switch (cmd) {
         case '/browse': return `浏览全部 ${state.cards.length || 78} 张牌`;
-        case '/help': return '帮助';
         case '/status': return '当前配置';
-        case '/quit': return '退出';
     }
 }
 
-const SLASH_COMMANDS = ['/browse', '/help', '/status', '/quit'];
+const SLASH_COMMANDS = ['/browse', '/status'];
 
 export function initHomeScreen() {
     const input = document.getElementById('home-input');
@@ -237,18 +235,8 @@ function handleSlashCommand(cmd) {
         case '/browse':
             showBrowserScreen();
             break;
-        case '/help':
-            showModal('帮助',
-                '<p>输入你的问题开始占卜</p>' +
-                `<p>/browse — ${slashDesc('/browse')}</p>` +
-                '<p>/status — 查看当前配置</p>' +
-                '<p>/quit — 退出</p>');
-            break;
         case '/status':
             showToast('当前配置', `API: ${state.config.api_url}  Model: ${state.config.model}`);
-            break;
-        case '/quit':
-            window.close();
             break;
     }
 }
