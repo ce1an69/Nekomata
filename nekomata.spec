@@ -50,7 +50,7 @@ a = Analysis(
         "nekomata.ai.interpreter",
         "nekomata.ai.prompts",
         "nekomata.render.styles",
-        "uvicorn.logging.default",
+        "uvicorn.logging",
         "uvicorn.lifespan.on",
         "uvicorn.protocols.http.auto",
         "uvicorn.protocols.websockets.auto",
