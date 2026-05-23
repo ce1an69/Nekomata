@@ -12,6 +12,9 @@ ICON_ICNS = ICON_DIR / "nekomata.icns"
 ICON_ICO = ICON_DIR / "nekomata.ico"
 APP_ICON = ICON_ICO if sys.platform == "win32" else ICON_ICNS if sys.platform == "darwin" else None
 
+# UPX can corrupt .NET/pythonnet DLLs on Windows
+_USE_UPX = sys.platform != "win32"
+
 # --- Collect data files ---
 
 datas = [
@@ -54,7 +57,11 @@ a = Analysis(
         "uvicorn.lifespan.on",
         "uvicorn.protocols.http.auto",
         "uvicorn.protocols.websockets.auto",
-        "webview.platforms.edgechromium",
+        *(
+            ["webview.platforms.winforms", "webview.platforms.edgechromium"]
+            if sys.platform == "win32"
+            else []
+        ),
     ],
     hookspath=[],
     hooksconfig={},
@@ -65,8 +72,6 @@ a = Analysis(
         "rich",
         "PIL",
         "tkinter",
-        "clr",
-        "pythonnet",
         "matplotlib",
         "numpy",
         "scipy",
@@ -88,7 +93,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=_USE_UPX,
     console=False,
     icon=str(APP_ICON) if APP_ICON else None,
 )
@@ -99,7 +104,7 @@ coll = COLLECT(
     a.zipfiles,
     a.datas,
     strip=False,
-    upx=True,
+    upx=_USE_UPX,
     upx_exclude=[],
     name="Nekomata",
 )
