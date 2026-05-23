@@ -33,12 +33,8 @@ export class InterpretationController {
                 }),
                 signal: this._abortController.signal,
             });
-            if (!resp.ok) {
-                throw new Error(`解读请求失败 (${resp.status})`);
-            }
-            if (!resp.body) {
-                throw new Error('解读请求没有返回内容');
-            }
+            if (!resp.ok) throw new Error(`解读请求失败 (${resp.status})`);
+            if (!resp.body) throw new Error('解读请求没有返回内容');
 
             const reader = resp.body.getReader();
             const decoder = new TextDecoder();
@@ -66,14 +62,18 @@ export class InterpretationController {
                             this._showLoading(false);
                             return;
                         }
-                        // Render each chunk as it arrives
                         if (chunk.kind !== currentKind) {
                             currentKind = chunk.kind;
                             currentEl = document.createElement('div');
                             currentEl.className = chunk.kind === 'thinking' ? 'thinking' : 'content';
                             this._container.appendChild(currentEl);
                         }
-                        currentEl.textContent += chunk.text;
+                        if (currentKind === 'content') {
+                            currentEl.innerHTML = renderMarkdown(currentEl._raw + chunk.text);
+                            currentEl._raw = (currentEl._raw || '') + chunk.text;
+                        } else {
+                            currentEl.textContent += chunk.text;
+                        }
                     } catch { /* skip malformed */ }
                 }
             }
@@ -81,13 +81,11 @@ export class InterpretationController {
             this._showLoading(false);
             const doneEl = document.createElement('div');
             doneEl.className = 'interp-done';
-            doneEl.textContent = '— done —';
+            doneEl.textContent = '─── ✦ ───';
             this._container.appendChild(doneEl);
 
         } catch (e) {
-            if (e.name !== 'AbortError') {
-                this._appendError(e.message);
-            }
+            if (e.name !== 'AbortError') this._appendError(e.message);
             this._showLoading(false);
         }
     }
@@ -126,4 +124,18 @@ export class InterpretationController {
         el.textContent = msg;
         this._container.appendChild(el);
     }
+}
+
+/** Minimal markdown → HTML for interpretation content. */
+function renderMarkdown(text) {
+    return text
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>')
+        .replace(/^/, '<p>').replace(/$/, '</p>');
 }

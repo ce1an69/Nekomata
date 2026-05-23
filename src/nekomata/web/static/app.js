@@ -17,7 +17,7 @@ const state = {
     spreads: [],
     strings: {},
     spread: null,
-    phase: 'pick',   // pick | flip | done
+    phase: 'pick',
     deck: null,
     carousel: null,
     pickIndex: 0,
@@ -114,6 +114,47 @@ function showScreen(id) {
 }
 
 // ---------------------------------------------------------------------------
+// Toast notifications
+// ---------------------------------------------------------------------------
+
+function showToast(title, body, duration = 3000) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<div class="toast-title">${title}</div>` +
+        (body ? `<div class="toast-body">${body}</div>` : '');
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('exiting');
+        toast.addEventListener('animationend', () => toast.remove());
+    }, duration);
+}
+
+// ---------------------------------------------------------------------------
+// Modal dialog
+// ---------------------------------------------------------------------------
+
+function showModal(title, bodyHtml) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `<div class="modal-box">` +
+        `<h3>${title}</h3>` +
+        bodyHtml +
+        `<div class="modal-actions"><button class="btn btn-primary modal-close">OK</button></div></div>`;
+
+    const close = () => {
+        overlay.classList.add('closing');
+        overlay.addEventListener('animationend', () => overlay.remove());
+    };
+
+    overlay.querySelector('.modal-close').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    document.body.appendChild(overlay);
+}
+
+
+// ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
 
@@ -148,15 +189,9 @@ function initSetupScreen() {
     if (initSetupScreen._done) return;
     initSetupScreen._done = true;
 
-    modelInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') saveSetup();
-    });
-    keyInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') modelInput.focus();
-    });
-    urlInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') keyInput.focus();
-    });
+    modelInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveSetup(); });
+    keyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') modelInput.focus(); });
+    urlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') keyInput.focus(); });
 }
 
 async function saveSetup() {
@@ -268,10 +303,14 @@ function handleSlashCommand(cmd) {
             showBrowserScreen();
             break;
         case '/help':
-            alert('输入你的问题开始占卜，或使用 /browse 浏览牌面');
+            showModal('帮助',
+                '<p>输入你的问题开始占卜</p>' +
+                '<p>/browse — 浏览全部 78 张牌</p>' +
+                '<p>/status — 查看当前配置</p>' +
+                '<p>/quit — 退出</p>');
             break;
         case '/status':
-            alert(`API: ${state.config.api_url}\nModel: ${state.config.model}`);
+            showToast('当前配置', `API: ${state.config.api_url}  Model: ${state.config.model}`);
             break;
         case '/quit':
             window.close();
@@ -395,6 +434,7 @@ function renderCarousel() {
 
     if (state.carousel) state.carousel.destroy();
 
+
     const scene = document.getElementById('carousel-scene');
     state.carousel = new CardCarousel(scene, {
         onSelect: onCarouselSelect,
@@ -491,9 +531,7 @@ function renderSpreadSlots() {
         area.appendChild(slot);
     });
 
-    if (state.spread.positions.length > 0) {
-        markWaitingSlot(0);
-    }
+    if (state.spread.positions.length > 0) markWaitingSlot(0);
 }
 
 function markWaitingSlot(idx) {
@@ -516,10 +554,8 @@ function buildCardFaceInner(drawnCard) {
     const imgHtml = c.has_image
         ? cardImgUrl(c).replace('detail-card-img', 'slot-card-img')
         : `<div style="font-size:0.75em;color:var(--text);padding:4px;">${c.name_zh}</div>`;
-    const revMark = drawnCard.isReversed
-        ? `<div class="reversed-mark">reversed</div>` : '';
-    return imgHtml + revMark +
-        `<div class="card-name">${c.name_zh}</div>`;
+    const revMark = drawnCard.isReversed ? `<div class="reversed-mark">reversed</div>` : '';
+    return imgHtml + revMark + `<div class="card-name">${c.name_zh}</div>`;
 }
 
 function transitionToFlip() {
@@ -539,9 +575,7 @@ function transitionToFlip() {
 
 function onSpreadSlotClicked(slotEl, idx) {
     if (state.phase === 'flip') {
-        if (slotEl.classList.contains('face-down')) {
-            flipSlot(slotEl, idx);
-        }
+        if (slotEl.classList.contains('face-down')) flipSlot(slotEl, idx);
     } else if (state.phase === 'done') {
         selectSlot(idx);
     }
@@ -621,9 +655,7 @@ function selectSlot(idx) {
 
 function showDetailPanel() {
     const panel = document.getElementById('detail-panel');
-    if (state.showDetail) {
-        panel.classList.remove('hidden');
-    }
+    if (state.showDetail) panel.classList.remove('hidden');
     syncDrawLayoutState();
 }
 
@@ -637,9 +669,7 @@ function updateDetailContent() {
 
     const c = dc.card;
     const panel = document.getElementById('detail-content');
-
     const imgHtml = c.has_image ? cardImgUrl(c) : '';
-
     const keywords = dc.isReversed ? c.keywords_reversed : c.keywords_upright;
     const meaning = dc.isReversed ? c.meaning_reversed : c.meaning_upright;
     const statusLabel = dc.isReversed ? '逆位' : '正位';
@@ -759,9 +789,7 @@ function renderCardList(filter) {
     countEl.textContent = `${filtered.length}/78 cards`;
 
     list.innerHTML = filtered.map((c) => {
-        const numStr = c.arcana === 'major'
-            ? toRoman(c.number)
-            : String(c.number);
+        const numStr = c.arcana === 'major' ? toRoman(c.number) : String(c.number);
         return `<div class="card-list-item" data-id="${c.id}">` +
             `<span class="item-name">${numStr} ${c.name_zh}</span>` +
             `<span class="item-suit">${c.arcana_zh}</span></div>`;
@@ -790,7 +818,6 @@ function showBrowserDetail(cardId) {
     const reversed = state.browserReversed;
 
     const imgHtml = card.has_image ? cardImgUrl(card, reversed) : '';
-
     const keywords = reversed ? card.keywords_reversed : card.keywords_upright;
     const statusLabel = reversed ? '逆位' : '正位';
     const revBadge = reversed ? '<span class="browser-reversed-badge">reversed</span>' : '';
@@ -816,7 +843,7 @@ function toRoman(num) {
 }
 
 // ---------------------------------------------------------------------------
-// Init screens on first show
+// Lazy init on first show
 // ---------------------------------------------------------------------------
 
 const observer = new MutationObserver((mutations) => {
