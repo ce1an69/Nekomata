@@ -15,12 +15,14 @@
 
 <div id="app">
 
+  <div id="toast-container"></div>
+
   <!-- Setup Screen -->
   <section id="screen-setup" class="screen hidden">
     <div class="card-panel setup-panel">
       <h1 class="title">Setup</h1>
       <p class="subtitle">配置你的 API 连接</p>
-      <div class="ornament">--- * ---</div>
+      <div class="ornament">─── ✦ ───</div>
       <div class="form-group">
         <label>API URL</label>
         <input type="text" id="setup-url" placeholder="https://api.openai.com/v1" value="https://api.openai.com/v1">
@@ -44,7 +46,7 @@
     <div class="home-shell">
       <div class="card-panel home-panel">
         <h1 class="title">Nekomata</h1>
-        <div class="ornament">--- * ---</div>
+        <div class="ornament">─── ✦ ───</div>
         <input type="text" id="home-input" placeholder="> 输入你的问题..." autocomplete="off">
         <div id="home-suggestions" class="suggestions hidden"></div>
         <div class="hint-bar">Enter 确认 / 输入 / 查看命令</div>

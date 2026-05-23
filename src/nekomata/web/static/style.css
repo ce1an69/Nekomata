@@ -251,6 +251,90 @@ input[type="text"]:focus, input[type="password"]:focus {
     font-size: 0.85em;
 }
 
+/* ---- Toast notifications ---- */
+
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.toast {
+    background: var(--base);
+    border: 1px solid var(--surface0);
+    border-radius: 10px;
+    padding: 12px 20px;
+    color: var(--text);
+    font-size: 0.9em;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
+    max-width: 360px;
+}
+
+.toast.exiting { animation: toastOut 0.25s ease forwards; }
+
+.toast .toast-title {
+    color: var(--mauve);
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.toast .toast-body { color: var(--subtext1); }
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(40px) scale(0.95); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes toastOut {
+    to { opacity: 0; transform: translateX(40px) scale(0.95); }
+}
+
+/* ---- Modal ---- */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 17, 27, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-overlay.closing { animation: fadeOut 0.2s ease forwards; }
+
+.modal-box {
+    background: var(--mantle);
+    border: 1px solid var(--surface0);
+    border-radius: 12px;
+    padding: 28px 36px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    max-width: 480px;
+    width: 90%;
+    animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-box h3 { color: var(--mauve); margin-bottom: 12px; }
+.modal-box p { color: var(--subtext1); margin-bottom: 6px; font-size: 0.9em; }
+.modal-box .modal-actions { margin-top: 16px; text-align: right; }
+
+@keyframes modalIn {
+    from { opacity: 0; transform: scale(0.95) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { to { opacity: 0; } }
+
 /* ---- Setup ---- */
 
 .setup-panel {
