@@ -1,15 +1,15 @@
 """Spread registry and factory for all tarot card layouts."""
 
 import json
-from pathlib import Path
 
+from nekomata._paths import data_dir as _data_dir_func
 from nekomata.card.types import Position
 from nekomata.spread.base import Spread
 from nekomata.spread.single import SingleCardSpread
 from nekomata.spread.three_card import PastPresentFuture, SituationActionResult, BodyMindSpirit
 from nekomata.spread.five_card import FiveCardCross
 
-_DATA_DIR = Path(__file__).resolve().parents[3] / "data"
+_DATA_DIR = _data_dir_func()
 
 # Ordered registry: (key, class) — order matters for UI index-based selection
 SPREAD_REGISTRY: list[tuple[str, type[Spread]]] = [

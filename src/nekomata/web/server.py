@@ -5,7 +5,6 @@ import json
 import logging
 import threading
 import webbrowser
-from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, StreamingResponse
@@ -31,14 +30,14 @@ from nekomata.render.styles import (
     C_SURFACE2,
     C_TEXT,
 )
+from nekomata._paths import assets_dir, static_dir
 from nekomata.spread import SPREAD_REGISTRY
 from nekomata.storage.config import AppConfig
-from nekomata.strings import DATA_DIR
 
 log = logging.getLogger(__name__)
 
-_STATIC_DIR = Path(__file__).parent / "static"
-_ASSETS_DIR = DATA_DIR.parent / "assets"
+_STATIC_DIR = static_dir()
+_ASSETS_DIR = assets_dir()
 
 # Cached at module level — read once, not per-request
 _CACHED_HTML: str | None = None
