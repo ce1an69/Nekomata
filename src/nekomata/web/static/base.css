@@ -29,8 +29,8 @@ body {
     font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
     font-size: 14px;
     line-height: 1.6;
-    min-height: 100vh;
-    overflow-x: hidden;
+    height: 100vh;
+    overflow: hidden;
     position: relative;
 }
 
@@ -81,8 +81,9 @@ button, .btn, .spread-option, .card-list-item, .filter-btn, .cc-card { user-sele
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    height: 100vh;
     padding: 24px 40px;
+    overflow: hidden;
     animation: fadeIn 0.4s ease;
 }
 

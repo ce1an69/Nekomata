@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    if (!state.config.api_key) {
+    if (!state.config.has_api_key) {
         showScreen('setup');
     } else {
         showScreen('home');

@@ -225,7 +225,9 @@ export class CardCarousel {
             this.vel = Math.max(-this.maxVel, Math.min(this.maxVel, -dx / this._cw() * 0.06));
             this._startLoop();
         }
-    }(e) {
+    }
+
+    _onWheel(e) {
         if (this._intro || this._centering) return;
         this.vel = Math.max(-this.maxVel, Math.min(this.maxVel, this.vel + e.deltaY * 0.001));
         this._startLoop();

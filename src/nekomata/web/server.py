@@ -30,7 +30,7 @@ from nekomata.render.styles import (
     C_SURFACE2,
     C_TEXT,
 )
-from nekomata._paths import assets_dir, static_dir
+from nekomata._paths import assets_dir, data_dir, static_dir
 from nekomata.spread import SPREAD_REGISTRY
 from nekomata.storage.config import AppConfig
 
@@ -204,7 +204,7 @@ def create_app() -> FastAPI:
     async def get_strings():
         global _CACHED_STRINGS
         if _CACHED_STRINGS is None:
-            path = _DATA_DIR / "ui_strings.json"
+            path = data_dir() / "ui_strings.json"
             _CACHED_STRINGS = json.loads(path.read_text(encoding="utf-8"))
         return _CACHED_STRINGS
 

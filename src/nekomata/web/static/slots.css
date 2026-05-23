@@ -141,6 +141,7 @@
     border-radius: 12px;
     padding: 20px;
     overflow-y: auto;
+    max-height: 60vh;
     animation: slideInRight 0.25s ease;
     box-shadow: 0 4px 24px var(--shadow);
 }
