@@ -149,8 +149,6 @@ class StreamHandler:
 
     def _render(self) -> None:
         parts = []
-        if self._thinking_chars:
-            parts.append(Text("".join(self._thinking_chars), style=f"italic {C_OVERLAY0}"))
         if self._content_chars:
             parts.append(Text("解读", style=f"bold {C_MAUVE}"))
             parts.append(Markdown("".join(self._content_chars), style=C_TEXT))
