@@ -68,8 +68,18 @@ export class CardCarousel {
     }
 
     start() {
-        this._intro = true;
-        this._loop();
+        this._intro = false;
+        this.idx = this._introTarget;
+        this._pos();
+        // Fade in all cards
+        for (const el of this.els) {
+            if (el) {
+                el.style.opacity = '0';
+                el.style.transition = 'opacity 0.6s ease';
+                requestAnimationFrame(() => { el.style.opacity = '1'; });
+            }
+        }
+        this.onReady();
     }
 
     destroy() {
