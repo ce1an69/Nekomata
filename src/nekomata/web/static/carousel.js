@@ -36,6 +36,9 @@ export class CardCarousel {
         this._mm = this._onMove.bind(this);
         this._mu = this._onUp.bind(this);
         this._wh = this._onWheel.bind(this);
+        this._onTouchStart = this._handleTouchStart.bind(this);
+        this._onTouchMove = this._handleTouchMove.bind(this);
+        this._onTouchEnd = this._handleTouchEnd.bind(this);
     }
 
     loadCards(cards) {
@@ -58,6 +61,10 @@ export class CardCarousel {
         this.scene.addEventListener('wheel', this._wh, { passive: true });
         window.addEventListener('mousemove', this._mm);
         window.addEventListener('mouseup', this._mu);
+
+        this.scene.addEventListener('touchstart', this._onTouchStart, { passive: false });
+        this.scene.addEventListener('touchmove', this._onTouchMove, { passive: false });
+        this.scene.addEventListener('touchend', this._onTouchEnd);
     }
 
     start() {
@@ -72,6 +79,9 @@ export class CardCarousel {
         this.scene.removeEventListener('wheel', this._wh);
         window.removeEventListener('mousemove', this._mm);
         window.removeEventListener('mouseup', this._mu);
+        this.scene.removeEventListener('touchstart', this._onTouchStart);
+        this.scene.removeEventListener('touchmove', this._onTouchMove);
+        this.scene.removeEventListener('touchend', this._onTouchEnd);
         this.scene.innerHTML = '';
     }
 
@@ -84,12 +94,16 @@ export class CardCarousel {
         this.cards[i] = null;
     }
 
-    cancelCharge() {}
-
     /* ---- loop ---- */
+
+    _startLoop() {
+        if (this._raf != null) return;
+        this._raf = requestAnimationFrame(this._loop);
+    }
 
     _loop = () => {
         if (this._dead) return;
+        this._raf = null;
 
         if (this._intro) {
             const d = this._introTarget - this.idx;
@@ -100,6 +114,7 @@ export class CardCarousel {
                 this.onReady();
             }
             this._pos();
+            this._startLoop();
         } else {
             if (this._centering) {
                 const d = this._centerTarget - this.idx;
@@ -108,6 +123,8 @@ export class CardCarousel {
                     this.idx = this._centerTarget;
                     this._centering = false;
                 }
+                this._pos();
+                this._startLoop();
             } else if (!this.dragging) {
                 this.idx += this.vel;
                 this.vel *= this.friction;
@@ -115,12 +132,13 @@ export class CardCarousel {
                 const mx = this._maxIdx();
                 if (this.idx < 0) { this.idx = 0; this.vel = -this.vel * 0.5; }
                 if (this.idx > mx) { this.idx = mx; this.vel = -this.vel * 0.5; }
+                this._pos();
+                if (this.vel !== 0) this._startLoop();
+            } else {
+                this._pos();
+                this._startLoop();
             }
-
-            this._pos();
         }
-
-        this._raf = requestAnimationFrame(this._loop);
     };
 
     /* ---- positioning ---- */
@@ -175,6 +193,7 @@ export class CardCarousel {
         this._dragIdx0 = this.idx;
         this.vel = 0;
         this.scene.style.cursor = 'grabbing';
+        this._startLoop();
     }
 
     _onMove(e) {
@@ -199,16 +218,61 @@ export class CardCarousel {
                 } else {
                     this._centerTarget = ci;
                     this._centering = true;
+                    this._startLoop();
+                }
+            }
+        } else {
+            this.vel = Math.max(-this.maxVel, Math.min(this.maxVel, -dx / this._cw() * 0.06));
+            this._startLoop();
+        }
+    }(e) {
+        if (this._intro || this._centering) return;
+        this.vel = Math.max(-this.maxVel, Math.min(this.maxVel, this.vel + e.deltaY * 0.001));
+        this._startLoop();
+    }
+
+    /* ---- touch ---- */
+
+    _handleTouchStart(e) {
+        if (this._intro || this._centering) return;
+        e.preventDefault();
+        const t = e.touches[0];
+        this.dragging = true;
+        this._dragMoved = false;
+        this._dragX0 = t.clientX;
+        this._dragIdx0 = this.idx;
+        this.vel = 0;
+        this._startLoop();
+    }
+
+    _handleTouchMove(e) {
+        if (!this.dragging) return;
+        e.preventDefault();
+        const t = e.touches[0];
+        const dx = t.clientX - this._dragX0;
+        if (Math.abs(dx) > 5) this._dragMoved = true;
+        this.idx = this._dragIdx0 - dx / this._cw();
+    }
+
+    _handleTouchEnd(e) {
+        if (!this.dragging) return;
+        this.dragging = false;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - this._dragX0;
+
+        if (!this._dragMoved && Math.abs(dx) < 5) {
+            const ci = this._cardAtPoint(t.clientX, t.clientY);
+            if (ci !== null && this.cards[ci] !== null) {
+                if (Math.abs(ci - this.idx) < 0.6) {
+                    this._fireSelect(ci);
+                } else {
+                    this._centerTarget = ci;
+                    this._centering = true;
                 }
             }
         } else {
             this.vel = Math.max(-this.maxVel, Math.min(this.maxVel, -dx / this._cw() * 0.06));
         }
-    }
-
-    _onWheel(e) {
-        if (this._intro || this._centering) return;
-        this.vel = Math.max(-this.maxVel, Math.min(this.maxVel, this.vel + e.deltaY * 0.001));
     }
 
     /* ---- helpers ---- */

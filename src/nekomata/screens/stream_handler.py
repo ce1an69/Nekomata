@@ -1,9 +1,7 @@
 """Stream handler for AI interpretation with typewriter effect."""
 
 import asyncio
-import json
 from collections import deque
-from pathlib import Path
 
 from rich.console import Group
 from rich.markdown import Markdown
@@ -11,18 +9,18 @@ from rich.text import Text
 
 from nekomata.ai.interpreter import InterpretationError, StreamChunk, get_interpreter
 from nekomata.render.styles import C_MAUVE, C_OVERLAY0, C_TEXT
+from nekomata.strings import all_strings
 
-STREAM_TYPE_INTERVAL = 0.025
-STREAM_CHARS_PER_TICK = 3
-
-_UI_STRINGS = json.loads(
-    (Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
-)
+_UI_STRINGS = all_strings()
 _LOADING_FRAMES = tuple(_UI_STRINGS["loading_frames"])
 _LOADING_INTERVAL = _UI_STRINGS["loading_interval_ms"] / 1000.0
 _LOADING_MESSAGE_INTERVAL = _UI_STRINGS["loading_message_interval_s"]
 _LOADING_MESSAGES = tuple(_UI_STRINGS["loading_messages"])
 _DRAW_STR = _UI_STRINGS["draw"]
+_ERR_STR = _UI_STRINGS["errors"]
+
+STREAM_TYPE_INTERVAL = _UI_STRINGS["stream_tick_ms"] / 1000.0
+STREAM_CHARS_PER_TICK = _UI_STRINGS["stream_chars_per_tick"]
 
 
 class StreamHandler:
@@ -150,7 +148,7 @@ class StreamHandler:
     def _render(self) -> None:
         parts = []
         if self._content_chars:
-            parts.append(Text("解读", style=f"bold {C_MAUVE}"))
+            parts.append(Text(_DRAW_STR["interp_title"], style=f"bold {C_MAUVE}"))
             parts.append(Markdown("".join(self._content_chars), style=C_TEXT))
         self._render_content(parts)
 
@@ -187,16 +185,16 @@ class StreamHandler:
         except InterpretationError as exc:
             if not self._screen.is_mounted or cancelled_check():
                 return
-            self._show_error(f"解读失败: {exc}")
+            self._show_error(_ERR_STR["interp_failed"].format(error=exc))
             return
         except Exception as exc:
             if not self._screen.is_mounted or cancelled_check():
                 return
             msg = str(exc)
             if "api_key" in msg.lower() or "unauthorized" in msg.lower():
-                self._show_error("API key 未配置，请在 .neko/settings.json 中设置 api_key")
+                self._show_error(_ERR_STR["api_key_missing"])
             else:
-                self._show_error(f"解读失败: {exc}")
+                self._show_error(_ERR_STR["interp_failed"].format(error=exc))
             return
         if not self._screen.is_mounted or cancelled_check():
             return

@@ -26,6 +26,11 @@
   "loading_interval_ms": 80,
   "loading_message_interval_s": 2.0,
 
+  "errors": {
+    "api_key_missing": "API key 未配置，请在 .neko/settings.json 中设置 api_key",
+    "interp_failed": "解读失败: {error}"
+  },
+
   "home": {
     "title": "Nekomata",
     "placeholder": "> ask your question...",
@@ -80,6 +85,25 @@
     "card_count": "{filtered}/{total} cards",
     "reversed_preview": "  (reversed preview)",
     "select_placeholder": "Select a card",
-    "hints": "↑/↓ move · Enter inspect · R reversal · Q back"
+    "hints": "↑/↓ cards · ←/→ filter · R reversal · Q back"
+  },
+
+  "card_detail": {
+    "element": "元素",
+    "astrology": "星座",
+    "upright": "正位",
+    "reversed": "逆位",
+    "status_upright": "正位",
+    "status_reversed": "逆位"
+  },
+
+  "status": {
+    "title": "当前配置",
+    "api_url": "API URL",
+    "api_key": "API Key",
+    "api_key_set": "(已设置)",
+    "api_key_not_set": "(未设置)",
+    "model": "Model",
+    "render": "Render"
   }
 }

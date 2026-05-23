@@ -1,5 +1,12 @@
 /** Shared UI helpers. */
 
+const _screenHooks = {};
+
+export function onShow(screenId, fn) {
+    _screenHooks[screenId] = _screenHooks[screenId] || [];
+    _screenHooks[screenId].push(fn);
+}
+
 export function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     const el = document.getElementById(`screen-${id}`);
@@ -9,14 +16,24 @@ export function showScreen(id) {
         el.offsetHeight;
         el.style.animation = '';
     }
+    const hooks = _screenHooks[id];
+    if (hooks) hooks.forEach(fn => fn());
 }
 
 export function showToast(title, body, duration = 3000) {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     toast.className = 'toast';
-    toast.innerHTML = `<div class="toast-title">${title}</div>` +
-        (body ? `<div class="toast-body">${body}</div>` : '');
+    const titleEl = document.createElement('div');
+    titleEl.className = 'toast-title';
+    titleEl.textContent = title;
+    toast.appendChild(titleEl);
+    if (body) {
+        const bodyEl = document.createElement('div');
+        bodyEl.className = 'toast-body';
+        bodyEl.textContent = body;
+        toast.appendChild(bodyEl);
+    }
     container.appendChild(toast);
     setTimeout(() => {
         toast.classList.add('exiting');
@@ -27,22 +44,36 @@ export function showToast(title, body, duration = 3000) {
 export function showModal(title, bodyHtml) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
-    overlay.innerHTML = `<div class="modal-box">` +
-        `<h3>${title}</h3>` +
-        bodyHtml +
-        `<div class="modal-actions"><button class="btn btn-primary modal-close">OK</button></div></div>`;
+    const box = document.createElement('div');
+    box.className = 'modal-box';
+    const h3 = document.createElement('h3');
+    h3.textContent = title;
+    box.appendChild(h3);
+    box.insertAdjacentHTML('beforeend', bodyHtml);
+    const actions = document.createElement('div');
+    actions.className = 'modal-actions';
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-primary modal-close';
+    btn.textContent = 'OK';
+    actions.appendChild(btn);
+    box.appendChild(actions);
+    overlay.appendChild(box);
     const close = () => {
         overlay.classList.add('closing');
         overlay.addEventListener('animationend', () => overlay.remove());
     };
-    overlay.querySelector('.modal-close').addEventListener('click', close);
+    btn.addEventListener('click', close);
     overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
     document.body.appendChild(overlay);
 }
 
+function escapeAttr(s) {
+    return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 export function cardImgUrl(card, reversed = false) {
     const style = reversed ? ' style="transform: rotate(180deg)"' : '';
-    return `<div class="detail-card-img"><img src="/assets/cards/${card.arcana}/${card.id}_detail.png" alt="${card.name}"${style}></div>`;
+    return `<div class="detail-card-img"><img src="/assets/cards/${escapeAttr(card.arcana)}/${escapeAttr(card.id)}_detail.png" alt="${escapeAttr(card.name)}"${style}></div>`;
 }
 
 export function makeBtn(label, cls, onClick) {
@@ -57,4 +88,11 @@ export function resumeHome() {
     const input = document.getElementById('home-input');
     input.value = '';
     input.focus();
+}
+
+const _inited = new Set();
+export function needsInit(key) {
+    if (_inited.has(key)) return false;
+    _inited.add(key);
+    return true;
 }

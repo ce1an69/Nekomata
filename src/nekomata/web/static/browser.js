@@ -1,7 +1,7 @@
 /** Card browser screen. */
 
 import { state } from './state.js';
-import { showScreen, cardImgUrl, resumeHome } from './utils.js';
+import { showScreen, cardImgUrl, resumeHome, needsInit } from './utils.js';
 
 export function showBrowserScreen() {
     state.browserReversed = false;
@@ -11,8 +11,7 @@ export function showBrowserScreen() {
     const revBtn = document.getElementById('browser-reverse-btn');
     revBtn.classList.remove('active');
 
-    if (!showBrowserScreen._done) {
-        showBrowserScreen._done = true;
+    if (needsInit('browser')) {
 
         document.getElementById('browser-back-btn').addEventListener('click', () => {
             showScreen('home');
@@ -27,6 +26,20 @@ export function showBrowserScreen() {
         });
 
         document.getElementById('screen-browser').addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                const filterBtns = [...document.querySelectorAll('.filter-btn')];
+                const activeBtn = document.querySelector('.filter-btn.active');
+                const curIdx = activeBtn ? filterBtns.indexOf(activeBtn) : 0;
+                const nextIdx = e.key === 'ArrowRight'
+                    ? (curIdx + 1) % filterBtns.length
+                    : (curIdx - 1 + filterBtns.length) % filterBtns.length;
+                filterBtns.forEach(b => b.classList.remove('active'));
+                filterBtns[nextIdx].classList.add('active');
+                renderCardList(filterBtns[nextIdx].dataset.suit);
+                return;
+            }
+
             const items = document.querySelectorAll('.card-list-item');
             if (!items.length) return;
             const cur = document.querySelector('.card-list-item.selected');
@@ -111,7 +124,7 @@ function showBrowserDetail(cardId) {
     const imgHtml = card.has_image ? cardImgUrl(card, reversed) : '';
     const keywords = reversed ? card.keywords_reversed : card.keywords_upright;
     const statusLabel = reversed ? '逆位' : '正位';
-    const revBadge = reversed ? '<span class="browser-reversed-badge">reversed</span>' : '';
+    const revBadge = reversed ? '<span class="browser-reversed-badge">逆位</span>' : '';
 
     detail.innerHTML = imgHtml +
         `<div class="detail-field"><div class="label">${card.name_zh} ${card.name}${revBadge}</div></div>` +
@@ -122,13 +135,8 @@ function showBrowserDetail(cardId) {
         `<div class="detail-field"><div class="label">逆位牌义</div><div class="value sub">${card.meaning_reversed}</div></div>`;
 }
 
+const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI','XXII'];
+
 function toRoman(num) {
-    const map = [
-        [0, '0'], [1, 'I'], [2, 'II'], [3, 'III'], [4, 'IV'], [5, 'V'],
-        [6, 'VI'], [7, 'VII'], [8, 'VIII'], [9, 'IX'], [10, 'X'],
-        [11, 'XI'], [12, 'XII'], [13, 'XIII'], [14, 'XIV'], [15, 'XV'],
-        [16, 'XVI'], [17, 'XVII'], [18, 'XVIII'], [19, 'XIX'], [20, 'XX'],
-        [21, 'XXI'],
-    ];
-    return map.find(m => m[0] === num)?.[1] || String(num);
+    return ROMAN[num - 1] || String(num);
 }

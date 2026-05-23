@@ -1,13 +1,12 @@
 """Load and cache all 78 card definitions from YAML + resolve PNG image paths."""
 
 
-from pathlib import Path
-
 import yaml
 
 from nekomata.card.types import Arcana, Card
+from nekomata.strings import DATA_DIR
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+_PROJECT_ROOT = DATA_DIR.parent
 ASSETS_DIR = _PROJECT_ROOT / "assets" / "cards"
 
 # Module-level cache to avoid re-parsing YAML on repeated calls
@@ -17,7 +16,7 @@ _cards_cache: list[Card] | None = None
 def _load_card_meanings(path: Path | None = None) -> list[dict]:
     """Parse the YAML card meanings file into raw dicts."""
     if path is None:
-        path = _PROJECT_ROOT / "data" / "card_meanings.yaml"
+        path = DATA_DIR / "card_meanings.yaml"
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 

@@ -289,8 +289,9 @@ function spawnInterpParticle() {
     const sz = 3 + Math.random() * 8;
     p.style.width = sz + 'px';
     p.style.height = sz + 'px';
-    p.style.background = '#cba6f7';
-    p.style.boxShadow = '0 0 10px #cba6f7';
+    const gold = getComputedStyle(document.documentElement).getPropertyValue('--gold').trim();
+    p.style.background = gold;
+    p.style.boxShadow = `0 0 10px ${gold}`;
     p.style.zIndex = '9999';
     p.animate([
         { transform: 'translateY(0) scale(1)', opacity: 0.8 },

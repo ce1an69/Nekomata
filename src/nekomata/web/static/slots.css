@@ -13,7 +13,7 @@
     height: 160px;
     border: 2px solid var(--surface0);
     border-radius: 10px;
-    background: rgba(17, 17, 27, 0.6);
+    background: var(--dark-bg);
     backdrop-filter: blur(8px);
     cursor: pointer;
     position: relative;
@@ -60,12 +60,12 @@
 
 .spread-slot.revealed {
     border-color: var(--lavender);
-    background: rgba(30, 30, 46, 0.85);
+    background: var(--panel-bg);
 }
 
 .spread-slot.selected {
     border-color: var(--lavender);
-    box-shadow: 0 0 12px rgba(180, 190, 254, 0.3);
+    box-shadow: 0 0 12px var(--lavender-30);
 }
 
 .spread-slot.glow {
@@ -108,7 +108,7 @@
 }
 
 .slot-front {
-    background: rgba(30, 30, 46, 0.9);
+    background: var(--panel-bg);
     transform: rotateY(180deg);
 }
 
@@ -129,20 +129,20 @@
 }
 
 .spread-slot.flipping {
-    box-shadow: 0 0 24px rgba(203, 166, 247, 0.4);
+    box-shadow: 0 0 24px var(--gold-40);
 }
 
 /* Detail panel */
 .detail-panel {
     width: 420px;
-    background: rgba(30, 30, 46, 0.85);
+    background: var(--panel-bg);
     backdrop-filter: blur(12px);
     border: 1px solid var(--surface0);
     border-radius: 12px;
     padding: 20px;
     overflow-y: auto;
     animation: slideInRight 0.25s ease;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 24px var(--shadow);
 }
 
 .detail-card-img { text-align: center; margin-bottom: 10px; }
@@ -166,14 +166,14 @@
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    background: rgba(30, 30, 46, 0.85);
+    background: var(--panel-bg);
     backdrop-filter: blur(12px);
     border: 1px solid var(--surface0);
     border-radius: 12px;
-    max-height: 340px;
+    max-height: var(--interp-height, 340px);
     overflow-y: auto;
     animation: slideUp 0.3s ease;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 24px var(--shadow);
 }
 
 .interp-content { padding: 18px; }

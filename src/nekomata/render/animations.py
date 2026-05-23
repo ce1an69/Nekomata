@@ -49,21 +49,3 @@ def animate_exit(
     )
     if callback:
         widget.set_timer(duration + 0.01, callback)
-
-
-def animate_slide_horizontal(
-    widget,
-    *,
-    dx: int = 4,
-    duration: float = 0.30,
-    easing: str = "out_quint",
-) -> None:
-    """Fade-in + slide from a horizontal offset. Respects animation_enabled."""
-    if not widget.app.animation_enabled:
-        return
-    widget.styles.opacity = 0
-    widget.styles.offset = Offset(dx, 0)
-    widget.styles.animate("opacity", 1.0, duration=duration, easing=easing)
-    widget.styles.animate(
-        "offset", _OFFSET_ZERO, duration=duration, easing=easing,
-    )

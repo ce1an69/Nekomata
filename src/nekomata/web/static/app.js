@@ -2,7 +2,7 @@
 
 import { Starfield } from './particles.js';
 import { state } from './state.js';
-import { showScreen, showToast, showModal, resumeHome } from './utils.js';
+import { showScreen, showToast, showModal, resumeHome, needsInit, onShow } from './utils.js';
 import { showBrowserScreen } from './browser.js';
 import { showDrawScreen, initDrawKeyboard } from './draw.js';
 
@@ -89,10 +89,10 @@ function initSetupScreen() {
 
     if (state.config.api_url) urlInput.value = state.config.api_url;
     if (state.config.api_key) keyInput.value = state.config.api_key;
+    else if (state.config.has_api_key) { keyInput.value = ''; keyInput.placeholder = '•••••••• (已设置)'; }
     if (state.config.model) modelInput.value = state.config.model;
 
-    if (initSetupScreen._done) return;
-    initSetupScreen._done = true;
+    if (!needsInit('setup')) return;
 
     modelInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveSetup(); });
     keyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') modelInput.focus(); });
@@ -105,8 +105,13 @@ async function saveSetup() {
     const model = document.getElementById('setup-model').value.trim();
     const errEl = document.getElementById('setup-error');
 
-    if (!api_url || !api_key || !model) {
-        errEl.textContent = '所有字段均为必填';
+    if (!api_url || !model) {
+        errEl.textContent = 'API URL 和 Model 为必填项';
+        errEl.classList.remove('hidden');
+        return;
+    }
+    if (!api_key && !state.config.has_api_key) {
+        errEl.textContent = '请输入 API Key';
         errEl.classList.remove('hidden');
         return;
     }
@@ -134,19 +139,22 @@ async function saveSetup() {
 // Home Screen
 // ---------------------------------------------------------------------------
 
-const SLASH_COMMANDS = {
-    '/browse': '浏览全部 78 张牌',
-    '/help': '帮助',
-    '/status': '当前配置',
-    '/quit': '退出',
-};
+function slashDesc(cmd) {
+    switch (cmd) {
+        case '/browse': return `浏览全部 ${state.cards.length || 78} 张牌`;
+        case '/help': return '帮助';
+        case '/status': return '当前配置';
+        case '/quit': return '退出';
+    }
+}
+
+const SLASH_COMMANDS = ['/browse', '/help', '/status', '/quit'];
 
 export function initHomeScreen() {
     const input = document.getElementById('home-input');
     const sugBox = document.getElementById('home-suggestions');
 
-    if (initHomeScreen._done) return;
-    initHomeScreen._done = true;
+    if (!needsInit('home')) return;
 
     function _sugItems() { return sugBox.querySelectorAll('.suggestion-item'); }
     function _sugActive() { return sugBox.querySelector('.suggestion-item.active'); }
@@ -163,16 +171,16 @@ export function initHomeScreen() {
             sugBox.classList.add('hidden');
             return;
         }
-        const matches = Object.entries(SLASH_COMMANDS)
-            .filter(([cmd]) => cmd.startsWith(val));
-        if (matches.length === 0 || (matches.length === 1 && matches[0][0] === val)) {
+        const matches = SLASH_COMMANDS.filter(cmd => cmd.startsWith(val));
+        if (matches.length === 0 || (matches.length === 1 && matches[0] === val)) {
             sugBox.classList.add('hidden');
             return;
         }
-        sugBox.innerHTML = matches.map(([cmd, desc]) =>
-            `<div class="suggestion-item" data-cmd="${cmd}">` +
-            `<span class="cmd">${cmd}</span><span class="desc">${desc}</span></div>`
-        ).join('');
+        sugBox.innerHTML = matches.map(cmd => {
+            const desc = slashDesc(cmd);
+            return `<div class="suggestion-item" data-cmd="${cmd}">` +
+            `<span class="cmd">${cmd}</span><span class="desc">${desc}</span></div>`;
+        }).join('');
         sugBox.classList.remove('hidden');
 
         sugBox.querySelectorAll('.suggestion-item').forEach(item => {
@@ -215,7 +223,7 @@ export function initHomeScreen() {
             e.preventDefault();
             const val = input.value;
             if (val.startsWith('/')) {
-                const match = Object.keys(SLASH_COMMANDS).find(c => c.startsWith(val) && c !== val);
+                const match = SLASH_COMMANDS.find(c => c.startsWith(val) && c !== val);
                 if (match) input.value = match;
             }
         }
@@ -232,7 +240,7 @@ function handleSlashCommand(cmd) {
         case '/help':
             showModal('帮助',
                 '<p>输入你的问题开始占卜</p>' +
-                '<p>/browse — 浏览全部 78 张牌</p>' +
+                `<p>/browse — ${slashDesc('/browse')}</p>` +
                 '<p>/status — 查看当前配置</p>' +
                 '<p>/quit — 退出</p>');
             break;
@@ -333,20 +341,11 @@ function selectSpread(key) {
 }
 
 // ---------------------------------------------------------------------------
-// Lazy init on first show
+// Screen init hooks
 // ---------------------------------------------------------------------------
 
-const observer = new MutationObserver((mutations) => {
-    for (const m of mutations) {
-        if (m.target.id === 'screen-setup' && !m.target.classList.contains('hidden')) {
-            initSetupScreen();
-        }
-        if (m.target.id === 'screen-home' && !m.target.classList.contains('hidden')) {
-            initHomeScreen();
-            document.getElementById('home-input').focus();
-        }
-    }
+onShow('setup', initSetupScreen);
+onShow('home', () => {
+    initHomeScreen();
+    document.getElementById('home-input').focus();
 });
-
-observer.observe(document.getElementById('screen-setup'), { attributes: true, attributeFilter: ['class'] });
-observer.observe(document.getElementById('screen-home'), { attributes: true, attributeFilter: ['class'] });

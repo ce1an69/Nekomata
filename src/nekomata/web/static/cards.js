@@ -18,11 +18,4 @@ export class Deck {
             [a[i], a[j]] = [a[j], a[i]];
         }
     }
-
-    draw(reversalProb = 0.5) {
-        if (this.remaining.length === 0) return null;
-        const card = this.remaining.pop();
-        const isReversed = Math.random() < reversalProb;
-        return { card, isReversed };
-    }
 }

@@ -1,12 +1,12 @@
 """AI interpretation prompt templates for tarot readings."""
 
-from pathlib import Path
+from nekomata.strings import DATA_DIR
 
-_DATA_DIR = Path(__file__).resolve().parents[3] / "data"
-_PROMPTS_DIR = _DATA_DIR / "prompts"
+_PROMPTS_DIR = DATA_DIR / "prompts"
 
 _system_prompt: str | None = None
 _spread_prompts: dict[str, str] = {}
+_user_template: str | None = None
 
 
 def load_system_prompt() -> str:
@@ -28,13 +28,13 @@ def load_spread_prompt(spread_key: str) -> str:
     return _spread_prompts[spread_key]
 
 
+def _load_user_template() -> str:
+    global _user_template
+    if _user_template is None:
+        _user_template = (_PROMPTS_DIR / "user_template.md").read_text(encoding="utf-8")
+    return _user_template
+
+
 def build_user_prompt(question: str, cards_info: str) -> str:
     """Build the user message for AI interpretation."""
-    return f"""请为以下占卜进行解读：
-
-求问者的问题：{question}
-
-抽到的牌面：
-{cards_info}
-
-请逐张解读每张牌的含义，再综合分析牌面之间的关系，给出整体建议。"""
+    return _load_user_template().format(question=question, cards_info=cards_info)

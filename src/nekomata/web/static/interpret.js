@@ -41,6 +41,14 @@ export class InterpretationController {
             let buffer = '';
             let currentKind = null;
             let currentEl = null;
+            let renderBatch = '';
+            let renderTimer = null;
+
+            const flushRender = () => {
+                renderTimer = null;
+                if (!currentEl || !currentEl._raw) return;
+                currentEl.innerHTML = renderMarkdown(currentEl._raw);
+            };
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -64,24 +72,29 @@ export class InterpretationController {
                         }
                         if (chunk.kind === 'thinking') continue;
                         if (chunk.kind !== currentKind) {
+                            if (renderTimer) { clearTimeout(renderTimer); flushRender(); }
                             currentKind = chunk.kind;
                             currentEl = document.createElement('div');
                             currentEl.className = 'content';
                             this._container.appendChild(currentEl);
                         }
-                        currentEl.innerHTML = renderMarkdown(currentEl._raw + chunk.text);
                         currentEl._raw = (currentEl._raw || '') + chunk.text;
-                    } catch { /* skip malformed */ }
+                        if (!renderTimer) {
+                            renderTimer = setTimeout(flushRender, 60);
+                        }
+                    } catch (err) { console.debug('SSE parse skip:', err); }
                 }
             }
 
             this._showLoading(false);
+            if (renderTimer) { clearTimeout(renderTimer); flushRender(); }
             const doneEl = document.createElement('div');
             doneEl.className = 'interp-done';
             doneEl.textContent = '─── ✦ ───';
             this._container.appendChild(doneEl);
 
         } catch (e) {
+            if (renderTimer) { clearTimeout(renderTimer); flushRender(); }
             if (e.name !== 'AbortError') this._appendError(e.message);
             this._showLoading(false);
         }
