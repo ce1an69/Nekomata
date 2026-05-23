@@ -1,0 +1,28 @@
+"""Centralized UI string loading — parses data/ui_strings.json once."""
+
+import json
+from pathlib import Path
+
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = _PROJECT_ROOT / "data"
+_STRINGS: dict | None = None
+ORNAMENT = "─── ✦ ───"
+
+
+def _load() -> dict:
+    global _STRINGS
+    if _STRINGS is None:
+        _STRINGS = json.loads(
+            (DATA_DIR / "ui_strings.json").read_text(encoding="utf-8")
+        )
+    return _STRINGS
+
+
+def section(name: str) -> dict:
+    """Return a top-level section from ui_strings.json."""
+    return _load()[name]
+
+
+def all_strings() -> dict:
+    """Return the entire ui_strings.json dict."""
+    return _load()

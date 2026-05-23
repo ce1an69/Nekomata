@@ -1,8 +1,6 @@
 """Draw screen widgets: DeckCard, SpreadSlot, ConfirmExitInterpretation."""
 
 import asyncio
-import json
-from pathlib import Path
 
 from rich.console import Group
 from rich.panel import Panel
@@ -38,10 +36,9 @@ from nekomata.render.styles import (
     EASE_OUT,
 )
 from nekomata.render.themes import get_theme
+from nekomata.strings import section
 
-_STR = json.loads(
-    (Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
-)["draw"]
+_STR = section("draw")
 
 # Deck layout constants
 NUM_DECK_CARDS = 48
@@ -68,9 +65,9 @@ class ConfirmExitInterpretation(ModalScreen[bool]):
     """Confirm leaving an active interpretation."""
 
     BINDINGS = [
-        Binding("enter", "confirm", "确认退出"),
-        Binding("escape", "cancel", "取消"),
-        Binding("q", "cancel", "取消"),
+        Binding("enter", "confirm", "Confirm"),
+        Binding("escape", "cancel", "Cancel"),
+        Binding("q", "cancel", "Cancel"),
     ]
 
     DEFAULT_CSS = f"""

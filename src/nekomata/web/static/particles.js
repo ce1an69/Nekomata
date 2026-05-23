@@ -23,18 +23,25 @@ export class Starfield {
 
     _resize() {
         const { canvas } = this;
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        canvas.width = w;
+        canvas.height = h;
 
         if (this.stars.length === 0) {
             for (let i = 0; i < this.count; i++) {
                 this.stars.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
+                    x: Math.random() * w,
+                    y: Math.random() * h,
                     r: Math.random() * 1.8 + 0.2,
                     a: Math.random(),
                     speed: Math.random() * 0.4 + 0.1,
                 });
+            }
+        } else {
+            for (const s of this.stars) {
+                if (s.x > w) s.x = Math.random() * w;
+                if (s.y > h) s.y = Math.random() * h;
             }
         }
     }

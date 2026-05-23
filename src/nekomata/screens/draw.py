@@ -1,9 +1,7 @@
 """Draw screen — pick cards from a face-down deck, then flip to reveal."""
 
 import asyncio
-import json
 from enum import Enum, auto
-from pathlib import Path
 
 from rich.console import Group
 from rich.text import Text
@@ -33,11 +31,10 @@ from nekomata.screens.draw_widgets import (
 )
 from nekomata.screens.stream_handler import StreamHandler
 from nekomata.screens.widgets import go_home
+from nekomata.strings import ORNAMENT, section
 from nekomata.spread import get_spread
 
-_STR = json.loads(
-    (Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
-)["draw"]
+_STR = section("draw")
 
 
 class Phase(Enum):
@@ -51,10 +48,10 @@ class DrawScreen(Screen):
     """Card drawing screen: pick from deck → flip to reveal → detail + interpret."""
 
     BINDINGS = [
-        Binding("q", "handle_back", "返回"),
-        Binding("escape", "handle_back", "返回"),
-        Binding("i", "interpret", "解读", show=False),
-        Binding("d", "toggle_detail", "详情", show=False),
+        Binding("q", "handle_back", "Back"),
+        Binding("escape", "handle_back", "Back"),
+        Binding("i", "interpret", "Interpret", show=False),
+        Binding("d", "toggle_detail", "Detail", show=False),
     ]
 
     DEFAULT_CSS = DRAW_SCREEN_CSS
@@ -113,8 +110,7 @@ class DrawScreen(Screen):
             fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
         )
 
-    # -- Test compatibility properties --
-
+    # Exposed for integration tests (test_flow.py)
     @property
     def _loading_timer(self):
         return self._stream._loading_timer
@@ -149,7 +145,7 @@ class DrawScreen(Screen):
                 Text(f'"{self._question}"', style=C_SUBTEXT0),
                 id="draw-question",
             )
-        yield Static("─── ✦ ───", id="draw-divider")
+        yield Static(ORNAMENT, id="draw-divider")
 
         with Vertical(id="deck-section"):
             yield Static("", id="deck-label")
@@ -177,9 +173,9 @@ class DrawScreen(Screen):
         yield Static("", id="draw-footer")
 
         with VerticalScroll(id="interp-dialog"):
-            yield Static("解读", id="interp-dialog-title")
+            yield Static(_STR["interp_title"], id="interp-dialog-title")
             yield Static("", id="interp-dialog-content")
-            yield Static("Q 关闭", id="interp-dialog-hints")
+            yield Static(_STR["interp_close_hint"], id="interp-dialog-hints")
 
     # -- Mount / Unmount --
 

@@ -12,6 +12,9 @@ from rich.text import Text
 
 from nekomata.card.types import Card, DrawnCard
 from nekomata.render.themes import get_theme
+from nekomata.strings import section
+
+_DETAIL_STR = section("card_detail")
 
 _ORIGIN_MAX_SIZE = (1024, 1536)
 _DETAIL_MAX_SIZE = (256, 384)
@@ -164,15 +167,15 @@ def _build_detail_text(drawn: DrawnCard) -> Text:
     card = drawn.card
     text = Text()
     text.append(f"[{drawn.position.name}] {card.name_zh} ({card.name})  [{drawn.status_label}]\n", style="bold")
-    text.append(f"Element: {card.element}  ·  Astrology: {card.astrology}\n\n")
+    text.append(f"{_DETAIL_STR['element']}: {card.element}  ·  {_DETAIL_STR['astrology']}: {card.astrology}\n\n")
 
-    text.append("Upright: ", style="bold")
+    text.append(f"{_DETAIL_STR['upright']}: ", style="bold")
     text.append(", ".join(card.keywords_upright))
     text.append("\n")
     text.append(card.meaning_upright)
     text.append("\n\n")
 
-    text.append("Reversed: ", style="bold")
+    text.append(f"{_DETAIL_STR['reversed']}: ", style="bold")
     text.append(", ".join(card.keywords_reversed))
     text.append("\n")
     text.append(card.meaning_reversed)

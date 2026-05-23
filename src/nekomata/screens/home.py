@@ -1,8 +1,5 @@
 """Home screen with animated banner, question input, and slash commands."""
 
-import json
-from pathlib import Path
-
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
@@ -13,7 +10,7 @@ from textual.screen import Screen
 from textual.timer import Timer
 from textual.widgets import Input, Static
 
-from nekomata.render.animations import animate_entrance, animate_exit
+from nekomata.render.animations import animate_entrance
 from nekomata.render.styles import (
     C_BASE,
     C_CRUST,
@@ -26,10 +23,10 @@ from nekomata.render.styles import (
     C_TEXT,
     EASE,
 )
+from nekomata.strings import ORNAMENT, section
 
-_STR = json.loads(
-    (Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
-)["home"]
+_STR = section("home")
+_STATUS_STR = section("status")
 
 SLASH_COMMANDS = {k: tuple(v) for k, v in _STR["commands"].items()}
 
@@ -126,18 +123,22 @@ class HomeScreen(Screen):
     def __init__(self) -> None:
         super().__init__()
         self._suggestions_hide_timer: Timer | None = None
+        self._suggestion_matches: list[str] = []
+        self._suggestion_idx: int = -1
+        self._suggestion_typed_prefix: str = ""
+        self._navigating_suggestions: bool = False
 
     def compose(self) -> ComposeResult:
         with Vertical(id="home-stack"):
             yield Static(_STR["title"], id="title")
-            yield Static("─── ✦ ───", id="ornament")
+            yield Static(ORNAMENT, id="ornament")
             with Vertical(id="input-area"):
                 yield HomePromptInput(
                     placeholder=_STR["placeholder"],
                     id="prompt-input",
                 )
                 yield Static("", id="command-suggestions")
-            yield Static("─── ✦ ───", id="ornament-bottom")
+            yield Static(ORNAMENT, id="ornament-bottom")
             yield Static(_STR["hints"], id="hints")
 
     def resume(self) -> None:
@@ -148,7 +149,7 @@ class HomeScreen(Screen):
         if self.app.animation_enabled:
             stack = self.query_one("#home-stack")
             stack.styles.opacity = 0.5
-            stack.styles.animate("opacity", 1.0, duration=0.25, easing="out_cubic")
+            stack.styles.animate("opacity", 1.0, duration=0.25, easing=EASE)
 
     def _show_help(self) -> None:
         """Display help text in the command suggestions area."""
@@ -161,11 +162,12 @@ class HomeScreen(Screen):
     def _show_status(self) -> None:
         """Display current configuration in the command suggestions area."""
         cfg = self.app.config
-        lines = ["[command-highlight]Configuration[/]\n"]
-        lines.append(f"  API URL    {cfg.api_url}")
-        lines.append(f"  API Key    {'(set)' if cfg.api_key else '(not set)'}")
-        lines.append(f"  Model      {cfg.model}")
-        lines.append(f"  Render     {self.app.render_mode}")
+        key_status = _STATUS_STR["api_key_set"] if cfg.api_key else _STATUS_STR["api_key_not_set"]
+        lines = [f"[command-highlight]{_STATUS_STR['title']}[/]\n"]
+        lines.append(f"  {_STATUS_STR['api_url']}    {cfg.api_url}")
+        lines.append(f"  {_STATUS_STR['api_key']}    {key_status}")
+        lines.append(f"  {_STATUS_STR['model']}      {cfg.model}")
+        lines.append(f"  {_STATUS_STR['render']}     {self.app.render_mode}")
         self.set_timer(0.05, lambda: self._show_suggestions("\n".join(lines)))
 
     def _show_suggestions(self, text: str) -> None:
@@ -197,17 +199,34 @@ class HomeScreen(Screen):
         self._refresh_command_suggestions(event.value)
 
     def on_key(self, event: Key) -> None:
-        """Handle home keyboard shortcuts."""
+        """Handle Tab completion and arrow navigation for slash commands."""
         prompt = self.query_one("#prompt-input", Input)
-        if event.key != "tab":
+
+        if event.key == "tab":
+            match = self._matching_command(prompt.value)
+            if match is None:
+                return
+            prompt.value = match
+            prompt.cursor_position = len(match)
+            self._refresh_command_suggestions(match)
+            event.stop()
             return
-        match = self._matching_command(prompt.value)
-        if match is None:
+
+        if event.key in ("up", "down") and self._suggestion_matches:
+            event.stop()
+            delta = 1 if event.key == "down" else -1
+            new_idx = self._suggestion_idx + delta
+            if new_idx < 0:
+                new_idx = len(self._suggestion_matches) - 1
+            elif new_idx >= len(self._suggestion_matches):
+                new_idx = 0
+            self._suggestion_idx = new_idx
+            self._navigating_suggestions = True
+            prompt.value = self._suggestion_matches[new_idx]
+            prompt.cursor_position = len(prompt.value)
+            self._render_suggestions()
+            self._navigating_suggestions = False
             return
-        prompt.value = match
-        prompt.cursor_position = len(match)
-        self._refresh_command_suggestions(match)
-        event.stop()
 
     def action_quit_if_empty(self) -> None:
         """Quit from the empty home prompt with Q."""
@@ -250,9 +269,13 @@ class HomeScreen(Screen):
 
     def _refresh_command_suggestions(self, value: str) -> None:
         """Show or hide the command suggestions dropdown based on input."""
+        if self._navigating_suggestions:
+            return
         suggestions = self.query_one("#command-suggestions", Static)
         matches = [cmd for cmd in SLASH_COMMANDS if cmd.startswith(value.lower())]
         if not value.startswith("/") or not matches or value.lower() in SLASH_COMMANDS:
+            self._suggestion_matches = []
+            self._suggestion_idx = -1
             self._hide_suggestions()
             return
         if self._suggestions_hide_timer is not None:
@@ -260,19 +283,34 @@ class HomeScreen(Screen):
             self._suggestions_hide_timer = None
         was_hidden = not suggestions.display
         suggestions.display = True
-        prefix_len = len(value)
-        lines = []
-        for cmd in matches:
-            typed = cmd[:prefix_len]
-            rest = cmd[prefix_len:]
-            lines.append(f"[command-highlight]{typed}[/]{rest}  {SLASH_COMMANDS[cmd][1]}")
-        suggestions.update("\n".join(lines))
+        self._suggestion_matches = matches
+        self._suggestion_idx = -1
+        self._suggestion_typed_prefix = value.lower()
+        self._render_suggestions()
         if was_hidden:
             animate_entrance(suggestions, duration=0.16, dy=-1)
-        else:
-            if self.app.animation_enabled:
-                suggestions.styles.opacity = 1.0
-                suggestions.styles.offset = (0, 0)
+        elif self.app.animation_enabled:
+            suggestions.styles.opacity = 1.0
+            suggestions.styles.offset = (0, 0)
+
+    def _render_suggestions(self) -> None:
+        """Render the suggestion list with the current selection highlighted."""
+        suggestions = self.query_one("#command-suggestions", Static)
+        if not self._suggestion_matches:
+            suggestions.display = False
+            suggestions.update("")
+            return
+        prefix_len = len(self._suggestion_typed_prefix)
+        lines = []
+        for i, cmd in enumerate(self._suggestion_matches):
+            _, desc = SLASH_COMMANDS[cmd]
+            if i == self._suggestion_idx:
+                lines.append(f" ▸ [command-highlight]{cmd}[/]  {desc}")
+            else:
+                typed = cmd[:prefix_len]
+                rest = cmd[prefix_len:]
+                lines.append(f"   [command-highlight]{typed}[/]{rest}  {desc}")
+        suggestions.update("\n".join(lines))
 
     def _hide_suggestions(self) -> None:
         suggestions = self.query_one("#command-suggestions", Static)
@@ -304,11 +342,12 @@ class HomeScreen(Screen):
         self._suggestions_hide_timer = None
 
     def _matching_command(self, value: str) -> str | None:
-        """Return the unique slash command matching the input, or None."""
+        """Return the first slash command matching the input prefix."""
         if not value.startswith("/"):
             return None
-        matches = [cmd for cmd in SLASH_COMMANDS if cmd.startswith(value.lower())]
-        return matches[0] if len(matches) == 1 else None
+        lower = value.lower()
+        matches = [cmd for cmd in SLASH_COMMANDS if cmd.startswith(lower) and cmd != lower]
+        return matches[0] if matches else None
 
     def _on_spread_selected(self, spread_key: str) -> None:
         """Callback when the user picks a spread — push the draw screen."""

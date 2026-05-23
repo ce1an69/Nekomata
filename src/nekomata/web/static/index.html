@@ -14,8 +14,8 @@
 <body>
 
 <!-- Starfield background -->
-<canvas id="stars-canvas"></canvas>
-<div id="fog-layer"></div>
+<canvas id="stars-canvas" aria-hidden="true"></canvas>
+<div id="fog-layer" aria-hidden="true"></div>
 
 <div id="app">
 
@@ -24,7 +24,7 @@
   <!-- Setup Screen -->
   <section id="screen-setup" class="screen hidden">
     <div class="card-panel setup-panel">
-      <h1 class="title">Setup</h1>
+      <h1 class="title">初始配置</h1>
       <p class="subtitle">配置你的 API 连接</p>
       <div class="ornament">─── ✦ ───</div>
       <div class="form-group">
@@ -40,7 +40,7 @@
         <input type="text" id="setup-model" placeholder="gpt-4o-mini">
       </div>
       <div id="setup-error" class="error-text hidden"></div>
-      <button id="setup-save" class="btn btn-primary">Save</button>
+      <button id="setup-save" class="btn btn-primary" aria-label="保存配置">保存</button>
       <div class="hint-bar">按 Enter 保存</div>
     </div>
   </section>
@@ -51,7 +51,7 @@
       <div class="card-panel home-panel">
         <h1 class="title">Nekomata</h1>
         <div class="ornament">─── ✦ ───</div>
-        <textarea id="home-input" placeholder="> 输入你的问题..." autocomplete="off" rows="1"></textarea>
+        <textarea id="home-input" placeholder="> 输入你的问题..." autocomplete="off" rows="1" aria-label="输入占卜问题"></textarea>
         <div id="home-suggestions" class="suggestions hidden"></div>
         <div class="hint-bar">Enter 确认 / 输入 / 查看命令</div>
       </div>
@@ -62,7 +62,7 @@
   <section id="screen-spread-select" class="screen hidden">
     <div class="card-panel spread-panel">
       <div id="spread-question-bar" class="question-bar hidden"></div>
-      <h2 class="title">Choose a Spread</h2>
+      <h2 class="title">选择牌阵</h2>
       <div class="spread-layout">
         <div id="spread-buttons" class="spread-buttons"></div>
         <div id="spread-preview" class="spread-preview">
@@ -79,7 +79,7 @@
       <span id="draw-spread-name" class="accent"></span>
       <div id="draw-question" class="draw-question"></div>
     </div>
-    <div class="ornament">--- * ---</div>
+    <div class="ornament">─── ✦ ───</div>
     <div id="carousel-section" class="carousel-section">
       <div id="carousel-scene"></div>
     </div>
@@ -109,8 +109,8 @@
     <div class="browser-toolbar">
       <div id="filter-bar" class="filter-bar"></div>
       <div class="browser-actions">
-        <button id="browser-reverse-btn" class="btn" title="切换逆位">逆位</button>
-        <button id="browser-back-btn" class="btn" title="返回">← 返回</button>
+        <button id="browser-reverse-btn" class="btn" title="切换逆位" aria-label="切换逆位预览">逆位</button>
+        <button id="browser-back-btn" class="btn" title="返回" aria-label="返回首页">← 返回</button>
       </div>
     </div>
     <div id="browser-count" class="subtext"></div>

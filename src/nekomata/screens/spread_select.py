@@ -1,8 +1,5 @@
 """Spread selection screen — choose a card layout before drawing."""
 
-import json
-from pathlib import Path
-
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.message import Message
@@ -20,11 +17,10 @@ from nekomata.render.styles import (
     C_SURFACE0,
     C_TEXT,
 )
+from nekomata.strings import section
 from nekomata.spread import SPREAD_REGISTRY, get_spread
 
-_STR = json.loads(
-    (Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
-)["spread_select"]
+_STR = section("spread_select")
 
 
 class SpreadOption(Static):

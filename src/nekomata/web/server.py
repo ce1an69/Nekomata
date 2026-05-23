@@ -33,12 +33,12 @@ from nekomata.render.styles import (
 )
 from nekomata.spread import SPREAD_REGISTRY
 from nekomata.storage.config import AppConfig
+from nekomata.strings import DATA_DIR
 
 log = logging.getLogger(__name__)
 
 _STATIC_DIR = Path(__file__).parent / "static"
-_ASSETS_DIR = Path(__file__).resolve().parents[3] / "assets"
-_DATA_DIR = Path(__file__).resolve().parents[3] / "data"
+_ASSETS_DIR = DATA_DIR.parent / "assets"
 
 # Cached at module level — read once, not per-request
 _CACHED_HTML: str | None = None
@@ -64,6 +64,11 @@ _THEME_COLORS = {
     "pink": C_PINK,
     "red": C_RED,
 }
+
+
+async def _sse_error(message: str):
+    """Single-shot SSE generator that yields one error then stops."""
+    yield f"data: {json.dumps({'error': message})}\n\n"
 
 
 def _card_to_dict(card: Card, has_origin: bool = False) -> dict:
@@ -162,13 +167,20 @@ def create_app() -> FastAPI:
     @app.get("/api/config")
     async def get_config():
         cfg = AppConfig.load()
-        return {"api_url": cfg.api_url, "api_key": cfg.api_key or "", "model": cfg.model}
+        return {
+            "api_url": cfg.api_url,
+            "api_key": "",
+            "model": cfg.model,
+            "has_api_key": bool(cfg.api_key),
+        }
 
     @app.post("/api/config")
     async def save_config(payload: ConfigPayload):
+        existing = AppConfig.load()
+        api_key = payload.api_key or existing.api_key or ""
         cfg = AppConfig.save(
             api_url=payload.api_url,
-            api_key=payload.api_key,
+            api_key=api_key,
             model=payload.model,
         )
         return {"ok": True, "api_url": cfg.api_url, "model": cfg.model}
@@ -218,19 +230,12 @@ def create_app() -> FastAPI:
             ))
 
         if not drawn:
-            async def _err_no_cards():
-                yield f"data: {json.dumps({'error': 'No valid cards provided'})}\n\n"
-            return StreamingResponse(_err_no_cards(), media_type="text/event-stream")
+            return StreamingResponse(_sse_error("No valid cards provided"), media_type="text/event-stream")
 
         try:
             interp = get_interpreter(config)
         except InterpretationError as exc:
-            err_msg = str(exc)
-
-            async def _err_setup():
-                yield f"data: {json.dumps({'error': err_msg})}\n\n"
-
-            return StreamingResponse(_err_setup(), media_type="text/event-stream")
+            return StreamingResponse(_sse_error(str(exc)), media_type="text/event-stream")
 
         async def _stream():
             loop = asyncio.get_running_loop()

@@ -1,8 +1,5 @@
 """Card browser screen — browse and filter all 78 tarot cards."""
 
-import json
-from pathlib import Path
-
 from textual.app import ComposeResult
 from textual.containers import Center, Horizontal, Vertical, VerticalScroll
 from textual.events import Key
@@ -24,23 +21,22 @@ from nekomata.render.styles import (
     C_SURFACE1,
     C_TEXT,
 )
-from nekomata.screens.widgets import focus_sibling
+from nekomata.strings import section, all_strings
 
-_STR = json.loads(
-    (Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
-)["card_browser"]
+_STR = section("card_browser")
+_ARCANA_LABELS = all_strings()["arcana_labels"]
 
 SUIT_FILTERS = [
-    ("All", None),
-    ("Major", Arcana.MAJOR),
-    ("Cups", Arcana.CUPS),
-    ("Wands", Arcana.WANDS),
-    ("Swords", Arcana.SWORDS),
-    ("Pentacles", Arcana.PENTACLES),
+    (_ARCANA_LABELS["all"], None),
+    (_ARCANA_LABELS["major"], Arcana.MAJOR),
+    (_ARCANA_LABELS["cups"], Arcana.CUPS),
+    (_ARCANA_LABELS["wands"], Arcana.WANDS),
+    (_ARCANA_LABELS["swords"], Arcana.SWORDS),
+    (_ARCANA_LABELS["pentacles"], Arcana.PENTACLES),
 ]
 
 # Reusable position for card browser preview
-_BROWSER_POS = Position(name="Browser", name_zh="Browser", description="Card browser")
+_BROWSER_POS = Position(name="Browser", name_zh="浏览", description="Card browser")
 
 
 class CardBrowserScreen(Screen):
@@ -223,16 +219,20 @@ class CardBrowserScreen(Screen):
             self._focus_next_visible_card(-1)
 
     def key_left(self) -> None:
-        if isinstance(self.focused, CardListItem):
-            self._focus_next_visible_card(-1)
-        elif isinstance(self.focused, Button) and (self.focused.id or "").startswith("filter-"):
-            focus_sibling(self, Button, -1)
+        self._cycle_filter(-1)
 
     def key_right(self) -> None:
-        if isinstance(self.focused, CardListItem):
-            self._focus_next_visible_card(1)
-        elif isinstance(self.focused, Button) and (self.focused.id or "").startswith("filter-"):
-            focus_sibling(self, Button, 1)
+        self._cycle_filter(1)
+
+    def _cycle_filter(self, delta: int) -> None:
+        """Switch filter tab left or right."""
+        current_idx = 0
+        for i, (_, arcana) in enumerate(SUIT_FILTERS):
+            if arcana == self._active_arcana:
+                current_idx = i
+                break
+        new_idx = (current_idx + delta) % len(SUIT_FILTERS)
+        self._apply_filter_by_index(new_idx)
 
     def _focus_next_visible_card(self, delta: int) -> None:
         items = [i for i in self.query(CardListItem) if i.display]

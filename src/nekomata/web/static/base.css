@@ -1,17 +1,30 @@
 /* Nekomata Web — base resets, layout, scrollbar, starfield */
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
     --gold: #cba6f7;
     --gold-glow: rgba(203, 166, 247, 0.6);
     --gold-dim: rgba(203, 166, 247, 0.25);
+    --panel-bg: rgba(30, 30, 46, 0.85);
+    --dark-bg: rgba(17, 17, 27, 0.6);
+    --dark-bg-solid: rgba(17, 17, 27, 0.7);
+    --shadow: rgba(0, 0, 0, 0.3);
+    --shadow-lg: rgba(0, 0, 0, 0.4);
+    --gold-5: rgba(203, 166, 247, 0.05);
+    --gold-8: rgba(203, 166, 247, 0.08);
+    --gold-15: rgba(203, 166, 247, 0.15);
+    --gold-20: rgba(203, 166, 247, 0.2);
+    --gold-25: rgba(203, 166, 247, 0.25);
+    --gold-40: rgba(203, 166, 247, 0.4);
+    --gold-45: rgba(203, 166, 247, 0.45);
+    --lavender-30: rgba(180, 190, 254, 0.3);
     --cc-w: clamp(100px, 16vw, 160px);
     --cc-h: calc(var(--cc-w) * 1.5);
 }
 
 body {
-    background: linear-gradient(180deg, var(--crust) 0%, #0a0a1e 100%);
+    background: linear-gradient(180deg, var(--crust) 0%, var(--mantle) 100%);
     color: var(--text);
     font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
     font-size: 14px;
@@ -19,19 +32,21 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
-    user-select: none;
 }
+
+button, .btn, .spread-option, .card-list-item, .filter-btn, .cc-card { user-select: none; }
 
 .hidden { display: none !important; }
 
 /* Scrollbar */
+* { scrollbar-width: thin; scrollbar-color: var(--gold-dim) var(--base); }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--base); border-radius: 4px; }
 ::-webkit-scrollbar-thumb {
-    background: rgba(203, 166, 247, 0.25);
+    background: var(--gold-dim);
     border-radius: 4px;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(203, 166, 247, 0.45); }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-45); }
 ::-webkit-scrollbar-corner { background: var(--base); }
 
 /* Starfield & Fog */
@@ -51,7 +66,7 @@ body {
     left: 0;
     width: 100%;
     height: 35%;
-    background: linear-gradient(to top, rgba(10, 10, 30, 0.8), transparent);
+    background: linear-gradient(to top, rgba(17, 17, 27, 0.8), transparent);
     z-index: 1;
     pointer-events: none;
 }

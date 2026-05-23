@@ -1,8 +1,5 @@
 """Setup screen — configure API settings on first launch."""
 
-import json
-from pathlib import Path
-
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
@@ -22,11 +19,10 @@ from nekomata.render.styles import (
     C_SURFACE1,
     C_TEXT,
 )
+from nekomata.strings import ORNAMENT, section
 from nekomata.storage.config import AppConfig
 
-_STR = json.loads(
-    (Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
-)["setup"]
+_STR = section("setup")
 
 
 class SetupButton(Static):
@@ -154,7 +150,7 @@ class SetupScreen(Screen):
         with Vertical(id="setup-stack"):
             yield Static(_STR["title"], id="setup-title")
             yield Static(_STR["subtitle"], id="setup-subtitle")
-            yield Static("─── ✦ ───", id="setup-ornament-top")
+            yield Static(ORNAMENT, id="setup-ornament-top")
             yield Static(_STR["field_api_url"], classes="field-label")
             yield Input(
                 value="https://api.openai.com/v1",
@@ -175,7 +171,7 @@ class SetupScreen(Screen):
                 id="model-input",
                 classes="setup-input",
             )
-            yield Static("─── ✦ ───", id="setup-ornament-bottom")
+            yield Static(ORNAMENT, id="setup-ornament-bottom")
             yield SetupButton(_STR["save_label"], id="save-btn")
             yield Static("", id="setup-error")
             yield Static(_STR["hints"], id="setup-hints")
