@@ -117,7 +117,13 @@ class OpenAIInterpreter:
     def interpret_stream(
         self, drawn_cards: list[DrawnCard], question: str, spread_key: str = ""
     ) -> Generator[StreamChunk, None, None]:
-        """Yield text chunks from the streaming API (SSE)."""
+        """Yield text chunks from the streaming API (SSE).
+
+        Parses Server-Sent Events line by line. Each event is "data: {json}".
+        The delta object may contain reasoning (chain-of-thought) and/or
+        content (the actual response). Different providers use different
+        field names for reasoning — we check all common variants.
+        """
         req = self._make_request({
             "model": self._model,
             "messages": _build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key),
@@ -134,6 +140,7 @@ class OpenAIInterpreter:
                     if line.startswith("data: "):
                         data = json.loads(line[6:])
                         delta = data["choices"][0].get("delta", {})
+                        # Check multiple field names for reasoning content
                         reasoning = (
                             delta.get("reasoning_content")
                             or delta.get("reasoning")

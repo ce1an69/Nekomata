@@ -1,5 +1,8 @@
 """Card browser screen — browse and filter all 78 tarot cards."""
 
+import json
+from pathlib import Path
+
 from textual.app import ComposeResult
 from textual.containers import Center, Horizontal, Vertical, VerticalScroll
 from textual.events import Key
@@ -7,7 +10,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Static
 
 from nekomata.card.data import load_all_cards
-from nekomata.card.types import Arcana, ARCANA_ZH, Card, DrawnCard, Position
+from nekomata.card.types import Arcana, ARCANA_ZH, Card, DrawnCard, Position, ROMAN
 from nekomata.render.animations import animate_entrance
 from nekomata.render.card_renderer import render_card_detail, render_card_full_detail_widgets
 from nekomata.render.styles import (
@@ -23,11 +26,9 @@ from nekomata.render.styles import (
 )
 from nekomata.screens.widgets import focus_sibling
 
-# Roman numerals for Major Arcana display
-_ROMAN = [
-    "0", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
-    "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX", "XXI",
-]
+_STR = json.loads(
+    (Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
+)["card_browser"]
 
 SUIT_FILTERS = [
     ("All", None),
@@ -144,10 +145,10 @@ class CardBrowserScreen(Screen):
             with VerticalScroll(id="card-list"):
                 pass
             with VerticalScroll(id="card-detail"):
-                yield Static("Select a card", id="detail-placeholder")
+                yield Static(_STR["select_placeholder"], id="detail-placeholder")
         with Center(id="back-bar"):
             yield Button("Back", id="back")
-        yield Static("↑/↓ move · Enter inspect · R reversal · Q back", id="hints")
+        yield Static(_STR["hints"], id="hints")
 
     def on_mount(self) -> None:
         """Populate card list, focus the first item, and animate entrance."""
@@ -210,8 +211,8 @@ class CardBrowserScreen(Screen):
         """Update the card count line to reflect current filter and reversal state."""
         count = self.query_one("#card-count", Static)
         filtered = [c for c in self._cards if self._active_arcana is None or c.arcana == self._active_arcana]
-        rev_label = "  (reversed preview)" if self._reversed_preview else ""
-        count.update(f"{len(filtered)}/{len(self._cards)} cards{rev_label}")
+        rev_label = _STR["reversed_preview"] if self._reversed_preview else ""
+        count.update(_STR["card_count"].format(filtered=len(filtered), total=len(self._cards)) + rev_label)
 
     def key_down(self) -> None:
         if isinstance(self.focused, CardListItem):
@@ -292,7 +293,7 @@ class CardBrowserScreen(Screen):
         if self.app.animation_enabled:
             detail.styles.opacity = 0.2
         detail.remove_children()
-        detail.mount(Static("Select a card"))
+        detail.mount(Static(_STR["select_placeholder"]))
         if self.app.animation_enabled:
             detail.styles.animate("opacity", 1.0, duration=0.18, easing="out_quint")
 
@@ -333,7 +334,7 @@ class CardListItem(Static):
     def __init__(self, card: Card) -> None:
         self._card = card
         suit = ARCANA_ZH.get(card.arcana, card.arcana.value)
-        num = _ROMAN[card.number] if card.arcana == Arcana.MAJOR and card.number < len(_ROMAN) else str(card.number)
+        num = ROMAN[card.number] if card.arcana == Arcana.MAJOR and card.number < len(ROMAN) else str(card.number)
         super().__init__(f"{num:>3s}  {card.name} [{suit}]")
 
     def on_click(self) -> None:

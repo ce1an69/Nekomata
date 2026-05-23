@@ -24,5 +24,62 @@
   "stream_tick_ms": 25,
   "stream_chars_per_tick": 3,
   "loading_interval_ms": 80,
-  "loading_message_interval_s": 2.0
+  "loading_message_interval_s": 2.0,
+
+  "home": {
+    "title": "Nekomata",
+    "placeholder": "> ask your question...",
+    "hints": "Enter confirm · / commands · Q quit",
+    "commands": {
+      "/browse": ["card_browser", "Browse all 78 cards"],
+      "/help": ["help", "Show available commands"],
+      "/status": ["status", "Show current configuration"],
+      "/quit": ["quit", "Exit application"]
+    }
+  },
+
+  "setup": {
+    "title": "Setup",
+    "subtitle": "Configure your API connection",
+    "field_api_url": "API URL",
+    "field_api_key": "API Key",
+    "field_model": "Model",
+    "save_label": "Save",
+    "error_url_required": "API URL is required",
+    "error_model_required": "Model is required",
+    "hints": "Enter next / save · Tab switch"
+  },
+
+  "spread_select": {
+    "prompt": "Choose a spread",
+    "back_label": "Q   Back",
+    "back_desc": "Return to the question prompt.",
+    "hints": "↑/↓/←/→ move · Enter confirm · Q back"
+  },
+
+  "draw": {
+    "pick_label": "── 选牌 ({picked}/{total}) ──",
+    "pick_next": "── 牌阵 · 还需选 {remaining} 张 · 下一个: {name} ──",
+    "pick_done": "── 牌阵 · 选牌完成 ──",
+    "flip_label": "── 翻牌 · 剩余 {unrevealed} 张 ──",
+    "done_label": "── ✦ 牌阵已就绪 ✦ ──",
+    "hint_pick": "← → 选牌  Enter 抽牌",
+    "hint_flip": "← → 选择  Enter 翻牌",
+    "hint_done": "← → 选牌  {detail_hint}  I 解读  Q 返回",
+    "detail_show": "D 详情",
+    "detail_hide": "D 隐藏详情",
+    "interp_title": "解读",
+    "interp_close_hint": "Q 关闭",
+    "interp_done_hint": "── 完成 ──  Q 关闭",
+    "confirm_exit_title": "退出解读？",
+    "confirm_exit_body": "当前解读将停止，并直接返回首页。",
+    "confirm_exit_hints": "Enter 确认退出 · Esc 取消"
+  },
+
+  "card_browser": {
+    "card_count": "{filtered}/{total} cards",
+    "reversed_preview": "  (reversed preview)",
+    "select_placeholder": "Select a card",
+    "hints": "↑/↓ move · Enter inspect · R reversal · Q back"
+  }
 }

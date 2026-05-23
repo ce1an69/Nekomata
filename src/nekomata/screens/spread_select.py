@@ -1,5 +1,8 @@
 """Spread selection screen — choose a card layout before drawing."""
 
+import json
+from pathlib import Path
+
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.message import Message
@@ -18,6 +21,10 @@ from nekomata.render.styles import (
     C_TEXT,
 )
 from nekomata.spread import SPREAD_REGISTRY, get_spread
+
+_STR = json.loads(
+    (Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
+)["spread_select"]
 
 
 class SpreadOption(Static):
@@ -157,7 +164,7 @@ class SpreadSelectScreen(Screen):
         with Vertical(id="spread-shell"):
             if question:
                 yield Static(question, id="question")
-            yield Static("Choose a spread", id="prompt")
+            yield Static(_STR["prompt"], id="prompt")
             with Horizontal(id="spread-body"):
                 with Vertical(id="spread-buttons"):
                     for i, (key, cls) in enumerate(SPREAD_REGISTRY, 1):
@@ -167,12 +174,12 @@ class SpreadSelectScreen(Screen):
                             f"{i:02d}  {spread.name:<28s} {n_pos:>2d}",
                             f"spread-{key}",
                         )
-                    yield SpreadOption("Q   Back", "back", back=True)
+                    yield SpreadOption(_STR["back_label"], "back", back=True)
                 with Vertical(id="spread-preview"):
                     yield Static("", id="preview-title")
                     yield Static("", id="preview-desc")
                     yield Static("", id="preview-positions")
-            yield Static("↑/↓/←/→ move · Enter confirm · Q back", id="hints")
+            yield Static(_STR["hints"], id="hints")
 
     def on_mount(self) -> None:
         """Auto-focus the first spread button, show preview, and animate entrance."""
@@ -213,7 +220,7 @@ class SpreadSelectScreen(Screen):
                     )
                 return
         title.update("Back")
-        desc_text.update("Return to the question prompt.")
+        desc_text.update(_STR["back_desc"])
         positions_text.update("")
 
     def on_spread_option_selected(self, event: SpreadOption.Selected) -> None:

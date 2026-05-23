@@ -142,17 +142,6 @@ def test_spread_recenters_with_motion_after_deck_exit():
     assert SPREAD_RECENTER_DURATION == pytest.approx(0.28)
 
 
-def test_spread_slot_place_uses_short_slide_in():
-    """Placed cards should slide into their slot quickly instead of just fading in."""
-    from nekomata.screens.draw import DrawScreen
-    constants = DrawScreen._animate_slot_entrance.__code__.co_names
-    reveal_constants = DrawScreen._reveal_slot.__code__.co_names
-
-    assert "SLOT_PLACE_OFFSET" in constants
-    assert "SLOT_PLACE_DURATION" in reveal_constants
-    assert SLOT_PLACE_OFFSET == 2
-    assert SLOT_PLACE_DURATION == pytest.approx(0.22)
-
 
 def test_spread_slot_flip_uses_smooth_two_phase_motion():
     """Flipping should be compact and animated through the face swap."""

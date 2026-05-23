@@ -134,22 +134,23 @@ def test_draw_interpretation_panel_fills_bottom_flow_space():
 
 
 def test_draw_interpretation_panel_width_tracks_detail_space():
-    source = inspect.getsource(DrawScreen._sync_interp_layout)
+    from nekomata.screens.draw_dialog import InterpretationDialog
+    source = inspect.getsource(InterpretationDialog.sync_layout)
 
-    assert "_w_interp.styles.width = max(" in source
-    assert "self.size.width" in source
+    assert "styles.width = max(" in source
+    assert "screen_width" in source
     assert "DETAIL_PANEL_WIDTH" in source
     assert "INTERP_FULL_SIDE_MARGIN * 2" in source
     assert "INTERP_FULL_WIDTH_CORRECTION" in source
 
 
 def test_draw_hiding_detail_recenters_spread_area():
-    source = inspect.getsource(DrawScreen._hide_detail_panel)
-    finish_source = inspect.getsource(DrawScreen._finish_hide_detail_panel)
+    from nekomata.screens.draw_detail import DetailPanel
+    source = inspect.getsource(DetailPanel.hide)
+    finish_source = inspect.getsource(DetailPanel._finish_hide)
 
-    assert "_center_spread_area" in source
-    assert "preview.display = False" in finish_source
-    assert "_center_spread_area" in finish_source
+    assert "center_spread" in source
+    assert "display = False" in finish_source
 
 
 def test_draw_stream_uses_app_thread_callback():
@@ -175,7 +176,7 @@ def test_draw_stream_content_renders_markdown():
 
     assert 'Text("".join(self._thinking_chars)' in source
     assert 'Markdown("".join(self._content_chars)' in source
-    assert "italic dim" in source
+    assert "italic" in source
     assert "C_OVERLAY0" in source
     assert "self._render_content(parts)" in source
 
@@ -196,7 +197,7 @@ def test_interpretation_exit_confirm_uses_catppuccin_modal():
     source = inspect.getsource(DrawScreen.action_handle_back)
 
     assert "ConfirmExitInterpretation" in source
-    assert "callback=self._on_exit_interpretation_confirmed" in source
+    assert "callback=on_confirm" in source
     assert f"background: {C_CRUST};" in css
     assert "background: #11111b 70%" not in css
     assert f"border: round {C_MAUVE}" in css

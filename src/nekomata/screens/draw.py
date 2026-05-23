@@ -1,14 +1,18 @@
 """Draw screen — pick cards from a face-down deck, then flip to reveal."""
 
 import asyncio
+import json
 from enum import Enum, auto
+from pathlib import Path
 
+from rich.console import Group
 from rich.text import Text
 
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.css.scalar import ScalarOffset
+from textual.css.query import NoMatches
 from textual.events import DescendantFocus, Key, Resize
 from textual.geometry import Offset
 from textual.screen import Screen
@@ -16,63 +20,31 @@ from textual.widgets import Static
 
 from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
-from nekomata.render.card_renderer import (
-    clear_cache,
-    preload_all_async,
-    preload_card_image_async,
-    render_card_detail,
-    render_card_full_detail_widgets,
-)
-from nekomata.render.styles import (
-    C_CRUST,
-    C_LAVENDER,
-    C_MANTLE,
-    C_MAUVE,
-    C_OVERLAY0,
-    C_PINK,
-    C_RED,
-    C_SUBTEXT0,
-    C_SURFACE0,
-    C_SURFACE1,
-    C_SURFACE2,
-    C_TEXT,
-    EASE,
-    EASE_OUT,
-    EASE_SPRING,
-)
+from nekomata.render.card_renderer import clear_cache, preload_all_async, preload_card_image_async
+from nekomata.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_SUBTEXT0, C_TEXT, EASE
 from nekomata.screens.box_manager import BoxManager
+from nekomata.screens.draw_css import DRAW_SCREEN_CSS
+from nekomata.screens.draw_dialog import InterpretationDialog
+from nekomata.screens.draw_detail import DetailPanel
 from nekomata.screens.draw_widgets import (
-    DECK_CARD_WIDTH,
-    DECK_HIDE_DELAY,
-    DECK_ROW_COUNT,
-    NUM_DECK_CARDS,
-    PICK_COMPLETE_DELAY,
-    SLOT_PLACE_DURATION,
-    SLOT_PLACE_OFFSET,
-    SPREAD_RECENTER_DURATION,
-    SPREAD_RECENTER_OFFSET,
-    ConfirmExitInterpretation,
-    DeckCard,
-    SpreadSlot,
+    DECK_HIDE_DELAY, DECK_ROW_COUNT, NUM_DECK_CARDS, PICK_COMPLETE_DELAY,
+    SLOT_PLACE_DURATION, SLOT_PLACE_OFFSET, SPREAD_RECENTER_DURATION, SPREAD_RECENTER_OFFSET,
+    ConfirmExitInterpretation, DeckCard, SpreadSlot,
 )
 from nekomata.screens.stream_handler import StreamHandler
 from nekomata.screens.widgets import go_home
 from nekomata.spread import get_spread
 
-DETAIL_PANEL_WIDTH = 66
-INTERP_PANEL_HEIGHT = "46%"
-INTERP_MIN_HEIGHT = 14
-INTERP_MAX_HEIGHT = 30
-INTERP_SIDE_MARGIN = 1
-INTERP_DETAIL_GAP = 0
-INTERP_FULL_SIDE_MARGIN = 5
-INTERP_FULL_WIDTH_CORRECTION = 4
+_STR = json.loads(
+    (Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
+)["draw"]
 
 
 class Phase(Enum):
-    PICK = auto()
-    FLIP = auto()
-    DONE = auto()
+    """Draw screen state machine: PICK → FLIP → DONE."""
+    PICK = auto()   # User selecting cards from the deck
+    FLIP = auto()   # All cards placed, user flipping to reveal
+    DONE = auto()   # All cards revealed, detail + interpretation available
 
 
 class DrawScreen(Screen):
@@ -85,191 +57,7 @@ class DrawScreen(Screen):
         Binding("d", "toggle_detail", "详情", show=False),
     ]
 
-    DEFAULT_CSS = f"""
-    DrawScreen {{
-        align: center top;
-    }}
-    #draw-header {{
-        text-align: center;
-        height: auto;
-        margin-bottom: 0;
-    }}
-    #draw-divider {{
-        color: {C_SURFACE2};
-        text-align: center;
-        height: 1;
-    }}
-    #draw-title {{
-        color: {C_MAUVE};
-        text-style: bold;
-        text-align: center;
-    }}
-    #draw-question {{
-        color: {C_SUBTEXT0};
-        text-align: center;
-    }}
-    #deck-section {{
-        height: auto;
-        min-height: 32;
-        padding: 0 1;
-        margin: 0 0;
-        border: round transparent;
-        border-bottom: round {C_SURFACE0};
-        background: {C_CRUST};
-        transition: opacity 420ms {EASE_OUT}, offset 420ms {EASE_OUT}, border 180ms {EASE_OUT};
-    }}
-    #deck-section.box-active {{
-        border-bottom: round {C_MAUVE};
-    }}
-    #deck-label {{
-        background: {C_CRUST};
-        color: {C_LAVENDER};
-        text-style: bold;
-        text-align: center;
-        margin: 0 0 1 0;
-    }}
-    #deck-row {{
-        height: auto;
-        padding: 0 1;
-        align: center middle;
-    }}
-    .deck-row-line {{
-        height: auto;
-        margin: 0 0 1 0;
-        align: center middle;
-    }}
-    #main-area {{
-        height: 1fr;
-        margin-top: 0;
-        transition: offset 280ms {EASE_SPRING};    }}
-    #spread-area {{
-        width: 1fr;
-        height: 1fr;
-        padding: 1 0;
-        align: center middle;
-        border: round transparent;
-        transition: border 180ms {EASE_OUT};    }}
-    #spread-area.box-active {{
-        border: round {C_MAUVE};
-    }}
-    #spread-label {{
-        color: {C_LAVENDER};
-        text-style: bold;
-        text-align: center;
-        margin: 0 0 1 0;
-    }}
-    #spread-grid {{
-        height: auto;
-        align: center middle;
-    }}
-    #spread-grid.layout-1 {{
-        layout: grid;
-        grid-size: 1;
-        grid-columns: 18;
-    }}
-    #spread-grid.layout-3 {{
-        layout: grid;
-        grid-size: 3 1;
-        grid-columns: 18 18 18;
-    }}
-    #spread-grid.layout-5 {{
-        layout: grid;
-        grid-size: 5 1;
-        grid-columns: 18 18 18 18 18;
-    }}
-    #spread-grid.layout-10 {{
-        layout: grid;
-        grid-size: 5 2;
-        grid-columns: 18 18 18 18 18;
-        grid-rows: auto auto;
-    }}
-    #card-preview {{
-        dock: right;
-        width: {DETAIL_PANEL_WIDTH};
-        min-width: {DETAIL_PANEL_WIDTH};
-        height: 1fr;
-        border: round {C_SURFACE0};
-        background: {C_MANTLE};
-        padding: 1 1;
-        align: center top;
-        opacity: 0;
-        display: none;
-        offset: 4 0;
-        transition: opacity 240ms {EASE_OUT}, offset 320ms {EASE_SPRING}, border 180ms {EASE_OUT};
-    }}
-    #card-preview.box-active {{
-        border: round {C_MAUVE};
-    }}
-    #card-preview .card-origin {{
-        width: 50%;
-        height: auto;
-        background: {C_MANTLE};
-    }}
-    #card-preview .card-origin-frame {{
-        width: 100%;
-        height: auto;
-        align: center top;
-        background: {C_MANTLE};
-    }}
-    #card-preview Static {{
-        background: {C_MANTLE};
-    }}
-    #card-preview.visible {{
-        display: block;
-        opacity: 1;
-        offset: 0 0;
-    }}
-    #draw-footer {{
-        dock: bottom;
-        height: 1;
-        color: {C_OVERLAY0};
-        text-align: center;
-        padding: 0 2;
-    }}
-    #interp-dialog {{
-        dock: bottom;
-        width: 1fr;
-        height: {INTERP_PANEL_HEIGHT};
-        min-height: {INTERP_MIN_HEIGHT};
-        max-height: {INTERP_MAX_HEIGHT};
-        display: none;
-        border: round {C_SURFACE1};
-        background: {C_MANTLE};
-        padding: 0 1;
-        margin: 0 1 1 1;
-        opacity: 0;
-        offset: 0 2;
-        transition: opacity 240ms {EASE_OUT}, offset 320ms {EASE_SPRING}, width 220ms {EASE_OUT}, border 180ms {EASE_OUT};
-    }}
-    #interp-dialog.box-active {{
-        border: round {C_MAUVE};
-    }}
-    #interp-dialog.visible {{
-        display: block;
-        opacity: 1;
-        offset: 0 0;
-    }}
-    #interp-dialog-title {{
-        color: {C_MAUVE};
-        text-style: bold;
-        height: 1;
-        margin: 0;
-    }}
-    #interp-dialog-content {{
-        color: {C_TEXT};
-        margin: 0;
-    }}
-    #interp-dialog-hints {{
-        color: {C_OVERLAY0};
-        height: 1;
-        margin: 0;
-    }}
-    #status {{
-        text-align: center;
-        color: {C_MAUVE};
-        height: auto;
-    }}
-    """
+    DEFAULT_CSS = DRAW_SCREEN_CSS
 
     def __init__(self, spread_key: str, question: str) -> None:
         super().__init__()
@@ -283,9 +71,7 @@ class DrawScreen(Screen):
         self._pick_index = 0
         self._phase = Phase.PICK
         self._cancelled = False
-        self._interp_streaming = False
         self._n_positions = len(self._spread.positions)
-        self._detail_visible = False
         self._last_preview_id: str | None = None
         self._deck_exit_started = False
         self._display_order = self._spread.display_order
@@ -297,16 +83,17 @@ class DrawScreen(Screen):
             render_content=self._on_stream_render,
             render_hints=self._on_stream_hints,
             scroll_to_bottom=self._on_stream_scroll,
-            show_error=self._show_error,
+            show_error=self._on_stream_error,
         )
+        self._dialog = InterpretationDialog(self, self._box, self._stream)
+        self._detail = DetailPanel(self)
 
-    # ── Callbacks for StreamHandler ──────────────────────────────────
+    # -- StreamHandler callbacks --
 
     def _on_stream_render(self, parts) -> None:
         if parts is None:
             self._w_interp_content.update("")
         else:
-            from rich.console import Group
             self._w_interp_content.update(Group(*parts))
 
     def _on_stream_hints(self, text) -> None:
@@ -316,12 +103,17 @@ class DrawScreen(Screen):
         try:
             self._w_interp.scroll_end(animate=False)
         except NoMatches:
-            pass
+            pass  # Widget may not be mounted yet during early streaming
 
-    # ── Delegation to StreamHandler (for test compatibility) ─────────
+    def _on_stream_error(self, message: str) -> None:
+        self._dialog.show_error(
+            message,
+            self._update_phase_ui,
+            sync_layout=self._sync_interp_layout,
+            fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
+        )
 
-    def _append_stream_chunk(self, chunk) -> None:
-        self._stream.append_chunk(chunk)
+    # -- Test compatibility properties --
 
     @property
     def _loading_timer(self):
@@ -331,7 +123,7 @@ class DrawScreen(Screen):
     def _stream_timer(self):
         return self._stream._timer
 
-    # ── Box available_boxes callback ─────────────────────────────────
+    # -- BoxManager callback --
 
     def _available_boxes(self) -> list[str]:
         if self._phase == Phase.PICK:
@@ -339,16 +131,13 @@ class DrawScreen(Screen):
         if self._phase == Phase.FLIP:
             return ["spread"]
         boxes = ["spread"]
-        if self._detail_visible:
+        if self._detail.visible:
             boxes.append("detail")
-        if self._interp_is_visible():
+        if self._dialog.is_visible:
             boxes.append("interp")
         return boxes
 
-    def _interp_is_visible(self) -> bool:
-        return self._w_interp.has_class("visible")
-
-    # ── Compose ──────────────────────────────────────────────────────
+    # -- Compose --
 
     def compose(self) -> ComposeResult:
         with Vertical(id="draw-header"):
@@ -392,34 +181,31 @@ class DrawScreen(Screen):
             yield Static("", id="interp-dialog-content")
             yield Static("Q 关闭", id="interp-dialog-hints")
 
-    def _slot_for_position(self, position_index: int) -> SpreadSlot:
-        slots = list(self.query(SpreadSlot))
-        return slots[self._display_order[position_index]]
+    # -- Mount / Unmount --
 
     def on_mount(self) -> None:
         self._prepare_drawn_cards()
 
-        # Cache frequently queried widgets
+        # Cache widget references
         self._w_deck_section = self.query_one("#deck-section")
         self._w_deck_label = self.query_one("#deck-label", Static)
         self._w_main_area = self.query_one("#main-area")
         self._w_spread_label = self.query_one("#spread-label", Static)
         self._w_spread_grid = self.query_one("#spread-grid")
-        self._w_preview = self.query_one("#card-preview")
         self._w_interp = self.query_one("#interp-dialog")
         self._w_interp_content = self.query_one("#interp-dialog-content", Static)
         self._w_interp_hints = self.query_one("#interp-dialog-hints", Static)
-        self._w_status = self.query_one("#status", Static)
         self._w_footer = self.query_one("#draw-footer", Static)
+
+        self._dialog.cache_widgets()
+        self._detail.cache_widgets()
 
         grid = self._w_spread_grid
         for cls in ("layout-1", "layout-3", "layout-5", "layout-10"):
             grid.remove_class(cls)
         grid.add_class(f"layout-{self._n_positions}")
 
-        # Hide spread area during PICK phase
         self._w_main_area.display = False
-
         self._update_phase_ui()
         self._animate_deck_entrance()
         deck_cards = list(self.query(DeckCard))
@@ -441,6 +227,8 @@ class DrawScreen(Screen):
         self._cancelled = True
         self._stream.stop()
         clear_cache()
+
+    # -- Deck animation --
 
     def _hide_deck(self) -> None:
         self._w_deck_section.display = False
@@ -465,47 +253,6 @@ class DrawScreen(Screen):
             self.set_timer(0.01 + i * 0.008, lambda c=card: c.add_class("exiting"))
         self.set_timer(DECK_HIDE_DELAY, self._hide_deck)
 
-    # ── Phase UI ──────────────────────────────────────────────────────
-
-    def _update_phase_ui(self) -> None:
-        if self._phase == Phase.PICK:
-            self._deck_exit_started = False
-            self._w_deck_section.styles.opacity = 1.0
-            self._w_deck_section.styles.offset = (0, 0)
-            remaining = self._n_positions - self._pick_index
-            if self._pick_index < self._n_positions:
-                pos_name = self._spread.positions[self._pick_index].name
-                self._w_spread_label.update(
-                    Text(f"── 牌阵 · 还需选 {remaining} 张 · 下一个: {pos_name} ──", style=f"bold {C_LAVENDER}")
-                )
-            else:
-                self._w_spread_label.update(
-                    Text("── 牌阵 · 选牌完成 ──", style=f"bold {C_LAVENDER}")
-                )
-            self._w_deck_label.update(
-                Text(f"── 选牌 ({self._pick_index}/{self._n_positions}) ──", style=f"bold {C_LAVENDER}")
-            )
-            self._w_footer.update(Text("← → 选牌  Enter 抽牌", style=C_OVERLAY0))
-            self._w_deck_section.display = True
-        elif self._phase == Phase.FLIP:
-            if not self._deck_exit_started:
-                self._deck_exit_started = True
-                self._animate_deck_exit()
-            unrevealed = sum(1 for s in self.query(SpreadSlot) if not s.is_revealed)
-            self._w_spread_label.update(
-                Text(f"── 翻牌 · 剩余 {unrevealed} 张 ──", style=f"bold {C_LAVENDER}")
-            )
-            self._w_footer.update(Text("← → 选择  Enter 翻牌", style=C_OVERLAY0))
-        elif self._phase == Phase.DONE:
-            self._w_deck_section.display = False
-            self._w_spread_label.update(
-                Text("── ✦ 牌阵已就绪 ✦ ──", style=f"bold {C_LAVENDER}")
-            )
-            d_hint = "D 隐藏详情" if self._detail_visible else "D 详情"
-            self._w_footer.update(Text(f"← → 选牌  {d_hint}  I 解读  Q 返回", style=C_OVERLAY0))
-
-    # ── Deck entrance animation ──────────────────────────────────────
-
     def _animate_deck_entrance(self) -> None:
         if not self.app.animation_enabled:
             return
@@ -519,26 +266,41 @@ class DrawScreen(Screen):
         card.styles.animate("opacity", 1.0, duration=0.32, easing=EASE)
         card.styles.offset = (0, 0)
 
-    # ── Spread slot entrance animation ────────────────────────────────
+    # -- Phase UI --
 
-    def _animate_slot_entrance(self, slot: SpreadSlot, delay: float = 0.0) -> None:
-        if not self.app.animation_enabled:
-            return
-        slot.styles.opacity = 0
-        slot.styles.offset = (0, -SLOT_PLACE_OFFSET)
-        self.set_timer(delay, lambda: self._reveal_slot(slot))
+    def _update_phase_ui(self) -> None:
+        """Update labels and footer hints to match the current phase."""
+        lbl = f"bold {C_LAVENDER}"
+        if self._phase == Phase.PICK:
+            self._deck_exit_started = False
+            self._w_deck_section.styles.opacity = 1.0
+            self._w_deck_section.styles.offset = (0, 0)
+            if self._pick_index < self._n_positions:
+                pos_name = self._spread.positions[self._pick_index].name
+                remaining = self._n_positions - self._pick_index
+                spread_text = _STR["pick_next"].format(remaining=remaining, name=pos_name)
+            else:
+                spread_text = _STR["pick_done"]
+            self._w_spread_label.update(Text(spread_text, style=lbl))
+            self._w_deck_label.update(Text(
+                _STR["pick_label"].format(picked=self._pick_index, total=self._n_positions), style=lbl
+            ))
+            self._w_footer.update(Text(_STR["hint_pick"], style=C_OVERLAY0))
+            self._w_deck_section.display = True
+        elif self._phase == Phase.FLIP:
+            if not self._deck_exit_started:
+                self._deck_exit_started = True
+                self._animate_deck_exit()
+            unrevealed = sum(1 for s in self.query(SpreadSlot) if not s.is_revealed)
+            self._w_spread_label.update(Text(_STR["flip_label"].format(unrevealed=unrevealed), style=lbl))
+            self._w_footer.update(Text(_STR["hint_flip"], style=C_OVERLAY0))
+        elif self._phase == Phase.DONE:
+            self._w_deck_section.display = False
+            self._w_spread_label.update(Text(_STR["done_label"], style=lbl))
+            d_hint = _STR["detail_hide"] if self._detail.visible else _STR["detail_show"]
+            self._w_footer.update(Text(_STR["hint_done"].format(detail_hint=d_hint), style=C_OVERLAY0))
 
-    @staticmethod
-    def _reveal_slot(slot: SpreadSlot) -> None:
-        slot.styles.animate("opacity", 1.0, duration=SLOT_PLACE_DURATION, easing=EASE)
-        slot.styles.animate(
-            "offset",
-            ScalarOffset.from_offset(Offset(0, 0)),
-            duration=SLOT_PLACE_DURATION,
-            easing=EASE,
-        )
-
-    # ── Pick phase ────────────────────────────────────────────────────
+    # -- Pick phase --
 
     async def on_deck_card_picked(self, event: DeckCard.Picked) -> None:
         if self._phase != Phase.PICK:
@@ -554,12 +316,7 @@ class DrawScreen(Screen):
         self._drawn_cards.append(dc)
 
         card_widget.add_class("picked")
-
-        # Preload the runtime image in the background for a smoother flip.
-        self.run_worker(
-            preload_card_image_async(dc.card, dc.is_reversed),
-            exclusive=False,
-        )
+        self.run_worker(preload_card_image_async(dc.card, dc.is_reversed), exclusive=False)
 
         self._pick_index += 1
         self._update_phase_ui()
@@ -570,18 +327,15 @@ class DrawScreen(Screen):
 
     async def _reveal_spread(self) -> None:
         """Show spread area, ensure all images cached, then enter FLIP phase."""
-        # Ensure all card images are preloaded before any flip can happen
         await preload_all_async(
             [(dc.card, dc.is_reversed) for dc in self._drawn_cards]
         )
-
         self._w_deck_section.display = False
         self._w_main_area.display = True
 
-        # Place all cards in slots
+        slots = list(self.query(SpreadSlot))
         for i, dc in enumerate(self._drawn_cards):
-            slot = self._slot_for_position(i)
-            slot.place_card(dc)
+            slots[self._display_order[i]].place_card(dc)
 
         self._phase = Phase.FLIP
         self._box.active_box = "spread"
@@ -591,7 +345,7 @@ class DrawScreen(Screen):
         if unrevealed:
             unrevealed[0].focus()
 
-    # ── Flip phase ────────────────────────────────────────────────────
+    # -- Flip phase --
 
     async def on_spread_slot_flipped(self, event: SpreadSlot.Flipped) -> None:
         if self._phase != Phase.FLIP:
@@ -607,7 +361,11 @@ class DrawScreen(Screen):
             self._phase = Phase.DONE
             self._box.active_box = "spread"
             self._box.update_highlights()
-            self._show_detail_panel(slots[0] if slots else None)
+            self._detail.show(
+                slots[0] if slots else None,
+                sync_interp=self._sync_interp_layout,
+                fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
+            )
             self._update_phase_ui()
             for s in slots:
                 s.remove_class("selected")
@@ -625,7 +383,7 @@ class DrawScreen(Screen):
         for s in self.query(SpreadSlot):
             s.remove_class("selected")
         event.slot.add_class("selected")
-        self._update_detail(event.slot)
+        self._detail.update(event.slot)
 
     async def _completion_shimmer(self, slots: list[SpreadSlot]) -> None:
         if not self.app.animation_enabled:
@@ -639,209 +397,70 @@ class DrawScreen(Screen):
         slot.add_class("glow")
         slot.set_timer(0.22, lambda: slot.remove_class("glow"))
 
-    # ── Detail panel ──────────────────────────────────────────────────
-
-    def _show_detail_panel(self, slot: SpreadSlot | None = None) -> None:
-        self._detail_visible = True
-        self._sync_interp_layout()
-        self._w_preview.display = True
-        self._fit_detail_panel_height()
-        self.call_after_refresh(self._fit_detail_panel_height)
-        if self.app.animation_enabled:
-            self._w_preview.styles.opacity = 0
-            self._w_preview.styles.offset = (4, 0)
-        self._w_preview.add_class("visible")
-        if self.app.animation_enabled:
-            self._w_preview.styles.animate("opacity", 1.0, duration=0.24, easing=EASE)
-            self._w_preview.styles.animate(
-                "offset",
-                ScalarOffset.from_offset(Offset(0, 0)),
-                duration=0.32,
-                easing=EASE,
-            )
-        self._last_preview_id = None
-        if slot is not None:
-            self._update_detail(slot)
-
-    def _hide_detail_panel(self) -> None:
-        self._detail_visible = False
-        self._sync_interp_layout()
-        self._center_spread_area()
-        if self.app.animation_enabled:
-            self._w_preview.styles.animate("opacity", 0.0, duration=0.18, easing=EASE)
-            self._w_preview.styles.animate(
-                "offset",
-                ScalarOffset.from_offset(Offset(4, 0)),
-                duration=0.24,
-                easing=EASE,
-            )
-            self.set_timer(0.24, self._finish_hide_detail_panel)
-        else:
-            self._finish_hide_detail_panel()
-
-    def _finish_hide_detail_panel(self) -> None:
-        self._w_preview.remove_class("visible")
-        self._w_preview.display = False
-        self._w_preview.styles.height = "1fr"
-        self._center_spread_area()
-
-    def _fit_detail_panel_height(self) -> None:
-        bottom = self._w_main_area.region.y + self._w_main_area.region.height
-        if self._w_interp.has_class("visible"):
-            bottom = max(bottom, self._w_interp.region.y + self._w_interp.region.height)
-        self._w_preview.styles.height = max(1, bottom - 1)
+    # -- Detail toggle --
 
     def action_toggle_detail(self) -> None:
         if self._phase != Phase.DONE:
             return
-        if self._detail_visible:
+        if self._detail.visible:
             if self._box.active_box == "detail":
                 self._box.active_box = "spread"
                 self._box.update_highlights()
                 self._box.focus_widget()
-            self._hide_detail_panel()
+            self._detail.hide(sync_interp=self._sync_interp_layout, center_spread=self._center_spread_area)
         else:
-            self._show_detail_panel()
+            self._detail.show(
+                sync_interp=self._sync_interp_layout,
+                fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
+            )
             slots = list(self.query(SpreadSlot))
             if slots:
-                self._update_detail(slots[0])
+                self._detail.update(slots[0])
                 slots[0].focus()
         self._update_phase_ui()
 
-    def _update_detail(self, slot: SpreadSlot) -> None:
-        if not self._detail_visible or not slot.drawn_card:
-            return
-        dc = slot.drawn_card
-        preview_id = f"{dc.card.id}:{dc.is_reversed}"
-        if self._last_preview_id == preview_id:
-            return
-        self._last_preview_id = preview_id
-
-        self._w_preview.remove_children()
-
-        if self.app.render_mode != "text":
-            result = render_card_full_detail_widgets(dc)
-            if result is not None:
-                img_widget, text_panel = result
-                self._w_preview.mount(Horizontal(img_widget, classes="card-origin-frame"))
-                self._w_preview.mount(Static(text_panel))
-                return
-
-        self._w_preview.mount(Static(render_card_detail(dc)))
-
-    # ── Interpretation ────────────────────────────────────────────────
+    # -- Layout helpers --
 
     def _sync_interp_layout(self) -> None:
-        if self._detail_visible:
-            self._w_interp.add_class("detail-visible")
-            self._w_interp.styles.margin = (0, 1, 2, 1)
-            self._w_interp.styles.width = max(
-                40,
-                self.size.width
-                - DETAIL_PANEL_WIDTH
-                - INTERP_SIDE_MARGIN
-                - INTERP_DETAIL_GAP,
-            )
-        else:
-            self._w_interp.remove_class("detail-visible")
-            self._w_interp.styles.margin = (0, 1, 1, 1)
-            self._w_interp.styles.width = max(
-                40,
-                self.size.width
-                - INTERP_FULL_SIDE_MARGIN * 2
-                + INTERP_FULL_WIDTH_CORRECTION,
-            )
+        self._dialog.sync_layout(self._detail.visible, self.size.width)
 
     def _center_spread_area(self) -> None:
+        """Reset main area offset to origin (with animation if enabled)."""
+        target = ScalarOffset.from_offset(Offset(0, 0))
         if self.app.animation_enabled:
-            self._w_main_area.styles.animate(
-                "offset",
-                ScalarOffset.from_offset(Offset(0, 0)),
-                duration=0.22,
-                easing=EASE,
-            )
+            self._w_main_area.styles.animate("offset", target, duration=0.22, easing=EASE)
         else:
             self._w_main_area.styles.offset = (0, 0)
 
+    # -- Interpretation --
+
     def action_interpret(self) -> None:
-        if self._phase == Phase.DONE and not self._interp_streaming:
-            self._do_interpret()
+        if self._phase == Phase.DONE and not self._dialog.is_streaming:
+            self._cancelled = False
+            self._dialog.show(
+                sync_layout=self._sync_interp_layout,
+                fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
+            )
+            self._dialog.run(self._drawn_cards, self._question, lambda: self._cancelled)
 
     def action_handle_back(self) -> None:
-        if self._w_interp.has_class("visible"):
-            self.app.push_screen(
-                ConfirmExitInterpretation(),
-                callback=self._on_exit_interpretation_confirmed,
-            )
+        if self._dialog.is_visible:
+            def on_confirm(confirmed: bool) -> None:
+                if confirmed:
+                    self._cancelled = True
+                    self._dialog.stop()
+                    go_home(self)
+            self.app.push_screen(ConfirmExitInterpretation(), callback=on_confirm)
         else:
             go_home(self)
 
-    def _on_exit_interpretation_confirmed(self, confirmed: bool) -> None:
-        if not confirmed:
-            return
-        self._cancelled = True
-        self._stream.stop()
-        go_home(self)
-
-    def _do_interpret(self) -> None:
-        self._cancelled = False
-        self._show_interp_dialog()
-        self.run_worker(
-            self._stream.run(self._drawn_cards, self._question, lambda: self._cancelled),
-            exclusive=True,
-        )
-
-    def _show_interp_dialog(self) -> None:
-        self._interp_streaming = True
-        self._box.active_box = "interp"
-        self._box.update_highlights()
-        self._sync_interp_layout()
-        self._fit_detail_panel_height()
-        self._w_interp.display = True
-        if self.app.animation_enabled:
-            self._w_interp.styles.opacity = 0
-            self._w_interp.styles.offset = (0, 2)
-        self._w_interp.add_class("visible")
-        if self.app.animation_enabled:
-            self._w_interp.styles.animate("opacity", 1.0, duration=0.24, easing=EASE)
-            self._w_interp.styles.animate(
-                "offset",
-                ScalarOffset.from_offset(Offset(0, 0)),
-                duration=0.32,
-                easing=EASE,
-            )
-        self._stream.reset()
-        self._w_status.update("")
-
     def on_resize(self, event: Resize) -> None:
-        self._fit_detail_panel_height()
+        if self._detail.visible:
+            self._detail._fit_height()
+        self._dialog.fit_height(self._w_main_area, self._detail.visible)
         self._sync_interp_layout()
 
-    def _hide_interp_dialog(self) -> None:
-        self._interp_streaming = False
-        self._stream.stop()
-        self._box.active_box = "spread"
-        self._box.update_highlights()
-        self._sync_interp_layout()
-        self._fit_detail_panel_height()
-        if self.app.animation_enabled:
-            self._w_interp.styles.animate("opacity", 0.0, duration=0.18, easing=EASE)
-            self._w_interp.styles.animate(
-                "offset",
-                ScalarOffset.from_offset(Offset(0, 2)),
-                duration=0.24,
-                easing=EASE,
-            )
-            self.set_timer(0.24, lambda: self._w_interp.remove_class("visible"))
-        else:
-            self._w_interp.remove_class("visible")
-        self._update_phase_ui()
-
-    def _show_error(self, message: str) -> None:
-        self._hide_interp_dialog()
-        self._w_status.update(Text(message, style=C_RED))
-
-    # ── Focus navigation ──────────────────────────────────────────────
+    # -- Focus navigation --
 
     def on_key(self, event: Key) -> None:
         if event.key == "shift+tab":
@@ -853,20 +472,18 @@ class DrawScreen(Screen):
         self._box.cycle(1)
 
     def key_left(self) -> None:
-        if self._box.active_box in ("detail", "interp"):
-            return
-        self._box.focus_neighbor("left", self._phase, self._n_positions)
+        if self._box.active_box not in ("detail", "interp"):
+            self._box.focus_neighbor("left", self._phase, self._n_positions)
 
     def key_right(self) -> None:
-        if self._box.active_box in ("detail", "interp"):
-            return
-        self._box.focus_neighbor("right", self._phase, self._n_positions)
+        if self._box.active_box not in ("detail", "interp"):
+            self._box.focus_neighbor("right", self._phase, self._n_positions)
 
     def key_up(self) -> None:
         if self._box.active_box == "interp":
             self._w_interp.scroll_up(animate=True)
         elif self._box.active_box == "detail":
-            self._w_preview.scroll_up(animate=True)
+            self.query_one("#card-preview").scroll_up(animate=True)
         else:
             self._box.focus_neighbor("up", self._phase, self._n_positions)
 
@@ -874,7 +491,7 @@ class DrawScreen(Screen):
         if self._box.active_box == "interp":
             self._w_interp.scroll_down(animate=True)
         elif self._box.active_box == "detail":
-            self._w_preview.scroll_down(animate=True)
+            self.query_one("#card-preview").scroll_down(animate=True)
         else:
             self._box.focus_neighbor("down", self._phase, self._n_positions)
 

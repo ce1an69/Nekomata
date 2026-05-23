@@ -1,5 +1,8 @@
 """Setup screen — configure API settings on first launch."""
 
+import json
+from pathlib import Path
+
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
@@ -20,6 +23,10 @@ from nekomata.render.styles import (
     C_TEXT,
 )
 from nekomata.storage.config import AppConfig
+
+_STR = json.loads(
+    (Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
+)["setup"]
 
 
 class SetupButton(Static):
@@ -93,7 +100,7 @@ class SetupScreen(Screen):
         color: {C_SUBTEXT0};
         margin-bottom: 0;
     }}
-    SetupScreen #api-url-input {{
+    SetupScreen .setup-input {{
         width: 100%;
         height: 3;
         margin-bottom: 1;
@@ -102,33 +109,7 @@ class SetupScreen(Screen):
         color: {C_TEXT};
         padding: 0 1;
     }}
-    SetupScreen #api-url-input:focus {{
-        border: round {C_MAUVE};
-        background: {C_MANTLE};
-    }}
-    SetupScreen #api-key-input {{
-        width: 100%;
-        height: 3;
-        margin-bottom: 1;
-        border: round {C_SURFACE1};
-        background: {C_BASE};
-        color: {C_TEXT};
-        padding: 0 1;
-    }}
-    SetupScreen #api-key-input:focus {{
-        border: round {C_MAUVE};
-        background: {C_MANTLE};
-    }}
-    SetupScreen #model-input {{
-        width: 100%;
-        height: 3;
-        margin-bottom: 1;
-        border: round {C_SURFACE1};
-        background: {C_BASE};
-        color: {C_TEXT};
-        padding: 0 1;
-    }}
-    SetupScreen #model-input:focus {{
+    SetupScreen .setup-input:focus {{
         border: round {C_MAUVE};
         background: {C_MANTLE};
     }}
@@ -171,30 +152,33 @@ class SetupScreen(Screen):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="setup-stack"):
-            yield Static("Setup", id="setup-title")
-            yield Static("Configure your API connection", id="setup-subtitle")
+            yield Static(_STR["title"], id="setup-title")
+            yield Static(_STR["subtitle"], id="setup-subtitle")
             yield Static("─── ✦ ───", id="setup-ornament-top")
-            yield Static("API URL", classes="field-label")
+            yield Static(_STR["field_api_url"], classes="field-label")
             yield Input(
                 value="https://api.openai.com/v1",
                 placeholder="https://api.openai.com/v1",
                 id="api-url-input",
+                classes="setup-input",
             )
-            yield Static("API Key", classes="field-label")
+            yield Static(_STR["field_api_key"], classes="field-label")
             yield Input(
                 placeholder="sk-...",
                 id="api-key-input",
                 password=True,
+                classes="setup-input",
             )
-            yield Static("Model", classes="field-label")
+            yield Static(_STR["field_model"], classes="field-label")
             yield Input(
                 placeholder="e.g. glm-4-flash",
                 id="model-input",
+                classes="setup-input",
             )
             yield Static("─── ✦ ───", id="setup-ornament-bottom")
-            yield SetupButton("Save", id="save-btn")
+            yield SetupButton(_STR["save_label"], id="save-btn")
             yield Static("", id="setup-error")
-            yield Static("Enter next / save · Tab switch", id="setup-hints")
+            yield Static(_STR["hints"], id="setup-hints")
 
     def on_mount(self) -> None:
         self.query_one("#api-url-input", Input).focus()
@@ -217,10 +201,10 @@ class SetupScreen(Screen):
         key = self.query_one("#api-key-input", Input).value.strip()
         model = self.query_one("#model-input", Input).value.strip()
         if not url:
-            self.query_one("#setup-error", Static).update("API URL is required")
+            self.query_one("#setup-error", Static).update(_STR["error_url_required"])
             return
         if not model:
-            self.query_one("#setup-error", Static).update("Model is required")
+            self.query_one("#setup-error", Static).update(_STR["error_model_required"])
             return
         config = AppConfig.save(url, key, model)
         self.app.config = config  # type: ignore[misc]

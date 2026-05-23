@@ -43,6 +43,7 @@ class BoxManager:
         return new_box
 
     def cycle(self, delta: int) -> None:
+        """Tab/Shift+Tab: cycle through available boxes (deck → spread → detail → interp)."""
         boxes = self._get_available_boxes()
         if len(boxes) <= 1:
             return
@@ -57,6 +58,7 @@ class BoxManager:
         self.focus_widget()
 
     def focus_widget(self) -> None:
+        """Focus the first (or last-remembered) widget in the active box."""
         box = self.active_box
         if box == "deck":
             cards = list(self._screen.query(DeckCard))

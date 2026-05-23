@@ -22,6 +22,12 @@ ARCANA_ZH = {
     Arcana.PENTACLES: "星币",
 }
 
+# Roman numerals for Major Arcana display
+ROMAN = [
+    "0", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
+    "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX", "XXI",
+]
+
 
 @dataclass(frozen=True)
 class Card:

@@ -26,7 +26,7 @@ class AppConfig:
 
     @classmethod
     def _resolve_save_path(cls) -> Path:
-        """Decide where to write config: local if it exists, else home."""
+        """Decide where to write config: prefer local .neko/ if it already exists, else home."""
         local = Path.cwd() / _SETTINGS_DIR / _SETTINGS_FILE
         if local.exists():
             return local

@@ -22,6 +22,7 @@ _LOADING_FRAMES = tuple(_UI_STRINGS["loading_frames"])
 _LOADING_INTERVAL = _UI_STRINGS["loading_interval_ms"] / 1000.0
 _LOADING_MESSAGE_INTERVAL = _UI_STRINGS["loading_message_interval_s"]
 _LOADING_MESSAGES = tuple(_UI_STRINGS["loading_messages"])
+_DRAW_STR = _UI_STRINGS["draw"]
 
 
 class StreamHandler:
@@ -107,6 +108,12 @@ class StreamHandler:
             )
 
     def _tick(self) -> None:
+        """Typewriter tick: drain a few characters from the queue per interval.
+
+        Processes STREAM_CHARS_PER_TICK characters per tick to create a
+        smooth typing effect. If the source is done and queue is empty,
+        finishes the stream.
+        """
         if not self._queue:
             if self._source_done:
                 self._finish()
@@ -124,6 +131,7 @@ class StreamHandler:
             self._append_char(chunk.kind, chunk.text[0])
             rest = chunk.text[1:]
             if rest:
+                # Partially consumed — update in place
                 self._queue[0] = StreamChunk(rest, chunk.kind)
             else:
                 self._queue.popleft()
@@ -133,12 +141,16 @@ class StreamHandler:
 
     def _append_char(self, kind: str, char: str) -> None:
         if kind == "thinking":
-            return
-        self._content_chars.append(char)
-        self._has_content = True
+            self._thinking_chars.append(char)
+            self._has_thinking = True
+        else:
+            self._content_chars.append(char)
+            self._has_content = True
 
     def _render(self) -> None:
         parts = []
+        if self._thinking_chars:
+            parts.append(Text("".join(self._thinking_chars), style=f"italic {C_OVERLAY0}"))
         if self._content_chars:
             parts.append(Text("解读", style=f"bold {C_MAUVE}"))
             parts.append(Markdown("".join(self._content_chars), style=C_TEXT))
@@ -157,7 +169,7 @@ class StreamHandler:
     def _finish(self) -> None:
         self.stop()
         self.streaming = False
-        self._render_hints(Text("── 完成 ──  Q 关闭", style=C_OVERLAY0))
+        self._render_hints(Text(_DRAW_STR["interp_done_hint"], style=C_OVERLAY0))
 
     async def run(self, drawn_cards, question, cancelled_check) -> None:
         try:
