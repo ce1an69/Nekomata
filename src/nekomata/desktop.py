@@ -6,6 +6,10 @@ import sys
 import threading
 import time
 
+# Force edgechromium backend on Windows — avoids pythonnet/clr dependency
+# which doesn't work in PyInstaller bundles.
+_FORCE_GUI = "edgechromium" if sys.platform == "win32" else None
+
 
 def find_free_port() -> int:
     """Find an available port on localhost."""
@@ -73,7 +77,7 @@ def main() -> None:
         print(f"[debug] opening webview window → {url}")
 
     webview.create_window("Nekomata 猫又", url, width=1200, height=800, min_size=(800, 600))
-    webview.start(debug=debug)
+    webview.start(debug=debug, gui=_FORCE_GUI)
 
 
 if __name__ == "__main__":
