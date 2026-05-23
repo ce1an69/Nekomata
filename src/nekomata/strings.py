@@ -1,10 +1,10 @@
 """Centralized UI string loading — parses data/ui_strings.json once."""
 
 import json
-from pathlib import Path
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DATA_DIR = _PROJECT_ROOT / "data"
+from nekomata._paths import data_dir
+
+DATA_DIR = data_dir()
 _STRINGS: dict | None = None
 ORNAMENT = "─── ✦ ───"
 
