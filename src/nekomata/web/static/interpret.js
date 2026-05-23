@@ -62,18 +62,15 @@ export class InterpretationController {
                             this._showLoading(false);
                             return;
                         }
+                        if (chunk.kind === 'thinking') continue;
                         if (chunk.kind !== currentKind) {
                             currentKind = chunk.kind;
                             currentEl = document.createElement('div');
-                            currentEl.className = chunk.kind === 'thinking' ? 'thinking' : 'content';
+                            currentEl.className = 'content';
                             this._container.appendChild(currentEl);
                         }
-                        if (currentKind === 'content') {
-                            currentEl.innerHTML = renderMarkdown(currentEl._raw + chunk.text);
-                            currentEl._raw = (currentEl._raw || '') + chunk.text;
-                        } else {
-                            currentEl.textContent += chunk.text;
-                        }
+                        currentEl.innerHTML = renderMarkdown(currentEl._raw + chunk.text);
+                        currentEl._raw = (currentEl._raw || '') + chunk.text;
                     } catch { /* skip malformed */ }
                 }
             }
@@ -126,16 +123,52 @@ export class InterpretationController {
     }
 }
 
-/** Minimal markdown → HTML for interpretation content. */
+/** Markdown → HTML with block-level parsing. */
 function renderMarkdown(text) {
+    const html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    const lines = html.split('\n');
+    const blocks = [];
+    let current = [];
+
+    for (const line of lines) {
+        if (line.trim() === '') {
+            if (current.length) { blocks.push(current); current = []; }
+        } else {
+            current.push(line);
+        }
+    }
+    if (current.length) blocks.push(current);
+
+    return blocks.map(renderBlock).join('');
+}
+
+function renderBlock(lines) {
+    const first = lines[0].trim();
+
+    if (lines.length === 1 && /^[-*_]{3,}$/.test(first)) return '<hr>';
+
+    const h = first.match(/^(#{1,3})\s+(.+)$/);
+    if (h && lines.length === 1) return `<h${h[1].length}>${fmt(h[2])}</h${h[1].length}>`;
+
+    if (lines.every(l => /^\s*[-*]\s/.test(l)))
+        return '<ul>' + lines.map(l => `<li>${fmt(l.replace(/^\s*[-*]\s+/, ''))}</li>`).join('') + '</ul>';
+
+    if (lines.every(l => /^\s*\d+\.\s/.test(l)))
+        return '<ol>' + lines.map(l => `<li>${fmt(l.replace(/^\s*\d+\.\s+/, ''))}</li>`).join('') + '</ol>';
+
+    if (lines.every(l => /^&gt;\s?/.test(l)))
+        return '<blockquote><p>' + lines.map(l => fmt(l.replace(/^&gt;\s?/, ''))).join('<br>') + '</p></blockquote>';
+
+    return '<p>' + lines.map(l => fmt(l)).join('<br>') + '</p>';
+}
+
+function fmt(text) {
     return text
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>')
-        .replace(/^/, '<p>').replace(/$/, '</p>');
+        .replace(/`(.+?)`/g, '<code>$1</code>');
 }

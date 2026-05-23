@@ -47,7 +47,7 @@
       <div class="card-panel home-panel">
         <h1 class="title">Nekomata</h1>
         <div class="ornament">─── ✦ ───</div>
-        <input type="text" id="home-input" placeholder="> 输入你的问题..." autocomplete="off">
+        <textarea id="home-input" placeholder="> 输入你的问题..." autocomplete="off" rows="1"></textarea>
         <div id="home-suggestions" class="suggestions hidden"></div>
         <div class="hint-bar">Enter 确认 / 输入 / 查看命令</div>
       </div>
@@ -73,7 +73,7 @@
   <section id="screen-draw" class="screen hidden">
     <div id="draw-header" class="draw-header">
       <span id="draw-spread-name" class="accent"></span>
-      <span id="draw-question" class="subtext"></span>
+      <div id="draw-question" class="draw-question"></div>
     </div>
     <div class="ornament">--- * ---</div>
     <div id="carousel-section" class="carousel-section">

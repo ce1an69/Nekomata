@@ -1,9 +1,10 @@
 /**
- * 3D card carousel with physics-based scrolling and hold-to-select.
+ * 3D card carousel with click-to-select.
  *
  * Mouse controls:
  *   - Drag to scroll
- *   - Click center card to start charge → auto-selects after chargeTime ms
+ *   - Click center-area card to select
+ *   - Click off-center card to center it first
  *   - Wheel to scroll
  */
 
@@ -18,21 +19,18 @@ export class CardCarousel {
         this.idx = 0;
         this.vel = 0;
         this.dragging = false;
-        this.charging = false;
-        this.chargeIdx = null;
-        this.chargeStart = 0;
-        this.chargeScale = 1;
         this._dead = false;
         this._intro = true;
         this._introTarget = 0;
+        this._centering = false;
+        this._centerTarget = 0;
         this._dragX0 = 0;
         this._dragIdx0 = 0;
         this._dragMoved = false;
         this._raf = null;
 
-        this.friction = 0.92;
-        this.maxVel = 0.3;
-        this.chargeTime = 800;
+        this.friction = 0.85;
+        this.maxVel = 0.15;
 
         this._md = this._onDown.bind(this);
         this._mm = this._onMove.bind(this);
@@ -86,13 +84,7 @@ export class CardCarousel {
         this.cards[i] = null;
     }
 
-    cancelCharge() {
-        if (!this.charging) return;
-        this.charging = false;
-        this.chargeIdx = null;
-        this.chargeScale = 1;
-        this._resetGlow();
-    }
+    cancelCharge() {}
 
     /* ---- loop ---- */
 
@@ -109,29 +101,20 @@ export class CardCarousel {
             }
             this._pos();
         } else {
-            if (!this.dragging && !this.charging) {
+            if (this._centering) {
+                const d = this._centerTarget - this.idx;
+                this.idx += d * 0.12;
+                if (Math.abs(d) < 0.05) {
+                    this.idx = this._centerTarget;
+                    this._centering = false;
+                }
+            } else if (!this.dragging) {
                 this.idx += this.vel;
                 this.vel *= this.friction;
                 if (Math.abs(this.vel) < 0.0001) this.vel = 0;
                 const mx = this._maxIdx();
                 if (this.idx < 0) { this.idx = 0; this.vel = -this.vel * 0.5; }
                 if (this.idx > mx) { this.idx = mx; this.vel = -this.vel * 0.5; }
-            }
-
-            if (this.charging && this.chargeIdx !== null) {
-                const t = Math.min((Date.now() - this.chargeStart) / this.chargeTime, 1);
-                this.chargeScale = 1 + t * 0.15;
-                const el = this.els[this.chargeIdx];
-                if (el) {
-                    const gs = 30 + t * 100;
-                    el.style.boxShadow =
-                        `0 0 ${gs}px rgba(212,175,55,${0.8 + t * 0.2}),` +
-                        `0 0 ${gs * 0.5}px rgba(212,175,55,1),` +
-                        `inset 0 0 30px rgba(212,175,55,0.5)`;
-                    el.style.filter = `brightness(${1 + t * 1.5})`;
-                    if (Math.random() > 0.5) this._particle(el);
-                }
-                if (t >= 1) this._complete();
             }
 
             this._pos();
@@ -177,11 +160,6 @@ export class CardCarousel {
                 el.style.zIndex = 1000 - Math.floor(Math.abs(d) * 10);
             }
 
-            if (this.charging && this.chargeIdx === i) {
-                sc *= this.chargeScale;
-                el.style.zIndex = 2000;
-            }
-
             el.style.transform = `translateX(${x}px) translateZ(${z}px) rotateY(${ry}deg) scale(${sc})`;
             el.classList.toggle('cc-active', sel);
         }
@@ -190,7 +168,7 @@ export class CardCarousel {
     /* ---- mouse ---- */
 
     _onDown(e) {
-        if (this._intro || this.charging) return;
+        if (this._intro || this._centering) return;
         this.dragging = true;
         this._dragMoved = false;
         this._dragX0 = e.clientX;
@@ -214,20 +192,22 @@ export class CardCarousel {
         const dx = e.clientX - this._dragX0;
 
         if (!this._dragMoved && Math.abs(dx) < 5) {
-            const ci = Math.round(this.idx);
-            if (ci >= 0 && ci < this.cards.length && this.cards[ci] !== null) {
-                this.charging = true;
-                this.chargeIdx = ci;
-                this.chargeStart = Date.now();
-                this.chargeScale = 1;
+            const ci = this._cardAtPoint(e.clientX, e.clientY);
+            if (ci !== null && this.cards[ci] !== null) {
+                if (Math.abs(ci - this.idx) < 0.6) {
+                    this._fireSelect(ci);
+                } else {
+                    this._centerTarget = ci;
+                    this._centering = true;
+                }
             }
         } else {
-            this.vel = Math.max(-this.maxVel, Math.min(this.maxVel, -dx / this._cw() * 0.15));
+            this.vel = Math.max(-this.maxVel, Math.min(this.maxVel, -dx / this._cw() * 0.06));
         }
     }
 
     _onWheel(e) {
-        if (this._intro || this.charging) return;
+        if (this._intro || this._centering) return;
         this.vel = Math.max(-this.maxVel, Math.min(this.maxVel, this.vel + e.deltaY * 0.001));
     }
 
@@ -246,13 +226,17 @@ export class CardCarousel {
         return Math.max(0, last);
     }
 
-    _complete() {
-        const i = this.chargeIdx;
-        this.charging = false;
-        this.chargeIdx = null;
-        this.chargeScale = 1;
-        this._resetGlow();
+    _cardAtPoint(x, y) {
+        for (let i = 0; i < this.els.length; i++) {
+            const el = this.els[i];
+            if (!el) continue;
+            const r = el.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return i;
+        }
+        return null;
+    }
 
+    _fireSelect(i) {
         const el = this.els[i];
         if (el) {
             const r = el.getBoundingClientRect();
@@ -263,32 +247,6 @@ export class CardCarousel {
             document.body.appendChild(ring);
             setTimeout(() => ring.remove(), 600);
         }
-
         this.onSelect(i);
-    }
-
-    _resetGlow() {
-        for (const el of this.els) {
-            if (el) { el.style.boxShadow = ''; el.style.filter = ''; }
-        }
-    }
-
-    _particle(el) {
-        const r = el.getBoundingClientRect();
-        const p = document.createElement('div');
-        p.className = 'cc-particle';
-        const ox = (Math.random() - 0.5) * r.width * 0.9;
-        const oy = (Math.random() - 0.5) * r.height * 0.9;
-        p.style.left = (r.left + r.width / 2 + ox) + 'px';
-        p.style.top = (r.top + r.height / 2 + oy) + 'px';
-        const sz = 2 + Math.random() * 5;
-        p.style.width = sz + 'px';
-        p.style.height = sz + 'px';
-        if (Math.random() > 0.5) {
-            p.style.background = '#d4af37';
-            p.style.boxShadow = '0 0 8px #d4af37';
-        }
-        document.body.appendChild(p);
-        setTimeout(() => p.remove(), 800);
     }
 }

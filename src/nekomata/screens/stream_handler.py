@@ -133,21 +133,13 @@ class StreamHandler:
 
     def _append_char(self, kind: str, char: str) -> None:
         if kind == "thinking":
-            self._thinking_chars.append(char)
-            self._has_thinking = True
-        else:
-            self._content_chars.append(char)
-            self._has_content = True
+            return
+        self._content_chars.append(char)
+        self._has_content = True
 
     def _render(self) -> None:
         parts = []
-        if self._thinking_chars:
-            style = f"italic dim {C_OVERLAY0}"
-            parts.append(Text("思考", style=f"bold {style}"))
-            parts.append(Text("".join(self._thinking_chars), style=style))
         if self._content_chars:
-            if parts:
-                parts.append(Text(""))
             parts.append(Text("解读", style=f"bold {C_MAUVE}"))
             parts.append(Markdown("".join(self._content_chars), style=C_TEXT))
         self._render_content(parts)

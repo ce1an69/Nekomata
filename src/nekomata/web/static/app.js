@@ -236,8 +236,17 @@ function initHomeScreen() {
     if (initHomeScreen._done) return;
     initHomeScreen._done = true;
 
+    function _sugItems() { return sugBox.querySelectorAll('.suggestion-item'); }
+    function _sugActive() { return sugBox.querySelector('.suggestion-item.active'); }
+    function _sugSetActive(item) {
+        sugBox.querySelectorAll('.suggestion-item').forEach(i => i.classList.remove('active'));
+        if (item) item.classList.add('active');
+    }
+
     input.addEventListener('input', () => {
         const val = input.value;
+        input.style.height = 'auto';
+        input.style.height = input.scrollHeight + 'px';
         if (!val.startsWith('/')) {
             sugBox.classList.add('hidden');
             return;
@@ -264,6 +273,20 @@ function initHomeScreen() {
     });
 
     input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            const items = _sugItems();
+            if (!items.length) return;
+            e.preventDefault();
+            const cur = _sugActive();
+            const arr = [...items];
+            const idx = cur ? arr.indexOf(cur) : -1;
+            const next = e.key === 'ArrowDown'
+                ? arr[(idx + 1) % arr.length]
+                : arr[(idx - 1 + arr.length) % arr.length];
+            _sugSetActive(next);
+            if (next) { input.value = next.dataset.cmd; next.scrollIntoView({ block: 'nearest' }); }
+            return;
+        }
         if (e.key === 'Enter') {
             const val = input.value.trim();
             sugBox.classList.add('hidden');
@@ -348,6 +371,7 @@ function initSpreadSelect() {
     state.spreads.forEach((sp) => {
         const opt = document.createElement('div');
         opt.className = 'spread-option';
+        opt.dataset.key = sp.key;
         opt.innerHTML = `<span class="sname">${sp.name}</span>` +
             `<span class="scount">${sp.card_count} 张</span>`;
         opt.addEventListener('mouseenter', () => showSpreadPreview(sp));
@@ -365,6 +389,35 @@ function initSpreadSelect() {
     btnContainer.appendChild(back);
 
     if (state.spreads.length > 0) showSpreadPreview(state.spreads[0]);
+
+    if (!initSpreadSelect._kbd) {
+        initSpreadSelect._kbd = true;
+        document.getElementById('screen-spread-select').addEventListener('keydown', (e) => {
+            const opts = btnContainer.querySelectorAll('.spread-option');
+            if (!opts.length) return;
+            const arr = [...opts];
+            const cur = btnContainer.querySelector('.spread-option.active');
+            const idx = cur ? arr.indexOf(cur) : -1;
+
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const next = e.key === 'ArrowDown'
+                    ? arr[(idx + 1) % arr.length]
+                    : arr[(idx - 1 + arr.length) % arr.length];
+                opts.forEach(o => o.classList.remove('active'));
+                next.classList.add('active');
+                const sp = state.spreads.find(s => s.key === next.dataset.key);
+                if (sp) showSpreadPreview(sp);
+                next.scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'Enter' && idx >= 0) {
+                selectSpread(arr[idx].dataset.key);
+            } else if (e.key === 'Enter' && idx < 0 && arr.length) {
+                arr[0].classList.add('active');
+                const sp = state.spreads.find(s => s.key === arr[0].dataset.key);
+                if (sp) showSpreadPreview(sp);
+            }
+        });
+    }
 }
 
 function showSpreadPreview(sp) {
@@ -380,6 +433,55 @@ function selectSpread(key) {
     state.spreadKey = key;
     showDrawScreen();
 }
+
+// ---------------------------------------------------------------------------
+// Global keyboard handler for draw screen
+// ---------------------------------------------------------------------------
+
+document.addEventListener('keydown', (e) => {
+    const draw = document.getElementById('screen-draw');
+    if (!draw || draw.classList.contains('hidden')) return;
+    if (document.activeElement?.tagName === 'TEXTAREA' || document.activeElement?.tagName === 'INPUT') return;
+
+    if (state.phase === 'pick' && state.carousel) {
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            state.carousel.idx = Math.max(0, state.carousel.idx - 1);
+            state.carousel.vel = 0;
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            state.carousel.idx = Math.min(
+                state.cards.length - 1, state.carousel.idx + 1,
+            );
+            state.carousel.vel = 0;
+        } else if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            const ci = Math.round(state.carousel.idx);
+            if (ci >= 0 && ci < state.cards.length && state.cards[ci]) {
+                onCarouselSelect(ci);
+            }
+        }
+    } else if (state.phase === 'flip') {
+        if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            const slot = document.querySelector('.spread-slot.face-down');
+            if (slot) flipSlot(slot, parseInt(slot.dataset.index));
+        }
+    } else if (state.phase === 'done') {
+        const slots = document.querySelectorAll('.spread-slot');
+        if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && slots.length) {
+            e.preventDefault();
+            let idx = state.selectedSlotIdx;
+            idx = e.key === 'ArrowLeft'
+                ? (idx - 1 + slots.length) % slots.length
+                : (idx + 1) % slots.length;
+            selectSlot(idx);
+        } else if (e.key === 'Enter' && !state.showInterp) {
+            e.preventDefault();
+            startInterpretation();
+        }
+    }
+});
 
 // ---------------------------------------------------------------------------
 // Draw Screen — Carousel
@@ -523,12 +625,21 @@ function renderSpreadSlots() {
     area.innerHTML = '';
 
     state.spread.positions.forEach((pos, idx) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'slot-wrapper';
+
         const slot = document.createElement('div');
         slot.className = 'spread-slot empty';
         slot.dataset.index = idx;
-        slot.innerHTML = `<span class="slot-label">${pos.name}</span>`;
         slot.addEventListener('click', () => onSpreadSlotClicked(slot, idx));
-        area.appendChild(slot);
+
+        const label = document.createElement('span');
+        label.className = 'slot-label';
+        label.textContent = pos.name;
+
+        wrapper.appendChild(slot);
+        wrapper.appendChild(label);
+        area.appendChild(wrapper);
     });
 
     if (state.spread.positions.length > 0) markWaitingSlot(0);
@@ -545,17 +656,14 @@ function buildSlotFaceDown(drawnCard) {
         `<div class="slot-face slot-back"><span class="slot-back-pattern">✦</span></div>` +
         `<div class="slot-face slot-front">` +
         buildCardFaceInner(drawnCard) +
-        `</div></div>` +
-        `<span class="slot-label">${drawnCard.position.name}</span>`;
+        `</div></div>`;
 }
 
 function buildCardFaceInner(drawnCard) {
     const c = drawnCard.card;
-    const imgHtml = c.has_image
-        ? cardImgUrl(c).replace('detail-card-img', 'slot-card-img')
-        : `<div style="font-size:0.75em;color:var(--text);padding:4px;">${c.name_zh}</div>`;
-    const revMark = drawnCard.isReversed ? `<div class="reversed-mark">reversed</div>` : '';
-    return imgHtml + revMark + `<div class="card-name">${c.name_zh}</div>`;
+    if (!c.has_image) return '';
+    const cls = drawnCard.isReversed ? 'reversed' : '';
+    return `<img src="/assets/cards/${c.arcana}/${c.id}_detail.png" alt="${c.name}" class="${cls}">`;
 }
 
 function transitionToFlip() {
@@ -582,19 +690,20 @@ function onSpreadSlotClicked(slotEl, idx) {
 }
 
 function flipSlot(slotEl, idx) {
-    slotEl.classList.add('flipped');
+    slotEl.classList.add('flipped', 'flipping');
     slotEl.classList.remove('face-down');
 
     setTimeout(() => {
+        slotEl.classList.remove('flipping');
         slotEl.classList.add('revealed');
         slotEl.classList.add('glow');
         setTimeout(() => slotEl.classList.remove('glow'), 400);
-    }, 500);
+    }, 400);
 
     state.flipIndex++;
 
     if (state.flipIndex >= state.spread.positions.length) {
-        setTimeout(() => completionShimmer(), 600);
+        setTimeout(() => completionShimmer(), 700);
     }
 
     updateDrawActions();
@@ -632,8 +741,8 @@ function spawnInterpParticle() {
     const sz = 3 + Math.random() * 8;
     p.style.width = sz + 'px';
     p.style.height = sz + 'px';
-    p.style.background = '#d4af37';
-    p.style.boxShadow = '0 0 10px #d4af37';
+    p.style.background = '#cba6f7';
+    p.style.boxShadow = '0 0 10px #cba6f7';
     p.style.zIndex = '9999';
     p.animate([
         { transform: 'translateY(0) scale(1)', opacity: 0.8 },
@@ -752,6 +861,25 @@ function showBrowserScreen() {
             revBtn.classList.toggle('active', state.browserReversed);
             const current = document.querySelector('.card-list-item.selected');
             if (current) showBrowserDetail(current.dataset.id);
+        });
+
+        document.getElementById('screen-browser').addEventListener('keydown', (e) => {
+            const items = document.querySelectorAll('.card-list-item');
+            if (!items.length) return;
+            const cur = document.querySelector('.card-list-item.selected');
+            const arr = [...items];
+            const idx = cur ? arr.indexOf(cur) : -1;
+
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const next = e.key === 'ArrowDown'
+                    ? arr[(idx + 1) % arr.length]
+                    : arr[(idx - 1 + arr.length) % arr.length];
+                arr.forEach(i => i.classList.remove('selected'));
+                next.classList.add('selected');
+                showBrowserDetail(next.dataset.id);
+                next.scrollIntoView({ block: 'nearest' });
+            }
         });
     }
 }
