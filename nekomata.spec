@@ -7,6 +7,10 @@ from pathlib import Path
 block_cipher = None
 
 PROJECT_ROOT = Path(SPECPATH)
+ICON_DIR = PROJECT_ROOT / "assets" / "icon"
+ICON_ICNS = ICON_DIR / "nekomata.icns"
+ICON_ICO = ICON_DIR / "nekomata.ico"
+APP_ICON = ICON_ICO if sys.platform == "win32" else ICON_ICNS if sys.platform == "darwin" else None
 
 # --- Collect data files ---
 
@@ -83,7 +87,7 @@ exe = EXE(
     strip=False,
     upx=True,
     console=False,
-    icon=None,
+    icon=str(APP_ICON) if APP_ICON else None,
 )
 
 coll = COLLECT(
@@ -102,7 +106,7 @@ if sys.platform == "darwin":
     app = BUNDLE(
         coll,
         name="Nekomata.app",
-        icon=None,
+        icon=str(ICON_ICNS),
         bundle_identifier="com.nekomata.app",
         version="0.1.0",
         info_plist={
