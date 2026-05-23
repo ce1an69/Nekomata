@@ -1,5 +1,8 @@
 """Home screen with animated banner, question input, and slash commands."""
 
+import json
+from pathlib import Path
+
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
@@ -24,12 +27,11 @@ from nekomata.render.styles import (
     EASE,
 )
 
-SLASH_COMMANDS = {
-    "/browse": ("card_browser", "Browse all 78 cards"),
-    "/help": ("help", "Show available commands"),
-    "/status": ("status", "Show current configuration"),
-    "/quit": ("quit", "Exit application"),
-}
+_STR = json.loads(
+    (Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
+)["home"]
+
+SLASH_COMMANDS = {k: tuple(v) for k, v in _STR["commands"].items()}
 
 
 class HomePromptInput(Input):
@@ -127,16 +129,16 @@ class HomeScreen(Screen):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="home-stack"):
-            yield Static("Nekomata", id="title")
+            yield Static(_STR["title"], id="title")
             yield Static("─── ✦ ───", id="ornament")
             with Vertical(id="input-area"):
                 yield HomePromptInput(
-                    placeholder="> ask your question...",
+                    placeholder=_STR["placeholder"],
                     id="prompt-input",
                 )
                 yield Static("", id="command-suggestions")
             yield Static("─── ✦ ───", id="ornament-bottom")
-            yield Static("Enter confirm · / commands · Q quit", id="hints")
+            yield Static(_STR["hints"], id="hints")
 
     def resume(self) -> None:
         """Clear and refocus the input — called when returning to this screen."""

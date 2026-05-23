@@ -16,9 +16,9 @@ from nekomata.render.themes import get_theme
 _ORIGIN_MAX_SIZE = (1024, 1536)
 _DETAIL_MAX_SIZE = (256, 384)
 
-# Cache: card_id → PIL Image (face-sized, with rotation applied)
+# Two-tier cache: runtime images (small, for spread slots) and origin images (large, for detail view).
+# Keys include ":rev" suffix for reversed cards since rotation is baked into the cached image.
 _image_cache: dict[str, PILImage.Image] = {}
-# Cache: card_id → PIL Image (origin-sized, with rotation applied)
 _origin_cache: dict[str, PILImage.Image] = {}
 
 

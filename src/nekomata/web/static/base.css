@@ -1,0 +1,97 @@
+/* Nekomata Web — base resets, layout, scrollbar, starfield */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --gold: #cba6f7;
+    --gold-glow: rgba(203, 166, 247, 0.6);
+    --gold-dim: rgba(203, 166, 247, 0.25);
+    --cc-w: clamp(100px, 16vw, 160px);
+    --cc-h: calc(var(--cc-w) * 1.5);
+}
+
+body {
+    background: linear-gradient(180deg, var(--crust) 0%, #0a0a1e 100%);
+    color: var(--text);
+    font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    user-select: none;
+}
+
+.hidden { display: none !important; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--base); border-radius: 4px; }
+::-webkit-scrollbar-thumb {
+    background: rgba(203, 166, 247, 0.25);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(203, 166, 247, 0.45); }
+::-webkit-scrollbar-corner { background: var(--base); }
+
+/* Starfield & Fog */
+#stars-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+#fog-layer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 35%;
+    background: linear-gradient(to top, rgba(10, 10, 30, 0.8), transparent);
+    z-index: 1;
+    pointer-events: none;
+}
+
+#app {
+    position: relative;
+    z-index: 2;
+}
+
+/* Screen base */
+.screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px 40px;
+    animation: fadeIn 0.4s ease;
+}
+
+/* Shared text utilities */
+.accent { color: var(--mauve); font-weight: bold; }
+.subtext { color: var(--subtext0); }
+.error-text { color: var(--red); margin: 8px 0; font-size: 0.9em; }
+
+.hint-bar {
+    color: var(--overlay0);
+    text-align: center;
+    font-size: 0.8em;
+    margin-top: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    :root {
+        --cc-w: clamp(80px, 22vw, 130px);
+    }
+    .screen { padding: 16px 20px; }
+    .card-panel { padding: 24px 20px; }
+    .spread-layout { flex-direction: column; }
+    .spread-buttons { flex: none; }
+    .browser-area { flex-direction: column; }
+    .card-list { flex: none; max-height: 200px; }
+}

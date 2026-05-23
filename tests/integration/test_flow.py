@@ -492,7 +492,7 @@ async def test_q_during_interpretation_confirms_then_returns_home():
         from nekomata.screens.home import HomeScreen
 
         assert isinstance(app.screen, DrawScreen)
-        app.screen._show_interp_dialog()
+        app.screen._dialog.show()
         await pilot.pause(0.2)
         preview = app.screen.query_one("#card-preview")
         dialog = app.screen.query_one("#interp-dialog")
@@ -527,7 +527,7 @@ async def test_detail_panel_keeps_interpretation_height_after_toggle():
         from nekomata.screens.draw import DrawScreen
 
         assert isinstance(app.screen, DrawScreen)
-        app.screen._show_interp_dialog()
+        app.screen._dialog.show()
         await pilot.pause(0.2)
 
         await pilot.press("d")
@@ -564,8 +564,8 @@ async def test_loading_hint_keeps_rotating_between_stream_chunks():
         from nekomata.screens.draw import DrawScreen
 
         assert isinstance(app.screen, DrawScreen)
-        app.screen._show_interp_dialog()
-        app.screen._append_stream_chunk(StreamChunk("猫", "thinking"))
+        app.screen._dialog.show()
+        app.screen._stream.append_chunk(StreamChunk("猫", "thinking"))
         await pilot.pause(0.3)
 
         assert app.screen._stream_timer is None

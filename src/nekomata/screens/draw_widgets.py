@@ -1,6 +1,8 @@
 """Draw screen widgets: DeckCard, SpreadSlot, ConfirmExitInterpretation."""
 
 import asyncio
+import json
+from pathlib import Path
 
 from rich.console import Group
 from rich.panel import Panel
@@ -36,6 +38,10 @@ from nekomata.render.styles import (
     EASE_OUT,
 )
 from nekomata.render.themes import get_theme
+
+_STR = json.loads(
+    (Path(__file__).resolve().parents[3] / "data" / "ui_strings.json").read_text(encoding="utf-8")
+)["draw"]
 
 # Deck layout constants
 NUM_DECK_CARDS = 48
@@ -94,11 +100,11 @@ class ConfirmExitInterpretation(ModalScreen[bool]):
     def compose(self) -> ComposeResult:
         with Vertical(id="confirm-card"):
             content = Text(justify="center")
-            content.append("退出解读？", style=f"bold {C_MAUVE}")
+            content.append(_STR["confirm_exit_title"], style=f"bold {C_MAUVE}")
             content.append("\n\n")
-            content.append("当前解读将停止，并直接返回首页。", style=C_TEXT)
+            content.append(_STR["confirm_exit_body"], style=C_TEXT)
             content.append("\n\n")
-            content.append("Enter 确认退出 · Esc 取消", style=C_OVERLAY0)
+            content.append(_STR["confirm_exit_hints"], style=C_OVERLAY0)
             yield Static(content, id="confirm-content")
 
     def on_mount(self) -> None:
@@ -331,7 +337,14 @@ class SpreadSlot(Widget):
                 return
 
     async def flip(self) -> None:
-        """Animate a card flip: fade-out → swap content → spring fade-in with glow."""
+        """Animate a card flip: fade-out → swap content → spring fade-in with glow.
+
+        Three-phase animation:
+        1. Fade out + slide up (face-down card disappears)
+        2. Swap content (reveal the card face underneath)
+        3. Fade in + spring down (new card bounces into place with glow)
+        """
+        # Phase 1: fade out the face-down card
         self.styles.animate("opacity", 0.0, duration=SLOT_FLIP_FADE_OUT, easing=EASE)
         self.styles.animate(
             "offset",
@@ -341,6 +354,7 @@ class SpreadSlot(Widget):
         )
         await asyncio.sleep(SLOT_FLIP_FADE_OUT)
 
+        # Phase 2: swap to revealed content (hidden, positioned below)
         self.is_revealed = True
         self.remove_class("face-down")
         self.add_class("revealed")
@@ -348,6 +362,7 @@ class SpreadSlot(Widget):
         self.styles.opacity = 0
         self.styles.offset = (0, 1)
 
+        # Phase 3: spring in from below with glow effect
         await asyncio.sleep(SLOT_FLIP_SWAP_PAUSE)
         self.styles.animate("opacity", 1.0, duration=SLOT_FLIP_FADE_IN, easing=EASE)
         self.styles.animate(
@@ -358,6 +373,7 @@ class SpreadSlot(Widget):
         )
         self.add_class("glow")
 
+        # Hold glow briefly, then remove
         await asyncio.sleep(SLOT_FLIP_FADE_IN + SLOT_FLIP_GLOW_HOLD)
         self.remove_class("glow")
 
