@@ -1,4 +1,5 @@
 import pytest
+from textual.widgets import Input
 
 from nekomata.app import NekomataApp
 
@@ -6,7 +7,7 @@ from nekomata.app import NekomataApp
 @pytest.mark.asyncio
 async def test_app_starts():
     app = NekomataApp()
-    async with app.run_test() as pilot:
+    async with app.run_test():
         assert app.screen is not None
 
 
@@ -14,7 +15,7 @@ async def test_app_starts():
 async def test_home_screen_has_title():
     app = NekomataApp()
     app.animation_enabled = False
-    async with app.run_test() as pilot:
+    async with app.run_test():
         title = app.screen.query_one("#title")
         rendered = str(title.render())
         assert "Nekomata" in rendered
@@ -23,14 +24,14 @@ async def test_home_screen_has_title():
 @pytest.mark.asyncio
 async def test_home_screen_has_input():
     app = NekomataApp()
-    async with app.run_test() as pilot:
+    async with app.run_test():
         assert app.screen.query_one("#prompt-input") is not None
 
 
 @pytest.mark.asyncio
 async def test_home_screen_hides_command_suggestions_by_default():
     app = NekomataApp()
-    async with app.run_test() as pilot:
+    async with app.run_test():
         suggestions = app.screen.query_one("#command-suggestions")
         assert not suggestions.display
 
@@ -39,7 +40,7 @@ async def test_home_screen_hides_command_suggestions_by_default():
 async def test_home_screen_shows_command_suggestions_while_typing_slash():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        inp = app.screen.query_one("#prompt-input")
+        inp = app.screen.query_one("#prompt-input", Input)
         inp.value = "/"
         await pilot.pause()
         suggestions = app.screen.query_one("#command-suggestions")
@@ -54,7 +55,7 @@ async def test_home_screen_shows_command_suggestions_while_typing_slash():
 async def test_home_screen_tab_completes_matching_command():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        inp = app.screen.query_one("#prompt-input")
+        inp = app.screen.query_one("#prompt-input", Input)
         inp.value = "/br"
         await pilot.press("tab")
         await pilot.pause()
@@ -67,7 +68,7 @@ async def test_home_screen_hides_suggestions_on_exact_match():
     """Typing a full command name hides the suggestion dropdown."""
     app = NekomataApp()
     async with app.run_test() as pilot:
-        inp = app.screen.query_one("#prompt-input")
+        inp = app.screen.query_one("#prompt-input", Input)
         inp.value = "/browse"
         await pilot.pause()
         suggestions = app.screen.query_one("#command-suggestions")
@@ -79,7 +80,7 @@ async def test_home_screen_help_command():
     """The /help command shows a help panel and clears the input."""
     app = NekomataApp()
     async with app.run_test() as pilot:
-        inp = app.screen.query_one("#prompt-input")
+        inp = app.screen.query_one("#prompt-input", Input)
         await pilot.press("slash")
         await pilot.press("h")
         await pilot.press("e")
@@ -98,7 +99,7 @@ async def test_home_screen_status_command():
     """The /status command shows current configuration."""
     app = NekomataApp()
     async with app.run_test() as pilot:
-        inp = app.screen.query_one("#prompt-input")
+        inp = app.screen.query_one("#prompt-input", Input)
         inp.value = "/status"
         await pilot.press("enter")
         await pilot.pause(0)
@@ -127,7 +128,7 @@ async def test_home_screen_q_exits_when_input_empty():
 async def test_navigate_to_spread_select():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        inp = app.screen.query_one("#prompt-input")
+        inp = app.screen.query_one("#prompt-input", Input)
         inp.value = "test question"
         await pilot.press("enter")
         await pilot.pause()
@@ -139,7 +140,7 @@ async def test_navigate_to_spread_select():
 async def test_spread_select_has_options():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        inp = app.screen.query_one("#prompt-input")
+        inp = app.screen.query_one("#prompt-input", Input)
         inp.value = "test"
         await pilot.press("enter")
         await pilot.pause()
@@ -153,7 +154,7 @@ async def test_spread_select_has_options():
 async def test_draw_screen_shows_deck():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        inp = app.screen.query_one("#prompt-input")
+        inp = app.screen.query_one("#prompt-input", Input)
         inp.value = "test question"
         await pilot.press("enter")
         await pilot.pause()
@@ -172,7 +173,7 @@ async def test_draw_screen_shows_deck():
 async def test_draw_screen_has_spread_slots():
     app = NekomataApp()
     async with app.run_test() as pilot:
-        inp = app.screen.query_one("#prompt-input")
+        inp = app.screen.query_one("#prompt-input", Input)
         inp.value = "preview test"
         await pilot.press("enter")
         await pilot.pause()
