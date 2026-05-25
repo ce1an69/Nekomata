@@ -146,7 +146,6 @@ class StreamHandler:
     def _render(self) -> None:
         parts = []
         if self._content_chars:
-            parts.append(Text(all_strings()["draw"]["interp_title"], style=f"bold {C_MAUVE}"))
             parts.append(Markdown("".join(self._content_chars), style=C_TEXT))
         self._render_content(parts)
 
