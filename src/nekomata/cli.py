@@ -12,7 +12,7 @@ from nekomata.ai.interpreter import InterpretationError, get_interpreter
 from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
 from nekomata.i18n import set_lang
-from nekomata.spread import SPREAD_REGISTRY, get_spread
+from nekomata.spread import SPREAD_REGISTRY, Spread, get_spread
 from nekomata.storage.config import AppConfig
 
 console = Console()
@@ -70,7 +70,7 @@ def _draw_cards(spread_key: str, seed: int, reversal_prob: float = 0.5) -> tuple
     return drawn, spread
 
 
-def _print_cards(drawn: list[DrawnCard], spread) -> None:
+def _print_cards(drawn: list[DrawnCard]) -> None:
     """Display drawn cards in a table."""
     console.print()
 
@@ -91,7 +91,7 @@ def _print_cards(drawn: list[DrawnCard], spread) -> None:
     console.print()
 
 
-def _stream_interpretation(config: AppConfig, drawn: list[DrawnCard], question: str, spread_key: str) -> None:
+def _stream_interpretation(config: AppConfig, drawn: list[DrawnCard], question: str) -> None:
     """Stream AI interpretation to the console with a loading spinner."""
     try:
         interp = get_interpreter(config)
@@ -131,7 +131,7 @@ def _stream_interpretation(config: AppConfig, drawn: list[DrawnCard], question: 
     first_content = True
 
     try:
-        for chunk in interp.interpret_stream(drawn, question, spread_key):
+        for chunk in interp.interpret_stream(drawn, question):
             if chunk.kind == "content":
                 if first_content:
                     _stop_spinner()
@@ -195,15 +195,15 @@ def run_cli(args: argparse.Namespace) -> None:
         console.print(f"[dim]Available: {', '.join(spread_keys)}[/dim]")
         return
 
-    drawn, spread = _draw_cards(spread_key, seed)
-    _print_cards(drawn, spread)
+    drawn, _ = _draw_cards(spread_key, seed)
+    _print_cards(drawn)
 
     if args.yes:
-        _stream_interpretation(config, drawn, question, spread_key)
+        _stream_interpretation(config, drawn, question)
         return
 
     confirm = _prompt("Start AI interpretation? (Y/n)", "y")
     if confirm.lower() in ("y", "yes", ""):
-        _stream_interpretation(config, drawn, question, spread_key)
+        _stream_interpretation(config, drawn, question)
     else:
         console.print("[dim]Skipped interpretation.[/dim]")
