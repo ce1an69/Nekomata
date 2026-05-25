@@ -55,10 +55,10 @@ SPREAD_RECENTER_OFFSET = 4
 SPREAD_RECENTER_DURATION = 0.28
 SLOT_PLACE_OFFSET = 2
 SLOT_PLACE_DURATION = 0.22
-SLOT_FLIP_FADE_OUT = 0.10
-SLOT_FLIP_SWAP_PAUSE = 0.015
-SLOT_FLIP_FADE_IN = 0.18
-SLOT_FLIP_GLOW_HOLD = 0.08
+SLOT_FLIP_FADE_OUT = 0.14
+SLOT_FLIP_SWAP_PAUSE = 0.02
+SLOT_FLIP_FADE_IN = 0.28
+SLOT_FLIP_GLOW_HOLD = 0.16
 DECK_ENTRANCE_STAGGER = 0.015
 DECK_ENTRANCE_FADE = 0.28
 SPREAD_SLOT_ENTRANCE_STAGGER = 0.07
@@ -246,6 +246,7 @@ class SpreadSlot(Widget):
     SpreadSlot.glow {{
         border: round {C_PINK};
         background: {C_SURFACE0};
+        text-style: bold;
     }}
     SpreadSlot .card-face {{
         width: 100%;
@@ -352,9 +353,9 @@ class SpreadSlot(Widget):
         Three-phase animation:
         1. Fade out + slide up (face-down card disappears)
         2. Swap content (reveal the card face underneath)
-        3. Fade in + spring down (new card bounces into place with glow)
+        3. Spring in from below with bounce + glow pulse
         """
-        # Phase 1: fade out the face-down card
+        # Phase 1: fade out + slide up the face-down card
         self.styles.animate("opacity", 0.0, duration=SLOT_FLIP_FADE_OUT, easing=EASE)
         self.styles.animate(
             "offset",
@@ -364,26 +365,26 @@ class SpreadSlot(Widget):
         )
         await asyncio.sleep(SLOT_FLIP_FADE_OUT)
 
-        # Phase 2: swap to revealed content (hidden, positioned below)
+        # Phase 2: swap to revealed content (positioned below for entrance)
         self.is_revealed = True
         self.remove_class("face-down")
         self.add_class("revealed")
         self._render_revealed()
         self.styles.opacity = 0
-        self.styles.offset = (0, 1)
+        self.styles.offset = (0, 2)
 
-        # Phase 3: spring in from below with glow effect
+        # Phase 3: spring in with bounce and glow
         await asyncio.sleep(SLOT_FLIP_SWAP_PAUSE)
         self.styles.animate("opacity", 1.0, duration=SLOT_FLIP_FADE_IN, easing=EASE)
         self.styles.animate(
             "offset",
             ScalarOffset.from_offset(Offset(0, 0)),
-            duration=SLOT_FLIP_FADE_IN,
+            duration=SLOT_FLIP_FADE_IN + 0.08,
             easing=EASE_SPRING,
         )
         self.add_class("glow")
 
-        # Hold glow briefly, then remove
+        # Hold glow, then fade it out
         await asyncio.sleep(SLOT_FLIP_FADE_IN + SLOT_FLIP_GLOW_HOLD)
         self.remove_class("glow")
 

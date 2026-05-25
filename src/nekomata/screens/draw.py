@@ -337,8 +337,12 @@ class DrawScreen(Screen):
         self._update_phase_ui()
 
         if self._pick_index >= self._n_positions:
-            await asyncio.sleep(PICK_COMPLETE_DELAY)
-            await self._reveal_spread()
+            self.run_worker(self._transition_to_flip(), exclusive=True)
+
+    async def _transition_to_flip(self) -> None:
+        """Brief pause then reveal spread — runs as a worker to avoid blocking."""
+        await asyncio.sleep(PICK_COMPLETE_DELAY)
+        await self._reveal_spread()
 
     async def _reveal_spread(self) -> None:
         """Show spread area, ensure all images cached, then enter FLIP phase."""
