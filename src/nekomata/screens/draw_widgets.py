@@ -59,6 +59,10 @@ SLOT_FLIP_FADE_OUT = 0.10
 SLOT_FLIP_SWAP_PAUSE = 0.015
 SLOT_FLIP_FADE_IN = 0.18
 SLOT_FLIP_GLOW_HOLD = 0.08
+DECK_ENTRANCE_STAGGER = 0.015
+DECK_ENTRANCE_FADE = 0.28
+SPREAD_SLOT_ENTRANCE_STAGGER = 0.07
+SPREAD_SLOT_ENTRANCE_FADE = 0.28
 
 
 class ConfirmExitInterpretation(ModalScreen[bool]):
@@ -246,6 +250,15 @@ class SpreadSlot(Widget):
     SpreadSlot .card-face {{
         width: 100%;
         height: 100%;
+        padding: 0 0;
+        margin: 0 0;
+    }}
+    SpreadSlot .slot-reveal {{
+        width: 100%;
+        height: 100%;
+        padding: 0 0;
+        margin: 0 0;
+        background: transparent;
     }}
     SpreadSlot .slot-content {{
         width: auto;
