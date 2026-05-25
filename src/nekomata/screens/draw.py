@@ -358,6 +358,9 @@ class DrawScreen(Screen):
         self._box.update_highlights()
         self._update_phase_ui()
 
+        # Focus first slot immediately so the UI stays responsive
+        self._focus_first_slot()
+
         if self.app.animation_enabled:
             for slot in slots:
                 slot.styles.opacity = 0
@@ -369,8 +372,6 @@ class DrawScreen(Screen):
                 )
             total = 0.05 + len(slots) * SPREAD_SLOT_ENTRANCE_STAGGER + SPREAD_SLOT_ENTRANCE_FADE
             self.set_timer(total, self._focus_first_slot)
-        else:
-            self._focus_first_slot()
 
     def _focus_first_slot(self) -> None:
         """Focus the first unrevealed slot after entrance animation."""

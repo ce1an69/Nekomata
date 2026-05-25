@@ -133,7 +133,7 @@ DrawScreen {{
     padding: 1 1;
 }}
 #card-preview .card-origin {{
-    width: 100%;
+    width: 50%;
     height: auto;
     background: {C_CRUST};
 }}
