@@ -36,9 +36,9 @@ from nekomata.render.styles import (
     EASE_OUT,
 )
 from nekomata.render.themes import get_theme
-from nekomata.strings import section
+from nekomata.i18n import lazy_section
 
-_STR = section("draw")
+_STR = lazy_section("draw")
 
 # Deck layout constants
 NUM_DECK_CARDS = 48

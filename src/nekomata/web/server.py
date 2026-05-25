@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from nekomata.ai.interpreter import InterpretationError, get_interpreter
 from nekomata.card.data import load_all_cards
 from nekomata.card.types import ARCANA_ZH, Card, DrawnCard, Position
+from nekomata.i18n import set_lang, ui_strings
 from nekomata.render.styles import (
     C_BASE,
     C_CRUST,
@@ -41,7 +42,6 @@ _ASSETS_DIR = assets_dir()
 
 # Cached at module level — read once, not per-request
 _CACHED_HTML: str | None = None
-_CACHED_STRINGS: dict | None = None
 _CACHED_SPREADS: list[dict] | None = None
 _CACHED_CARDS_DICT: list[dict] | None = None
 _CACHED_CARDS_BY_ID: dict[str, Card] | None = None
@@ -84,6 +84,10 @@ def _card_to_dict(card: Card, has_origin: bool = False) -> dict:
         "keywords_reversed": list(card.keywords_reversed),
         "meaning_upright": card.meaning_upright,
         "meaning_reversed": card.meaning_reversed,
+        "keywords_upright_en": list(card.keywords_upright_en),
+        "keywords_reversed_en": list(card.keywords_reversed_en),
+        "meaning_upright_en": card.meaning_upright_en,
+        "meaning_reversed_en": card.meaning_reversed_en,
         "has_image": has_origin,
     }
 
@@ -135,6 +139,7 @@ class ConfigPayload(BaseModel):
     api_url: str = ""
     api_key: str = ""
     model: str = ""
+    lang: str = "en"
 
 class DrawnCardPayload(BaseModel):
     card_id: str
@@ -170,6 +175,7 @@ def create_app() -> FastAPI:
             "api_url": cfg.api_url,
             "api_key": "",
             "model": cfg.model,
+            "lang": cfg.lang,
             "has_api_key": bool(cfg.api_key),
         }
 
@@ -181,8 +187,9 @@ def create_app() -> FastAPI:
             api_url=payload.api_url,
             api_key=api_key,
             model=payload.model,
+            lang=payload.lang,
         )
-        return {"ok": True, "api_url": cfg.api_url, "model": cfg.model}
+        return {"ok": True, "api_url": cfg.api_url, "model": cfg.model, "lang": cfg.lang, "has_api_key": bool(cfg.api_key)}
 
     @app.get("/api/cards")
     async def get_cards():
@@ -191,9 +198,10 @@ def create_app() -> FastAPI:
 
     @app.get("/api/spreads")
     async def get_spreads():
+        cfg = AppConfig.load()
+        set_lang(cfg.lang)
         global _CACHED_SPREADS
-        if _CACHED_SPREADS is None:
-            _CACHED_SPREADS = _spreads_to_list()
+        _CACHED_SPREADS = _spreads_to_list()
         return _CACHED_SPREADS
 
     @app.get("/api/theme")
@@ -202,11 +210,9 @@ def create_app() -> FastAPI:
 
     @app.get("/api/strings")
     async def get_strings():
-        global _CACHED_STRINGS
-        if _CACHED_STRINGS is None:
-            path = data_dir() / "ui_strings.json"
-            _CACHED_STRINGS = json.loads(path.read_text(encoding="utf-8"))
-        return _CACHED_STRINGS
+        cfg = AppConfig.load()
+        set_lang(cfg.lang)
+        return ui_strings()
 
     @app.post("/api/interpret")
     async def interpret(req: InterpretPayload):
@@ -252,7 +258,7 @@ def create_app() -> FastAPI:
                 yield f"data: {data}\n\n"
             except Exception as e:
                 log.exception("Unexpected interpretation failure")
-                data = json.dumps({"error": f"解读失败: {e}"})
+                data = json.dumps({"error": f"Interpretation failed: {e}"})
                 yield f"data: {data}\n\n"
 
         return StreamingResponse(_stream(), media_type="text/event-stream")

@@ -174,22 +174,22 @@ def test_draw_stream_content_renders_markdown():
     from nekomata.screens.stream_handler import StreamHandler
     source = inspect.getsource(StreamHandler._render)
 
-    assert 'Text("".join(self._thinking_chars)' in source
     assert 'Markdown("".join(self._content_chars)' in source
-    assert "italic" in source
-    assert "C_OVERLAY0" in source
+    assert "C_MAUVE" in source
     assert "self._render_content(parts)" in source
 
 
 def test_draw_loading_hint_rotates_cat_tarot_messages():
     from nekomata.screens import stream_handler
+    from nekomata.i18n import ui_strings
     source = inspect.getsource(stream_handler.StreamHandler._tick_loading)
 
     assert "模型正在解读" not in source
     assert "_LOADING_MESSAGE_INTERVAL" in source
     assert stream_handler._LOADING_MESSAGE_INTERVAL == 2.0
-    assert len(stream_handler._LOADING_MESSAGES) >= 3
-    assert any("猫" in message for message in stream_handler._LOADING_MESSAGES)
+    messages = ui_strings()["loading_messages"]
+    assert len(messages) >= 3
+    assert any("cat" in message.lower() for message in messages)
 
 
 def test_interpretation_exit_confirm_uses_catppuccin_modal():

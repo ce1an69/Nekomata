@@ -49,6 +49,10 @@ def load_all_cards(path: Path | None = None) -> list[Card]:
             meaning_upright=e["meaning_upright"],
             meaning_reversed=e["meaning_reversed"],
             image_path=_resolve_image_path(e["id"], arcana),
+            keywords_upright_en=tuple(e.get("keywords_upright_en", [])),
+            keywords_reversed_en=tuple(e.get("keywords_reversed_en", [])),
+            meaning_upright_en=e.get("meaning_upright_en", ""),
+            meaning_reversed_en=e.get("meaning_reversed_en", ""),
         ))
     if path is None:
         _cards_cache = cards

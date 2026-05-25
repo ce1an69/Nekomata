@@ -1,0 +1,99 @@
+{
+  "spreads": {
+    "single": {
+      "name": "Single Card",
+      "description": "A whisper of fate — draw one card and hear what the universe has to say right now.",
+      "suitable_for": "Daily inspiration, quick intuition, when a simple question lingers in your mind",
+      "positions": [
+        {
+          "name": "Daily Guidance",
+          "description": "The omen the stars have lit for this moment"
+        }
+      ]
+    },
+    "past_present_future": {
+      "name": "Past / Present / Future",
+      "description": "Three veils of time — part the mist of the past, gaze upon the truth of now, and glimpse the river of destiny flowing forward.",
+      "suitable_for": "Wanting to know how things will unfold, tracing the arc of a relationship, seeing the full story of a situation",
+      "positions": [
+        {
+          "name": "Past",
+          "description": "Seeds planted in the past, still quietly shaping this moment"
+        },
+        {
+          "name": "Present",
+          "description": "The crossroads where you stand right now"
+        },
+        {
+          "name": "Future",
+          "description": "What lies ahead if you follow the current path"
+        }
+      ]
+    },
+    "situation_action_result": {
+      "name": "Situation / Action / Result",
+      "description": "Keys to insight — see through the fog you're in, find the action that breaks through, and foresee the light of outcome.",
+      "suitable_for": "Facing a decision, wanting to know how to act, needing to see the consequences of a choice",
+      "positions": [
+        {
+          "name": "Situation",
+          "description": "The reality you're in, which may not be what it seems"
+        },
+        {
+          "name": "Action",
+          "description": "The step destiny hints you should take"
+        },
+        {
+          "name": "Result",
+          "description": "Where this path leads if you follow it through"
+        }
+      ]
+    },
+    "body_mind_spirit": {
+      "name": "Body / Mind / Spirit",
+      "description": "Triple resonance of body, mind, and spirit — examine your state across these three dimensions and rediscover inner balance.",
+      "suitable_for": "Feeling drained and wanting to realign, seeking deeper self-understanding, looking for balance and direction in life",
+      "positions": [
+        {
+          "name": "Body",
+          "description": "What your physical world and body are going through"
+        },
+        {
+          "name": "Mind",
+          "description": "The undercurrents surging through your thoughts and emotions"
+        },
+        {
+          "name": "Spirit",
+          "description": "The truth your intuition and spirit are whispering"
+        }
+      ]
+    },
+    "five_card_cross": {
+      "name": "Five Card Cross",
+      "description": "Revelation of the star-cross — five cards weave the full picture of a dilemma: present, obstacle, foundation, past, and guidance.",
+      "suitable_for": "Complex situations needing multi-angle analysis, wanting to find the root of a problem, seeking comprehensive guidance rather than a single answer",
+      "positions": [
+        {
+          "name": "Present",
+          "description": "Where you stand in the swirl right now"
+        },
+        {
+          "name": "Challenge",
+          "description": "The shadow and trials blocking your path"
+        },
+        {
+          "name": "Foundation",
+          "description": "The hidden root beneath the surface"
+        },
+        {
+          "name": "Past",
+          "description": "The forces that brought you here"
+        },
+        {
+          "name": "Guidance",
+          "description": "The direction destiny's light illuminates for you"
+        }
+      ]
+    }
+  }
+}

@@ -1,12 +1,13 @@
-"""Setup screen — configure API settings on first launch."""
+"""Setup screen — configure API settings and language on first launch."""
 
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
 from textual.message import Message
 from textual.screen import Screen
-from textual.widgets import Input, Static
+from textual.widgets import Input, Select, Static
 
+from nekomata.i18n import SUPPORTED_LANGS, set_lang
 from nekomata.render.animations import animate_entrance
 from nekomata.render.styles import (
     C_BASE,
@@ -19,10 +20,19 @@ from nekomata.render.styles import (
     C_SURFACE1,
     C_TEXT,
 )
-from nekomata.strings import ORNAMENT, section
+from nekomata.i18n import lazy_section
+from nekomata.strings import ORNAMENT
 from nekomata.storage.config import AppConfig
 
-_STR = section("setup")
+_STR = lazy_section("setup")
+
+_LANG_OPTIONS = [("English", "en"), ("中文", "zh")]
+
+if SUPPORTED_LANGS != ("en", "zh"):
+    _LANG_OPTIONS = [
+        (code.upper() if code not in ("en", "zh") else ("English" if code == "en" else "中文"), code)
+        for code in SUPPORTED_LANGS
+    ]
 
 
 class SetupButton(Static):
@@ -41,7 +51,7 @@ class SetupButton(Static):
 
 
 class SetupScreen(Screen):
-    """First-launch setup screen for API URL and API Key."""
+    """First-launch setup screen for API URL, API Key, and language."""
 
     BINDINGS = [
         Binding("q", "quit", "Quit"),
@@ -109,6 +119,10 @@ class SetupScreen(Screen):
         border: round {C_MAUVE};
         background: {C_MANTLE};
     }}
+    SetupScreen #lang-select {{
+        width: 100%;
+        margin-bottom: 1;
+    }}
     SetupButton {{
         width: 12;
         height: 3;
@@ -171,6 +185,12 @@ class SetupScreen(Screen):
                 id="model-input",
                 classes="setup-input",
             )
+            yield Static(_STR["field_lang"], classes="field-label")
+            yield Select(
+                options=_LANG_OPTIONS,
+                value="en",
+                id="lang-select",
+            )
             yield Static(ORNAMENT, id="setup-ornament-bottom")
             yield SetupButton(_STR["save_label"], id="save-btn")
             yield Static("", id="setup-error")
@@ -196,12 +216,16 @@ class SetupScreen(Screen):
         url = self.query_one("#api-url-input", Input).value.strip()
         key = self.query_one("#api-key-input", Input).value.strip()
         model = self.query_one("#model-input", Input).value.strip()
+        lang = self.query_one("#lang-select", Select).value
         if not url:
             self.query_one("#setup-error", Static).update(_STR["error_url_required"])
             return
         if not model:
             self.query_one("#setup-error", Static).update(_STR["error_model_required"])
             return
-        config = AppConfig.save(url, key, model)
+        if lang == Select.BLANK:
+            lang = "en"
+        config = AppConfig.save(url, key, model, lang=lang)
         self.app.config = config  # type: ignore[misc]
+        set_lang(lang)
         self.dismiss(None)

@@ -33,8 +33,8 @@ export class InterpretationController {
                 }),
                 signal: this._abortController.signal,
             });
-            if (!resp.ok) throw new Error(`解读请求失败 (${resp.status})`);
-            if (!resp.body) throw new Error('解读请求没有返回内容');
+            if (!resp.ok) throw new Error(`Interpretation request failed (${resp.status})`);
+            if (!resp.body) throw new Error('Interpretation request returned no content');
 
             const reader = resp.body.getReader();
             const decoder = new TextDecoder();

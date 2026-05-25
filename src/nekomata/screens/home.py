@@ -23,10 +23,11 @@ from nekomata.render.styles import (
     C_TEXT,
     EASE,
 )
-from nekomata.strings import ORNAMENT, section
+from nekomata.i18n import lazy_section
+from nekomata.strings import ORNAMENT
 
-_STR = section("home")
-_STATUS_STR = section("status")
+_STR = lazy_section("home")
+_STATUS_STR = lazy_section("status")
 
 SLASH_COMMANDS = {k: tuple(v) for k, v in _STR["commands"].items()}
 

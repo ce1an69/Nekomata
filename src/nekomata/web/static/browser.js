@@ -1,7 +1,7 @@
 /** Card browser screen. */
 
 import { state } from './state.js';
-import { showScreen, cardImgUrl, resumeHome, needsInit } from './utils.js';
+import { showScreen, cardImgUrl, resumeHome, needsInit, t } from './utils.js';
 
 export function showBrowserScreen() {
     state.browserReversed = false;
@@ -63,7 +63,7 @@ export function showBrowserScreen() {
 function initBrowser() {
     const filterBar = document.getElementById('filter-bar');
     const labels = state.strings.arcana_labels || {
-        all: '全部', major: '大阿卡纳', cups: '圣杯', wands: '权杖', swords: '宝剑', pentacles: '星币'
+        all: 'All', major: 'Major Arcana', cups: 'Cups', wands: 'Wands', swords: 'Swords', pentacles: 'Pentacles'
     };
     const suits = Object.entries(labels).map(([key, label]) => ({ key, label }));
 
@@ -82,6 +82,37 @@ function initBrowser() {
     renderCardList('all');
 }
 
+function _isEn() {
+    return state.config.lang === 'en';
+}
+
+function _cardName(c) {
+    return _isEn() ? c.name : (c.name_zh || c.name);
+}
+
+function _arcanaName(c) {
+    return _isEn() ? (c.arcana.charAt(0).toUpperCase() + c.arcana.slice(1)) : (c.arcana_zh || c.arcana);
+}
+
+function _keywords(c, reversed) {
+    if (_isEn() && c.keywords_upright_en && c.keywords_upright_en.length) {
+        return reversed ? c.keywords_reversed_en : c.keywords_upright_en;
+    }
+    return reversed ? c.keywords_reversed : c.keywords_upright;
+}
+
+function _meaning(c, reversed) {
+    if (_isEn() && c.meaning_upright_en) {
+        return reversed ? c.meaning_reversed_en : c.meaning_upright_en;
+    }
+    return reversed ? c.meaning_reversed : c.meaning_upright;
+}
+
+function _statusLabel(reversed) {
+    const cd = state.strings.card_detail || {};
+    return reversed ? (cd.reversed || 'Reversed') : (cd.upright || 'Upright');
+}
+
 function renderCardList(filter) {
     const list = document.getElementById('card-list');
     const countEl = document.getElementById('browser-count');
@@ -95,8 +126,8 @@ function renderCardList(filter) {
     list.innerHTML = filtered.map((c) => {
         const numStr = c.arcana === 'major' ? toRoman(c.number) : String(c.number);
         return `<div class="card-list-item" data-id="${c.id}">` +
-            `<span class="item-name">${numStr} ${c.name_zh}</span>` +
-            `<span class="item-suit">${c.arcana_zh}</span></div>`;
+            `<span class="item-name">${numStr} ${_cardName(c)}</span>` +
+            `<span class="item-suit">${_arcanaName(c)}</span></div>`;
     }).join('');
 
     list.querySelectorAll('.card-list-item').forEach(item => {
@@ -122,17 +153,22 @@ function showBrowserDetail(cardId) {
     const reversed = state.browserReversed;
 
     const imgHtml = card.has_image ? cardImgUrl(card, reversed) : '';
-    const keywords = reversed ? card.keywords_reversed : card.keywords_upright;
-    const statusLabel = reversed ? '逆位' : '正位';
-    const revBadge = reversed ? '<span class="browser-reversed-badge">逆位</span>' : '';
+    const keywords = _keywords(card, reversed);
+    const statusLabel = _statusLabel(reversed);
+    const revBadge = reversed ? `<span class="browser-reversed-badge">${statusLabel}</span>` : '';
+    const suitLabel = t('card_browser.suit', 'Suit');
+    const elemAstroLabel = `${t('card_detail.element', 'Element')} · ${t('card_detail.astrology', 'Astrology')}`;
+    const kwLabel = `${t('card_browser.select_placeholder', 'Keywords')} (${statusLabel})`;
+    const upMeaningLabel = `${t('card_detail.upright', 'Upright')} ${t('card_browser.select_placeholder', 'Meaning')}`;
+    const revMeaningLabel = `${t('card_detail.reversed', 'Reversed')} ${t('card_browser.select_placeholder', 'Meaning')}`;
 
     detail.innerHTML = imgHtml +
-        `<div class="detail-field"><div class="label">${card.name_zh} ${card.name}${revBadge}</div></div>` +
-        `<div class="detail-field"><div class="label">花色</div><div class="value">${card.arcana_zh}</div></div>` +
-        `<div class="detail-field"><div class="label">元素 · 星座</div><div class="value sub">${card.element} · ${card.astrology}</div></div>` +
-        `<div class="detail-field"><div class="label">关键词 (${statusLabel})</div><div class="value sub">${keywords.join(', ')}</div></div>` +
-        `<div class="detail-field"><div class="label">正位牌义</div><div class="value sub">${card.meaning_upright}</div></div>` +
-        `<div class="detail-field"><div class="label">逆位牌义</div><div class="value sub">${card.meaning_reversed}</div></div>`;
+        `<div class="detail-field"><div class="label">${_cardName(card)} ${card.name}${revBadge}</div></div>` +
+        `<div class="detail-field"><div class="label">${suitLabel}</div><div class="value">${_arcanaName(card)}</div></div>` +
+        `<div class="detail-field"><div class="label">${elemAstroLabel}</div><div class="value sub">${card.element} · ${card.astrology}</div></div>` +
+        `<div class="detail-field"><div class="label">${kwLabel}</div><div class="value sub">${keywords.join(', ')}</div></div>` +
+        `<div class="detail-field"><div class="label">${upMeaningLabel}</div><div class="value sub">${_meaning(card, false)}</div></div>` +
+        `<div class="detail-field"><div class="label">${revMeaningLabel}</div><div class="value sub">${_meaning(card, true)}</div></div>`;
 }
 
 const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI','XXII'];

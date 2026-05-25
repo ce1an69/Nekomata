@@ -3,7 +3,7 @@
 export const state = {
     question: '',
     spreadKey: '',
-    config: { api_url: '', api_key: '', model: '' },
+    config: { api_url: '', api_key: '', model: '', lang: 'en' },
     cards: [],
     spreads: [],
     strings: {},

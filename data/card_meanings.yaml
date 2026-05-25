@@ -15,6 +15,16 @@
   - 犹豫
   meaning_upright: 小猫在花园里追着蝴蝶奔跑，完全不在意脚边的悬崖。它相信自己的爪子能抓住一切——此刻的你正站在全新旅程的起点，带着纯真和勇气向前跃进吧。
   meaning_reversed: 猫咪在窗台上犹豫不决，既想跳下去又缩回了爪子。鲁莽的纵身一跃可能摔得很惨，但过度恐惧只会让你永远困在原地。
+  keywords_upright_en:
+  - new beginnings
+  - innocence
+  - freedom
+  keywords_reversed_en:
+  - recklessness
+  - foolhardiness
+  - hesitation
+  meaning_upright_en: A kitten chases a butterfly through the garden, oblivious to the cliff's edge beneath its paws. It trusts its claws to catch everything — you stand at the threshold of a new journey, leap forward with pure courage and innocence.
+  meaning_reversed_en: A cat hesitates on the windowsill, wanting to jump but pulling its paws back. A reckless leap could end badly, but excessive fear will only keep you stuck forever.
 - id: major_01
   name: The Magician
   name_zh: 魔术师
@@ -32,6 +42,16 @@
   - 浪费才能
   meaning_upright: 猫咪把桌上的东西一件件精准地推下去，每一爪都恰到好处。它将意志化为行动，桌上的一切都是它的道具——你拥有实现目标所需的全部工具。
   meaning_reversed: 猫咪把毛线团玩成了一团死结，爪子越挣扎缠得越紧。才能被浪费在错误的方向上，或者被暗中用来操纵他人，真正的力量正在被辜负。
+  keywords_upright_en:
+  - creativity
+  - skill
+  - willpower
+  keywords_reversed_en:
+  - manipulation
+  - deception
+  - wasted talent
+  meaning_upright_en: A cat pushes objects off the table one by one with pinpoint precision, each swipe perfectly calculated. It turns will into action and everything on the table is its prop — you already possess every tool needed to achieve your goals.
+  meaning_reversed_en: A cat tangles a ball of yarn into an impossible knot, and the more it struggles the tighter it becomes. Talent wasted in the wrong direction, or secretly used to manipulate others — true power is being squandered.
 - id: major_02
   name: The High Priestess
   name_zh: 女祭司
@@ -49,6 +69,16 @@
   - 隐藏动机
   meaning_upright: 猫咪在月光下静静凝视远方，瞳孔里映着银色的光芒。它听见了你听不到的声音——倾听内心深处的呢喃，答案就藏在直觉的暗流之中。
   meaning_reversed: 猫咪假装没听到你叫它的名字，耳朵微微转动却始终背对着你。忽视内在的智慧，让表面现象遮蔽了本该看见的真相。
+  keywords_upright_en:
+  - intuition
+  - subconscious
+  - mystery
+  keywords_reversed_en:
+  - ignoring intuition
+  - superficiality
+  - hidden motives
+  meaning_upright_en: A cat gazes into the distance beneath the moonlight, silver light reflected in its pupils. It hears what you cannot — listen to the whispers from deep within, for the answer flows in the undercurrents of your intuition.
+  meaning_reversed_en: A cat pretends not to hear you call its name, ears twitching slightly yet always facing away. Ignoring your inner wisdom lets surface appearances veil the truth you were meant to see.
 - id: major_03
   name: The Empress
   name_zh: 女皇
@@ -66,6 +96,16 @@
   - 创造力枯竭
   meaning_upright: 猫妈妈温柔地舔着小猫的额头，暖光洒在它们身上。周围的花草似乎都在为这一刻生长——丰饶与滋养的能量正环绕着你，创造力如春水般涌动。
   meaning_reversed: 猫妈妈用整个身体盖住了小猫，连光线都不让透过，小猫在黑暗中不安地扭动。过度保护让被爱变成了窒息，创造力在控制中渐渐枯萎。
+  keywords_upright_en:
+  - abundance
+  - nourishment
+  - nature
+  keywords_reversed_en:
+  - dependency
+  - overprotection
+  - creative drought
+  meaning_upright_en: A mother cat gently grooms her kitten's forehead, warm light cascading over them both. The flowers and greenery seem to grow just for this moment — the energy of abundance and nurturing surrounds you, creativity flowing like a spring tide.
+  meaning_reversed_en: A mother cat covers her kitten with her entire body, blocking every sliver of light, while the little one squirms restlessly in the dark. Overprotection turns love into suffocation, and creativity withers under too much control.
 - id: major_04
   name: The Emperor
   name_zh: 皇帝
@@ -83,6 +123,16 @@
   - 控制欲
   meaning_upright: 猫端坐在最高处的猫爬架上俯瞰整个房间，姿态威严而从容。每只猫都知道谁是这里的主人——稳定的结构、不可动摇的权威与天生的领导力。
   meaning_reversed: 猫咪不准任何同伴靠近它的食盆，低沉的呜咽声充满威胁。过度控制让秩序变成了牢笼，僵化的规矩扼杀了一切灵活。
+  keywords_upright_en:
+  - authority
+  - order
+  - leadership
+  keywords_reversed_en:
+  - tyranny
+  - rigidity
+  - control issues
+  meaning_upright_en: A cat sits regally atop the highest cat tree, surveying the entire room with calm authority. Every feline in the house knows who rules here — stable structure, unshakable authority, and natural leadership.
+  meaning_reversed_en: A cat forbids any companion from approaching its food bowl, low growls full of menace. Excessive control turns order into a cage, and rigid rules suffocate all flexibility.
 - id: major_05
   name: The Hierophant
   name_zh: 教皇
@@ -100,6 +150,16 @@
   - 墨守成规
   meaning_upright: 老猫耐心地教小猫如何使用猫砂盆，一遍又一遍地示范，尾巴轻柔地安抚着慌张的幼崽。传统里藏着代代相传的智慧——此刻你需要一位值得信赖的导师来指引方向。
   meaning_reversed: 小猫拒绝使用新换的猫砂，固执地在地板上解决，怎么教都不听。过于固守旧习或盲目叛逆，都可能让你错过真正有价值的指引。
+  keywords_upright_en:
+  - tradition
+  - guidance
+  - faith
+  keywords_reversed_en:
+  - dogma
+  - rebellion
+  - conventionality
+  meaning_upright_en: An old cat patiently teaches a kitten how to use the litter box, demonstrating again and again, its tail softly comforting the flustered little one. Tradition holds wisdom passed down through generations — you need a trusted mentor to light the way forward.
+  meaning_reversed_en: A kitten refuses the fresh litter, stubbornly doing its business on the floor, deaf to all instruction. Clinging blindly to old habits or rebelling without cause may cause you to miss truly valuable guidance.
 - id: major_06
   name: The Lovers
   name_zh: 恋人
@@ -117,6 +177,16 @@
   - 错误选择
   meaning_upright: 两只猫在窗台上互相舔毛，阳光勾勒出它们交叠的轮廓，呼噜声此起彼伏。这不是简单的依偎，而是灵魂的选择——深刻的关系需要心与心真正的连结。
   meaning_reversed: 两只猫为争夺同一片阳光炸起了毛，尖叫声划破了午后的宁静。关系中的失衡让爱变成了角力，价值观的裂痕正在加深。
+  keywords_upright_en:
+  - love
+  - choice
+  - harmony
+  keywords_reversed_en:
+  - imbalance
+  - conflict
+  - poor choices
+  meaning_upright_en: Two cats groom each other on the windowsill, sunlight tracing their overlapping silhouettes, purrs rising and falling in harmony. This is no simple cuddle but a choice of souls — a deep relationship demands a genuine connection between hearts.
+  meaning_reversed_en: Two cats puff up their fur fighting over the same patch of sunlight, shrieks shattering the afternoon calm. Imbalance in the relationship turns love into a tug-of-war, and the rift in your values keeps widening.
 - id: major_07
   name: The Chariot
   name_zh: 战车
@@ -134,6 +204,16 @@
   - 方向不明
   meaning_upright: 猫以闪电般的速度冲向激光笔的红点，穿过了沙发、桌腿和走廊。它的眼中只有一个目标——凭借坚定的意志和不可阻挡的决心冲破一切障碍。
   meaning_reversed: 猫咪追着自己的尾巴疯狂转圈，越转越快却永远够不着。失去了方向感的冲锋只会消耗自己，攻击性正在掩盖内心的迷茫。
+  keywords_upright_en:
+  - willpower
+  - triumph
+  - determination
+  keywords_reversed_en:
+  - loss of control
+  - aggression
+  - directionless
+  meaning_upright_en: A cat rockets toward the laser pointer's red dot at lightning speed, weaving past sofas, table legs, and hallways. Its eyes hold only one target — with unwavering will and unstoppable determination, it smashes through every obstacle in its path.
+  meaning_reversed_en: A cat chases its own tail in frantic circles, spinning faster and faster yet never quite reaching. Charging ahead without direction only drains you, and aggression is merely masking your inner confusion.
 - id: major_08
   name: Strength
   name_zh: 力量
@@ -151,6 +231,16 @@
   - 缺乏自制
   meaning_upright: 猫安静地蹲在高处凝视着你，目光温柔却让你不由自主地放下手中的动作。不是蛮力，而是内在的坚定与温柔的勇气——真正的力量从不咆哮。
   meaning_reversed: 猫咪被一根黄瓜吓得炸毛跳起，躲到沙发后面瑟瑟发抖。内在的力量动摇了，恐惧正在吞噬你本该拥有的自信与从容。
+  keywords_upright_en:
+  - courage
+  - patience
+  - inner strength
+  keywords_reversed_en:
+  - weakness
+  - self-doubt
+  - lack of discipline
+  meaning_upright_en: A cat sits quietly on a high perch gazing down at you, its look so gentle yet compelling that you unconsciously lower your hands. Not brute force but inner resolve and tender courage — true strength never needs to roar.
+  meaning_reversed_en: A cat puffs up in terror at a cucumber, leaping away to cower behind the sofa. Inner strength has faltered, and fear is devouring the confidence and composure that should have been yours.
 - id: major_09
   name: The Hermit
   name_zh: 隐者
@@ -168,6 +258,16 @@
   - 固执
   meaning_upright: 猫钻进纸箱最深处，只露出半截尾巴。黑暗中它的眼睛闪着幽光——你需要独处与内省的时光，在寂静的深处才能找到真正属于自己的智慧。
   meaning_reversed: 猫咪藏在床底下不肯出来，连最爱的罐头都无法引诱它。独处变成了孤立，内省沦为了逃避，你需要勇敢面对外面的世界。
+  keywords_upright_en:
+  - introspection
+  - wisdom
+  - solitude
+  keywords_reversed_en:
+  - isolation
+  - avoidance
+  - stubbornness
+  meaning_upright_en: A cat burrows into the deepest corner of a cardboard box, only half its tail visible. Its eyes glimmer in the darkness — you need time alone for introspection; only in the quietest depths will you find wisdom that truly belongs to you.
+  meaning_reversed_en: A cat hides under the bed and refuses to come out, not even tempted by its favorite canned food. Solitude has curdled into isolation, and introspection has become mere escapism — you need the courage to face the world outside.
 - id: major_10
   name: Wheel of Fortune
   name_zh: 命运之轮
@@ -185,6 +285,16 @@
   - 周期低谷
   meaning_upright: 猫追着滚动的毛线球跑过整个房间，球滚到哪里它就跟到哪里，眼睛里满是期待。命运的轮盘正在转动，好运悄悄降临，一个新的周期已经开始。
   meaning_reversed: 猫被自己追的毛线球绊倒了，滚了一身狼狈，甩着爪子满脸不服气。运势暂时低迷，但请记住——轮盘从不停歇，低谷之后必有回升。
+  keywords_upright_en:
+  - turning point
+  - opportunity
+  - destiny
+  keywords_reversed_en:
+  - misfortune
+  - resisting change
+  - cyclical low
+  meaning_upright_en: A cat chases a rolling yarn ball across the entire room, following wherever it goes, eyes brimming with anticipation. The wheel of fortune is spinning, good luck is quietly arriving, and a brand-new cycle has begun.
+  meaning_reversed_en: A cat trips over the very yarn ball it was chasing, tumbling in a flurry of embarrassment, then shakes its paws in defiant indignation. Fortunes may be temporarily low, but remember — the wheel never stops, and every trough is followed by a rise.
 - id: major_11
   name: Justice
   name_zh: 正义
@@ -202,6 +312,16 @@
   - 偏见
   meaning_upright: 猫一脸严肃地坐在打翻的水杯旁审视着你，目光中没有偏袒，尾巴有节奏地拍打着地面。公正的天平从不倾斜，因果循环自有定数——真相终将浮出水面。
   meaning_reversed: 猫咪打翻了花瓶却若无其事地舔着爪子，把罪证推给了旁边的毛绒玩具。不公正的局面正在发生，或者你在逃避本该承担的责任。
+  keywords_upright_en:
+  - justice
+  - truth
+  - cause and effect
+  keywords_reversed_en:
+  - injustice
+  - avoiding responsibility
+  - bias
+  meaning_upright_en: A cat sits beside a knocked-over water glass with a grave expression, scrutinizing you without favoritism, its tail rhythmically tapping the floor. The scales of justice never tilt, and karma follows its own law — the truth will surface in the end.
+  meaning_reversed_en: A cat knocks over a vase then calmly licks its paws as if nothing happened, silently framing the stuffed toy beside it. An unjust situation is unfolding, or you are evading a responsibility that is rightfully yours.
 - id: major_12
   name: The Hanged Man
   name_zh: 倒吊人
@@ -219,6 +339,16 @@
   - 固执
   meaning_upright: 猫倒挂在沙发背上，尾巴悠悠地晃着，眼中满是悠然自得。它看到了正着坐时看不到的风景——暂停脚步，换个角度看世界，牺牲也许正是另一种获得。
   meaning_reversed: 猫卡在树枝上倒挂着，既上不去也下不来，只能无助地叫唤。无意义的拖延和执迷不悟让你悬在半空，该做出选择了。
+  keywords_upright_en:
+  - sacrifice
+  - new perspective
+  - waiting
+  keywords_reversed_en:
+  - procrastination
+  - pointless sacrifice
+  - stubbornness
+  meaning_upright_en: A cat hangs upside down from the back of the sofa, tail swaying lazily, eyes full of leisurely contentment. It sees scenery invisible from an upright perch — pause your steps, view the world from a different angle, and what feels like sacrifice may be another form of gain.
+  meaning_reversed_en: A cat dangles helplessly from a tree branch, unable to climb up or drop down, mewing in distress. Meaningless delay and stubborn obsession leave you suspended in midair — it is time to make a choice.
 - id: major_13
   name: Death
   name_zh: 死神
@@ -236,6 +366,16 @@
   - 恐惧结束
   meaning_upright: 猫用前爪把花瓶从桌上慢慢推下去，看着碎片散落一地，眼神平静而坦然，没有一丝慌张。旧事物的碎裂不是毁灭——它在为新生命的生长腾出空间。
   meaning_reversed: 猫咪拼命用爪子护住那个已经破烂不堪的旧纸箱，不肯接受旁边那个崭新的。抗拒必然的改变只会让停滞变成腐烂。
+  keywords_upright_en:
+  - endings
+  - transformation
+  - rebirth
+  keywords_reversed_en:
+  - resisting change
+  - stagnation
+  - fear of endings
+  meaning_upright_en: A cat slowly pushes a vase off the table with its front paw, watching the shards scatter across the floor with calm, unruffled eyes. The shattering of the old is not destruction — it is making room for new life to grow.
+  meaning_reversed_en: A cat desperately guards a tattered old cardboard box with its claws, refusing the pristine new one sitting right beside it. Resisting inevitable change only turns stagnation into decay.
 - id: major_14
   name: Temperance
   name_zh: 节制
@@ -253,6 +393,16 @@
   - 急躁
   meaning_upright: 猫优雅地用前爪拨弄水龙头，让细流在两只爪子之间来回流转。每一滴水都被温柔地接住——在对立中找到和谐，平衡是此刻最美的修行。
   meaning_reversed: 猫一口气吃了三碗猫粮，肚子鼓得像个小球，还在眼巴巴地盯着下一碗。过度与失衡正在侵蚀你的生活，是时候回归中道了。
+  keywords_upright_en:
+  - balance
+  - harmony
+  - patience
+  keywords_reversed_en:
+  - imbalance
+  - excess
+  - impatience
+  meaning_upright_en: A cat elegantly nudges the faucet with its front paws, letting the thin stream flow back and forth between them. Every drop is caught with tenderness — finding harmony within opposites, balance is the most beautiful practice of this moment.
+  meaning_reversed_en: A cat devours three bowls of kibble in one sitting, belly round as a little ball, yet still gazing longingly at the next serving. Excess and imbalance are creeping into your life — it is time to return to the middle path.
 - id: major_15
   name: The Devil
   name_zh: 恶魔
@@ -270,6 +420,16 @@
   - 觉醒
   meaning_upright: 猫对激光笔上了瘾，追着那个永远抓不到的红点转了无数圈。明明知道是虚幻却停不下来——被欲望或不良习惯牢牢束缚，需要正视内心的阴影。
   meaning_reversed: 猫咪终于对那个追了无数遍的红点失去了兴趣，转身跳上了窗台。从束缚中挣脱的那一刻，才发现自由一直就在转身之后。
+  keywords_upright_en:
+  - bondage
+  - desire
+  - shadow
+  keywords_reversed_en:
+  - liberation
+  - breaking free
+  - awakening
+  meaning_upright_en: A cat is addicted to the laser pointer, chasing that forever-elusive red dot in endless circles. It knows the illusion yet cannot stop — bound tightly by desire or unhealthy habits, you need to confront the shadow within.
+  meaning_reversed_en: A cat finally loses interest in that endlessly pursued red dot and turns to leap onto the windowsill. The moment it breaks free, it discovers that freedom was always just a turn away.
 - id: major_16
   name: The Tower
   name_zh: 塔
@@ -287,6 +447,16 @@
   - 缓慢衰退
   meaning_upright: 猫用后腿蹬翻了整个书架，书本和碎片轰然坠落，扬起一片灰尘。突如其来的剧变摧毁了虚假的安全感，但在废墟之下，真相正在破土而出。
   meaning_reversed: 书架摇摇欲坠，猫还在上面悠然地舔毛，假装一切安好。逃避必要的改变只会让危机在暗处发酵，最终延长了本该结束的痛苦。
+  keywords_upright_en:
+  - sudden upheaval
+  - collapse
+  - awakening
+  keywords_reversed_en:
+  - avoiding disaster
+  - fear of change
+  - slow decline
+  meaning_upright_en: A cat kicks over an entire bookshelf with its hind legs, books and shards crashing down in a cloud of dust. A sudden upheaval shatters false security, but beneath the wreckage the truth is breaking through.
+  meaning_reversed_en: The bookshelf teeters on the edge of collapse, yet the cat lounges on it calmly grooming itself, pretending all is well. Evading necessary change only lets the crisis ferment in the dark, prolonging a pain that should have ended.
 - id: major_17
   name: The Star
   name_zh: 星星
@@ -304,6 +474,16 @@
   - 信心丧失
   meaning_upright: 猫在午后阳光下仰面朝天打着盹，肚皮朝向天空，呼噜声如远处的溪流。希望与灵感如星光般降临——风暴过后的宁静，是宇宙赠予的温柔。
   meaning_reversed: 猫咪望着窗外叹气，阳光明明就在咫尺却感觉遥不可及。希望的光芒变得黯淡，不切实际的幻想正在取代脚踏实地的信念。
+  keywords_upright_en:
+  - hope
+  - inspiration
+  - serenity
+  keywords_reversed_en:
+  - disappointment
+  - disconnection from reality
+  - loss of faith
+  meaning_upright_en: A cat naps on its back in the afternoon sun, belly turned skyward, purring like a distant brook. Hope and inspiration descend like starlight — the calm after the storm is the universe's gentle gift to you.
+  meaning_reversed_en: A cat sighs by the window, sunlight plainly within reach yet feeling impossibly far away. The light of hope is dimming, and fanciful illusions are replacing grounded belief.
 - id: major_18
   name: The Moon
   name_zh: 月亮
@@ -321,6 +501,16 @@
   - 走出迷雾
   meaning_upright: 猫对着月亮发出低沉的嚎叫，影子在月光下拉得又长又扭曲。深层的恐惧与幻觉正在浮出水面——潜意识的力量需要被正视，而非逃避。
   meaning_reversed: 猫咪终于从床底下探出了脑袋，发现那些可怕的影子不过是窗外摇曳的树枝。迷雾正在散去，恐惧开始消退，真相比你想象的温和得多。
+  keywords_upright_en:
+  - illusion
+  - subconscious
+  - unease
+  keywords_reversed_en:
+  - releasing fear
+  - truth revealed
+  - emerging from the fog
+  meaning_upright_en: A cat howls low at the moon, its shadow stretching long and twisted in the moonlight. Deep-seated fears and illusions are surfacing — the power of the subconscious must be faced head-on, not fled from.
+  meaning_reversed_en: A cat finally peeks out from under the bed and discovers those terrifying shadows were just tree branches swaying outside the window. The fog is lifting, fear is fading, and the truth is far gentler than you imagined.
 - id: major_19
   name: The Sun
   name_zh: 太阳
@@ -338,6 +528,16 @@
   - 内在小孩受阻
   meaning_upright: 猫在阳光里打滚，肚皮上沾满了金色的光斑，快乐得呼噜声震天响。光明、喜悦与成功的能量正从四面八方涌来——尽情享受这份纯粹的温暖吧。
   meaning_reversed: 猫咪从阳光里挪开，躲进了阴凉的角落。暂时的低潮不等于永恒的黑暗，但过度乐观也可能让你忽略了需要面对的阴影。
+  keywords_upright_en:
+  - joy
+  - success
+  - vitality
+  keywords_reversed_en:
+  - temporary slump
+  - over-optimism
+  - inner child blocked
+  meaning_upright_en: A cat rolls gleefully in the sunshine, golden light speckling its belly, purring loud enough to shake the room. Light, joy, and the energy of success pour in from all directions — revel in this pure and radiant warmth.
+  meaning_reversed_en: A cat shifts away from the sunlight and retreats into a cool shady corner. A temporary low is not eternal darkness, but over-optimism may blind you to shadows that still need facing.
 - id: major_20
   name: Judgement
   name_zh: 审判
@@ -355,6 +555,16 @@
   - 无法释怀
   meaning_upright: 猫听到开罐头的声响，从最深的沉睡中猛然跃起，瞳孔骤然放大，全身的毛发都竖了起来。一个深刻的觉醒时刻正在召唤你——审视过去，迎接灵魂的重生。
   meaning_reversed: 猫咪明明听到了开罐头的声音，却翻了个身继续装睡。逃避自我反省让过去的包袱越背越重，无法释怀的往事正在拖住你前行的脚步。
+  keywords_upright_en:
+  - awakening
+  - rebirth
+  - reflection
+  keywords_reversed_en:
+  - self-doubt
+  - avoiding reflection
+  - unable to let go
+  meaning_upright_en: A cat hears the can opener and springs from its deepest slumber, pupils dilating wildly, every hair standing on end. A profound moment of awakening is calling you — examine the past and embrace the rebirth of your soul.
+  meaning_reversed_en: A cat clearly hears the can opener but rolls over and pretends to keep sleeping. Evading self-reflection makes the baggage of the past heavier with every step, and old memories you cannot release are dragging you down.
 - id: major_21
   name: The World
   name_zh: 世界
@@ -372,6 +582,16 @@
   - 缺乏收尾
   meaning_upright: 猫终于钻进了那个与它身形完美契合的纸箱，四肢收拢，下巴搁在边缘上，满足地闭上了眼睛。一个完整的周期画上了圆满的句号，万物归一。
   meaning_reversed: 纸箱明明就在眼前，猫却怎么也钻不进去——不是纸箱太小，而是心里还有些未了的事。旅程尚未完成，别急着宣布终点。
+  keywords_upright_en:
+  - completion
+  - fulfillment
+  - accomplishment
+  keywords_reversed_en:
+  - incompleteness
+  - delay
+  - lack of closure
+  meaning_upright_en: A cat finally squeezes into the cardboard box that fits its body perfectly, tucks in all four paws, rests its chin on the edge, and contentedly closes its eyes. A complete cycle draws to a perfect close, and all things come together as one.
+  meaning_reversed_en: The box is right there in front of it, yet the cat cannot seem to squeeze in — not because the box is too small, but because some unfinished business still lingers in its heart. The journey is not yet done, so do not rush to declare the finish line.
 - id: cups_01
   name: Ace of Cups
   name_zh: 圣杯王牌
@@ -389,6 +609,16 @@
   - 压抑感情
   meaning_upright: 猫咪发现了一个从未见过的陶瓷水碗，小心翼翼地凑近嗅了嗅，水面倒映出它好奇的眼睛。一段全新的情感体验正在萌芽，心灵向你敞开了门。
   meaning_reversed: 猫咪对崭新的水碗嗤之以鼻，转头走向了角落。情感的大门悄悄关上了，内心的空虚正在蔓延，被压抑的感情需要找到出口。
+  keywords_upright_en:
+  - new feelings
+  - emotional awakening
+  - compassion
+  keywords_reversed_en:
+  - emotional blockage
+  - repressed feelings
+  - emptiness
+  meaning_upright_en: A curious kitten discovers a shimmering ceramic water bowl it has never seen before, cautiously approaching to sniff it as its own wide eyes reflect back from the surface. A brand-new emotional experience is stirring — the heart is opening its door to you.
+  meaning_reversed_en: The cat turns up its nose at the gleaming new water bowl and stalks off toward a dusty corner. The door of emotion quietly closes, inner emptiness spreads, and suppressed feelings are searching for an outlet.
 - id: cups_02
   name: Two of Cups
   name_zh: 圣杯二
@@ -406,6 +636,16 @@
   - 沟通不畅
   meaning_upright: 两只猫在窗台上并肩靠着，尾巴轻轻缠绕在一起。阳光勾勒出它们和谐的轮廓——深厚的情感连结正在发生，灵魂之间的吸引如此自然。
   meaning_reversed: 两只猫背对背坐在窗台两端，之间隔着看不见的冰墙。关系中的疏离感正在加深，沟通的桥梁需要有人先迈出一步。
+  keywords_upright_en:
+  - connection
+  - attraction
+  - balance
+  keywords_reversed_en:
+  - disharmony
+  - distance
+  - miscommunication
+  meaning_upright_en: Two cats sit side by side on the windowsill, tails gently intertwining. Sunlight traces their harmonious silhouettes — a deep emotional bond is forming, and the pull between souls feels effortlessly natural.
+  meaning_reversed_en: Two cats sit back-to-back at opposite ends of the windowsill, an invisible wall of ice between them. Distance in the relationship is deepening, and someone needs to take the first step across the bridge of communication.
 - id: cups_03
   name: Three of Cups
   name_zh: 圣杯三
@@ -423,6 +663,16 @@
   - 缺乏分享
   meaning_upright: 三只猫围在食盆旁，互相蹭着脑袋，发出满足的咕噜声，尾巴愉快地交缠在一起。友谊的温度在空气中流淌——这是一个值得庆祝的时刻，分享让快乐加倍。
   meaning_reversed: 猫咪独自缩在角落里，看着远处热闹的同伴群却提不起加入的力气。社交生活中弥漫着孤立的气息，也许你只是忘了如何分享。
+  keywords_upright_en:
+  - celebration
+  - friendship
+  - creative collaboration
+  keywords_reversed_en:
+  - over-socializing
+  - isolation
+  - lack of sharing
+  meaning_upright_en: Three cats gather around the food bowl, nuzzling each other's heads with satisfied purrs, tails happily tangled together. The warmth of friendship fills the air — this is a moment worth celebrating, and sharing makes the joy twice as bright.
+  meaning_reversed_en: A cat huddles alone in the corner, watching the lively group in the distance without the energy to join in. Isolation hangs in the social air — perhaps you have simply forgotten how to share.
 - id: cups_04
   name: Four of Cups
   name_zh: 圣杯四
@@ -440,6 +690,16 @@
   - 打破常规
   meaning_upright: 猫躺在满地玩具中间，百无聊赖地望着天花板，对面前晃动的逗猫棒无动于衷。情感的倦怠让你对身边的美好视而不见，内心渴望着新鲜感的刺激。
   meaning_reversed: 猫咪突然发现了角落里那只被遗忘的旧老鼠玩具，一爪拨过来玩出了新花样。重新找回热情的契机就藏在熟悉的事物中。
+  keywords_upright_en:
+  - apathy
+  - dissatisfaction
+  - contemplation
+  keywords_reversed_en:
+  - freshness
+  - re-engagement
+  - breaking routine
+  meaning_upright_en: A cat lies among a scatter of toys, staring bored at the ceiling, completely unfazed by the feather wand dangling right in front of its nose. Emotional apathy blinds you to the beauty nearby — the heart craves a spark of novelty.
+  meaning_reversed_en: The cat suddenly spots a long-forgotten toy mouse in the corner and bats it into a brand-new game. The spark to reignite your passion is hiding inside something wonderfully familiar.
 - id: cups_05
   name: Five of Cups
   name_zh: 圣杯五
@@ -457,6 +717,16 @@
   - 新的希望
   meaning_upright: 猫蹲在一地打翻的牛奶前，耳朵低垂，眼神黯淡。它只盯着地上的那滩白色——情感的失落与遗憾是真实的，但转头看看，并非一切都失去了。
   meaning_reversed: 猫咪抬起头，发现旁边还有一整碗满满的牛奶。开始接受现实的那一刻，悲伤的重量便轻了一些，走出低谷的路就在脚下。
+  keywords_upright_en:
+  - loss
+  - sadness
+  - regret
+  keywords_reversed_en:
+  - acceptance
+  - emerging from lows
+  - new hope
+  meaning_upright_en: "A cat sits before a pool of spilled milk, ears flat, eyes dim. It stares only at the white puddle on the floor — the loss and regret are real, but turn your head and look: not everything is gone."
+  meaning_reversed_en: The cat lifts its gaze and discovers a full bowl of milk sitting right beside it. The moment you begin to accept reality, the weight of sorrow lightens, and the path out of the low point is right under your paws.
 - id: cups_06
   name: Six of Cups
   name_zh: 圣杯六
@@ -474,6 +744,16 @@
   - 过度依赖
   meaning_upright: 猫回到小时候待过的第一个纸箱，绕着它转了一圈又一圈，鼻尖轻触着熟悉的味道。美好的回忆如潮水涌来——童真的温暖值得珍藏，但别忘记往前走。
   meaning_reversed: 猫咪守着那个已经破烂不堪的旧纸箱，怎么也不肯换一个新的。沉溺在过去的美梦里无法自拔，现实正在窗外等你。
+  keywords_upright_en:
+  - nostalgia
+  - childhood
+  - goodwill
+  keywords_reversed_en:
+  - clinging to the past
+  - unrealistic
+  - over-dependence
+  meaning_upright_en: A cat returns to the very first cardboard box it ever called home, circling it again and again, nose gently brushing the familiar scent. Beautiful memories rush in like a tide — the warmth of innocence is worth cherishing, but do not forget to walk forward.
+  meaning_reversed_en: The cat guards the old, tattered cardboard box and stubbornly refuses to trade it for a new one. Drowning in the sweet dreams of the past, you cannot pull yourself out — reality is waiting for you just outside the window.
 - id: cups_07
   name: Seven of Cups
   name_zh: 圣杯七
@@ -491,6 +771,16 @@
   - 面对现实
   meaning_upright: 猫对着鱼缸里的鱼出了神，爪子一次次拍打玻璃却永远够不着。眼前的选择太多，每个都闪着诱人的光——不切实际的幻想正在迷惑你的判断。
   meaning_reversed: 猫咪终于意识到鱼缸里的鱼不是给它的，转身去厨房找真正属于自己的晚餐。从幻想中清醒过来，做出选择并不难。
+  keywords_upright_en:
+  - fantasy
+  - choices
+  - bewilderment
+  keywords_reversed_en:
+  - clarity
+  - making a choice
+  - facing reality
+  meaning_upright_en: A cat stares mesmerized at the fish in the aquarium, paw repeatedly tapping the glass yet never reaching its prize. Too many glittering choices dazzle the eye — unrealistic fantasies are clouding your judgment.
+  meaning_reversed_en: The cat finally realizes the aquarium fish were never meant for it and trots off to the kitchen to find its own proper dinner. Waking from fantasy, making a choice is not as hard as it seemed.
 - id: cups_08
   name: Eight of Cups
   name_zh: 圣杯八
@@ -508,6 +798,16 @@
   - 逃避内心
   meaning_upright: 猫咪头也不回地走向远方，身后是温暖却已经不够的猫窝。为了追求更深层的满足，它勇敢地放下了已不再适合的一切——有些离开是为了更好的抵达。
   meaning_reversed: 猫咪在门口来回踱步，一只爪子迈出去又缩回来。恐惧改变让你裹足不前，但原地踏步本身就是一种隐形的消耗。
+  keywords_upright_en:
+  - letting go
+  - departure
+  - seeking more
+  keywords_reversed_en:
+  - stagnation
+  - fear of change
+  - avoiding inner truth
+  meaning_upright_en: A cat walks away without looking back, leaving behind a warm bed that no longer feels like enough. In pursuit of deeper fulfillment, it bravely lets go of everything that no longer fits — some departures lead to better arrivals.
+  meaning_reversed_en: A cat paces back and forth at the doorway, one paw stepping out then pulling back in. Fear of change keeps you rooted in place, but standing still is its own quiet kind of drain.
 - id: cups_09
   name: Nine of Cups
   name_zh: 圣杯九
@@ -525,6 +825,16 @@
   - 缺乏感恩
   meaning_upright: 猫躺在满满的零食柜前，爪子搭在最爱的罐头上，满足地眯起了眼睛。内心的愿望正一个接一个实现——这份满足感是真实的，请好好品味此刻的丰盛。
   meaning_reversed: 猫咪盯着隔壁猫碗里的零食，忘了自己面前已经堆了一座小山。得到了很多却始终不知感恩，贪婪正在吞噬本该拥有的幸福。
+  keywords_upright_en:
+  - contentment
+  - wish fulfilled
+  - abundance
+  keywords_reversed_en:
+  - dissatisfaction
+  - greed
+  - ingratitude
+  meaning_upright_en: A cat lounges in front of a fully stocked treat cabinet, paw resting on its favorite can, eyes half-closed in pure bliss. Wishes are coming true one by one — this satisfaction is real, so savor every morsel of this abundant moment.
+  meaning_reversed_en: The cat stares at the treats in the neighbor cat's bowl, forgetting the mountain of snacks piled right in front of it. Having so much yet feeling no gratitude, greed is swallowing the happiness that was already yours.
 - id: cups_10
   name: Ten of Cups
   name_zh: 圣杯十
@@ -542,6 +852,16 @@
   - 不和
   meaning_upright: 一窝小猫和猫妈妈挤在温暖的毯子上，互相叠着睡着了，呼噜声此起彼伏。家庭的圆满与情感的和谐就在此刻——爱不需要完美，只需要在一起。
   meaning_reversed: 猫咪们为争夺唯一一个猫窝炸起了毛，嘶吼声打破了夜的宁静。家庭关系中的裂痕正在扩大，情感耗竭让每个人都身心俱疲。
+  keywords_upright_en:
+  - family harmony
+  - happiness
+  - togetherness
+  keywords_reversed_en:
+  - family conflict
+  - emotional exhaustion
+  - discord
+  meaning_upright_en: A litter of kittens and their mother pile up on a warm blanket, sleeping in a furry heap as purrs rise and fall in a gentle chorus. Family wholeness and emotional harmony live in this moment — love does not need to be perfect, it only needs to be together.
+  meaning_reversed_en: Cats puff up and hiss over the only cat bed in the house, the screeching shattering the night's calm. Cracks in family bonds are widening, and emotional exhaustion is wearing everyone thin.
 - id: cups_11
   name: Page of Cups
   name_zh: 圣杯侍从
@@ -559,6 +879,16 @@
   - 缺乏自律
   meaning_upright: 小猫好奇地用前爪碰了碰水面，被涟漪吓了一跳又忍不住再碰一次。敏感而好奇的心灵正在接收来自深处的消息——倾听那个微弱却真实的声音。
   meaning_reversed: 小猫把爪子伸进水里又吓得缩回来，反复几次却始终不敢真正踏入。情绪化的反应掩盖了不成熟的心，学会与自己的感受相处吧。
+  keywords_upright_en:
+  - curiosity
+  - sensitivity
+  - inner message
+  keywords_reversed_en:
+  - immaturity
+  - moodiness
+  - lack of discipline
+  meaning_upright_en: A kitten curiously dips a front paw into the water bowl, startles at the ripples, yet cannot resist touching it again. A sensitive and curious heart is receiving a message from deep within — listen to that quiet but genuine voice.
+  meaning_reversed_en: The kitten dips a paw in the water and flinches back, repeating this over and over without ever truly stepping in. Moody reactions mask an immature heart — it is time to learn to sit with your own feelings.
 - id: cups_12
   name: Knight of Cups
   name_zh: 圣杯骑士
@@ -576,6 +906,16 @@
   - 情感冲动
   meaning_upright: 猫迈着优雅而坚定的步伐走向心仪的同伴，尾巴高高翘起，眼中只有那个身影。浪漫的追求不需要华丽的辞藻——真诚的行动胜过千言万语。
   meaning_reversed: 猫咪对着镜子里的自己哈气，弓起背以为镜中是来抢地盘的情敌。不切实际的嫉妒正在吞噬你的理智，情感冲动让你分不清虚实。
+  keywords_upright_en:
+  - romantic pursuit
+  - charm
+  - action
+  keywords_reversed_en:
+  - unrealistic
+  - jealousy
+  - emotional impulsiveness
+  meaning_upright_en: A cat strides gracefully and purposefully toward its beloved companion, tail held high, eyes fixed on nothing else. Romantic pursuit needs no grand words — sincere action speaks louder than a thousand declarations.
+  meaning_reversed_en: The cat hisses at its own reflection in the mirror, arching its back as if the image were a rival encroaching on its territory. Unrealistic jealousy is devouring your reason, and emotional impulses blur the line between what is real and what is imagined.
 - id: cups_13
   name: Queen of Cups
   name_zh: 圣杯王后
@@ -593,6 +933,16 @@
   - 过度敏感
   meaning_upright: 猫妈妈温柔地注视着熟睡的小猫，目光里盛满了无条件的爱。她能感知小猫每一个细微的需求——深度的关怀与直觉的智慧是你最珍贵的天赋。
   meaning_reversed: 猫咪紧张地缩在主人身后，对外面的每一个声响都高度警觉。缺乏安全感让你过度依赖他人，敏感的触角反而成了负担。
+  keywords_upright_en:
+  - nurturing
+  - intuition
+  - listening
+  keywords_reversed_en:
+  - insecurity
+  - emotional dependency
+  - oversensitivity
+  meaning_upright_en: A mother cat watches her sleeping kittens with a gaze overflowing with unconditional love. She senses every subtle need they have — deep nurturing and intuitive wisdom are your most precious gifts.
+  meaning_reversed_en: A cat huddles nervously behind its human, on high alert at every sound from outside. Insecurity drives you to lean too heavily on others, and your hypersensitive antennae have become a burden instead of a gift.
 - id: cups_14
   name: King of Cups
   name_zh: 圣杯国王
@@ -610,6 +960,16 @@
   - 缺乏同理心
   meaning_upright: 猫王稳坐在窗台最高处，目光如深潭般平静而深邃。风吹过它的毛发也不为所动——情感的成熟不是没有波澜，而是在波澜中依然从容自若。
   meaning_reversed: 猫咪今天的脾气像六月的天气，一会儿蹭你的手一会儿又哈气。情绪的阴晴不定让你难以被信任，内心的风暴需要被正视。
+  keywords_upright_en:
+  - emotional mastery
+  - composure
+  - wisdom
+  keywords_reversed_en:
+  - emotional instability
+  - manipulation
+  - lack of empathy
+  meaning_upright_en: The king cat sits regally on the highest perch of the windowsill, gaze as calm and deep as a still pond. Not even the wind ruffling its fur can stir it — emotional maturity is not the absence of waves, but remaining composed within them.
+  meaning_reversed_en: The cat's mood swings like unpredictable weather — nuzzling your hand one moment and hissing the next. Emotional volatility makes you hard to trust, and the storm inside needs to be faced head-on.
 - id: wands_01
   name: Ace of Wands
   name_zh: 权杖王牌
@@ -627,6 +987,16 @@
   - 拖延
   meaning_upright: 猫咪发现了一根崭新的逗猫棒，瞳孔骤然放大，全身的肌肉绷紧准备扑击。一股强烈的灵感与行动力正在迸发——抓住它，你的世界即将被点燃。
   meaning_reversed: 猫咪对崭新的逗猫棒翻了个身，懒洋洋地打了个哈欠。机遇正在眼前溜走，缺乏动力让你错过了本该属于你的火花。
+  keywords_upright_en:
+  - new opportunity
+  - inspiration
+  - action
+  keywords_reversed_en:
+  - lack of motivation
+  - missed chance
+  - procrastination
+  meaning_upright_en: A cat spots a brand-new feather wand and its pupils dilate instantly, every muscle coiling with the urge to pounce. A powerful surge of inspiration and drive is erupting — seize it, and your world is about to catch fire.
+  meaning_reversed_en: The cat rolls over at the sight of the brand-new feather wand and lets out a lazy yawn. Opportunity is slipping away before your eyes — lack of motivation is making you miss the spark that should have been yours.
 - id: wands_02
   name: Two of Wands
   name_zh: 权杖二
@@ -644,6 +1014,16 @@
   - 犹豫不决
   meaning_upright: 猫站在窗台最高处，目光越过屋顶望向远方的天际线，夕阳将它的轮廓染成了金色。它的尾巴微微晃动，正在盘算下一次冒险——规划与远见是此刻最重要的品质。
   meaning_reversed: 猫咪在窗台上往下看了一眼就缩回了爪子，外面的世界太大太陌生。对未知的恐惧让犹豫取代了规划，机会在踌躇中悄然离去。
+  keywords_upright_en:
+  - planning
+  - future vision
+  - decision
+  keywords_reversed_en:
+  - lack of planning
+  - fear of unknown
+  - indecision
+  meaning_upright_en: A cat stands on the highest point of the windowsill, gazing past the rooftops toward the distant skyline, the sunset painting its silhouette gold. Its tail sways gently as it plots the next adventure — planning and foresight are the qualities that matter most right now.
+  meaning_reversed_en: The cat peeks down from the windowsill and pulls its paws right back — the world outside is too vast, too unfamiliar. Fear of the unknown lets hesitation replace planning, and opportunity slips away while you waver.
 - id: wands_03
   name: Three of Wands
   name_zh: 权杖三
@@ -661,6 +1041,16 @@
   - 缺乏远见
   meaning_upright: 猫沿着墙头稳步前行，每一步都在探索新的路线，远处的风景逐渐清晰。远见与探索精神正在指引方向——事情正朝着好的方向发展，继续前行。
   meaning_reversed: 猫在墙头迷了路，左顾右盼找不到来时的方向。进展受阻，缺乏明确的方向让你在原地打转，是时候重新审视路线了。
+  keywords_upright_en:
+  - progress
+  - foresight
+  - exploration
+  keywords_reversed_en:
+  - delay
+  - obstacles
+  - lack of vision
+  meaning_upright_en: A cat strides steadily along the top of the wall, each step exploring a new route as the distant landscape grows clearer. Foresight and an adventurous spirit are lighting the way — things are heading in the right direction, so keep moving forward.
+  meaning_reversed_en: The cat loses its way on the wall, glancing left and right, unable to find the path it came from. Progress is blocked, and the lack of a clear direction leaves you circling in place — time to re-examine the route.
 - id: wands_04
   name: Four of Wands
   name_zh: 权杖四
@@ -678,6 +1068,16 @@
   - 过渡期
   meaning_upright: 猫终于在新家跳上了窗台，找到了属于自己的阳光斑，满足地趴了下来，呼噜声随即响起。稳定的归属感已经建立——这是一个值得庆祝的里程碑。
   meaning_reversed: 猫咪躲在新家床底下不肯出来，每一声响动都让它竖起耳朵。安全感的建立需要时间，你正处于不安的过渡期中。
+  keywords_upright_en:
+  - celebration
+  - stability
+  - belonging
+  keywords_reversed_en:
+  - instability
+  - insecurity
+  - transition
+  meaning_upright_en: A cat finally leaps onto the windowsill of its new home and finds its very own sunbeam, settling down with an immediate rumbling purr. A stable sense of belonging has taken root — this is a milestone worth celebrating.
+  meaning_reversed_en: The cat hides under the bed in the new home and refuses to come out, ears pricking at every tiny sound. Building a sense of security takes time, and you are in the uneasy midst of a transition.
 - id: wands_05
   name: Five of Wands
   name_zh: 权杖五
@@ -695,6 +1095,16 @@
   - 妥协
   meaning_upright: 两只猫在走廊里竖起全身的毛，弓着背对峙，低吼声此起彼伏。竞争与冲突在所难免——但每一次碰撞也是成长的契机，关键在于如何应对。
   meaning_reversed: 猫咪选择躲进纸箱里避开外面的争吵声，只露出半截尾巴微微发抖。逃避竞争不是懦弱，但过多的妥协会让你失去本该坚持的立场。
+  keywords_upright_en:
+  - competition
+  - conflict
+  - challenge
+  keywords_reversed_en:
+  - avoiding conflict
+  - inner struggle
+  - compromise
+  meaning_upright_en: Two cats puff up in the hallway, backs arched in a standoff, growls echoing back and forth. Competition and conflict are inevitable — but every clash is also a chance to grow, and what matters is how you rise to meet it.
+  meaning_reversed_en: The cat retreats into a cardboard box to escape the commotion outside, only the tip of its tail visible and trembling. Dodging conflict is not cowardice, but too much compromise will cost you the ground you should have held.
 - id: wands_06
   name: Six of Wands
   name_zh: 权杖六
@@ -712,6 +1122,16 @@
   - 自我怀疑
   meaning_upright: 猫骄傲地叼着捕获的玩具老鼠从走廊这头走到那头，尾巴高高竖起。所有目光都汇聚在它身上——胜利与被认可的时刻，你的努力终于得到了应有的回报。
   meaning_reversed: 猫咪把辛辛苦苦抓到的老鼠弄丢了，耷拉着尾巴缩在角落。失败的阴影正在侵蚀自信，感觉自己的付出始终不被看见。
+  keywords_upright_en:
+  - victory
+  - recognition
+  - pride
+  keywords_reversed_en:
+  - sense of failure
+  - unrecognized
+  - self-doubt
+  meaning_upright_en: A cat proudly parades down the hallway with a captured toy mouse in its mouth, tail held high. Every eye in the room turns toward it — this is a moment of victory and recognition, and your efforts are finally getting the reward they deserve.
+  meaning_reversed_en: The cat drops the mouse it worked so hard to catch and slinks into the corner with a drooping tail. The shadow of failure is eating away at your confidence, and it feels like no one sees what you have given.
 - id: wands_07
   name: Seven of Wands
   name_zh: 权杖七
@@ -729,6 +1149,16 @@
   - 压力过大
   meaning_upright: 猫面对十只狗的包围依然保持镇定，脊背弓起但眼神不屈。它知道自己必须守住这一方领地——面对挑战的坚持与勇气，是你此刻最需要的品质。
   meaning_reversed: 猫被太多的压力吓得炸毛逃走，放弃了原本坚守的位置。在重压面前屈服不是你的错，但放弃太快会让你失去更多。
+  keywords_upright_en:
+  - perseverance
+  - defense
+  - courage
+  keywords_reversed_en:
+  - yielding
+  - giving up
+  - overwhelmed
+  meaning_upright_en: A cat faces a circle of ten dogs yet holds its ground, back arched but gaze unyielding. It knows this territory must be defended — the perseverance and courage to face challenges head-on are the qualities you need most right now.
+  meaning_reversed_en: The cat's fur explodes in panic under the crushing pressure and it flees, abandoning the position it held. Yielding under overwhelming weight is not your fault, but giving up too quickly will cost you far more.
 - id: wands_08
   name: Eight of Wands
   name_zh: 权杖八
@@ -746,6 +1176,16 @@
   - 进展缓慢
   meaning_upright: 猫以闪电般的速度穿过整个房间，身后的窗帘和纸张被气流掀起，留下一道模糊的残影。事态正在飞速发展，机遇稍纵即逝——快速行动，跟上命运的节奏。
   meaning_reversed: 猫咪冲到一半突然停下来舔起了毛，完全忘了刚才追逐的目标，眼神迷茫。进展被意外的拖延打断，挫败感正在一点一点积聚。
+  keywords_upright_en:
+  - swift action
+  - change
+  - momentum
+  keywords_reversed_en:
+  - delay
+  - frustration
+  - slow progress
+  meaning_upright_en: A cat tears across the room like lightning, curtains and papers billowing in its wake, leaving only a blur behind. Events are accelerating fast and opportunity is fleeting — move quickly and keep pace with destiny's rhythm.
+  meaning_reversed_en: The cat dashes halfway across the room then stops to lick its fur, completely forgetting the chase, eyes going blank. Progress is interrupted by unexpected delays, and frustration is building bit by bit.
 - id: wands_09
   name: Nine of Wands
   name_zh: 权杖九
@@ -763,6 +1203,16 @@
   - 不堪重负
   meaning_upright: 猫的耳朵上带着伤疤，走路的姿势依然优雅从容，每一步都沉稳有力。它经历过无数次领地争斗却从未退缩——韧性与内在的勇气让你在逆境中依然挺立。
   meaning_reversed: 猫咪趴在地上不想动了，连逗猫棒在面前晃过都懒得抬眼。疲惫不堪的身体正在发出警告，也许是时候停下来休整了。
+  keywords_upright_en:
+  - resilience
+  - courage
+  - holding ground
+  keywords_reversed_en:
+  - exhaustion
+  - giving up
+  - overwhelmed
+  meaning_upright_en: A cat with a notched ear walks with an elegance that betrays no weakness, every step steady and sure. It has survived countless territory disputes without ever backing down — resilience and inner courage keep you standing tall in adversity.
+  meaning_reversed_en: The cat flops on the floor and cannot be moved, not even lifting an eye as the feather wand dances in front of its nose. A bone-tired body is sending warnings — perhaps it is time to stop and truly rest.
 - id: wands_10
   name: Ten of Wands
   name_zh: 权杖十
@@ -780,6 +1230,16 @@
   - 减少负担
   meaning_upright: 猫试图一次叼起所有的小猫，嘴里叼着两只，身上还驮着三只，步履蹒跚。沉重的负担与责任压弯了它的腰——你不必独自扛下一切，寻求帮助不是软弱。
   meaning_reversed: 猫咪终于放下了嘴里的小猫，接受了主人递来的温暖手掌。学会释放压力，让别人分担一些重量，你才能走得更远。
+  keywords_upright_en:
+  - burden
+  - responsibility
+  - effort
+  keywords_reversed_en:
+  - release pressure
+  - delegation
+  - lightening load
+  meaning_upright_en: A cat tries to carry all its kittens at once — two in its mouth, three on its back — stumbling under the weight. Heavy burdens and responsibilities bend its spine — you do not have to carry everything alone. Asking for help is not weakness.
+  meaning_reversed_en: The cat finally sets the kittens down and accepts the warm palm its human offers. Learning to release pressure and letting others share the weight is how you will go farther than you ever could alone.
 - id: wands_11
   name: Page of Wands
   name_zh: 权杖侍从
@@ -797,6 +1257,16 @@
   - 不成熟
   meaning_upright: 小猫第一次被放到院子里，它兴奋地嗅着每一寸草地，尾巴高高翘起。充满热情的自由探索精神正在驱动你——世界如此广阔，大胆出发吧。
   meaning_reversed: 小猫冲出门又吓得飞奔回来，躲在门框后面小心翼翼地张望，心脏还在砰砰直跳。冲动需要方向的指引，否则热情只会变成惊慌。
+  keywords_upright_en:
+  - exploration
+  - freedom
+  - enthusiasm
+  keywords_reversed_en:
+  - lack of direction
+  - impulsiveness
+  - immaturity
+  meaning_upright_en: A kitten is placed in the garden for the very first time, excitedly sniffing every inch of grass with its tail held high. A free-spirited enthusiasm for exploration is driving you — the world is wide, so set out boldly.
+  meaning_reversed_en: The kitten bolts outside then rushes right back in, hiding behind the doorframe and peering out cautiously, heart still pounding. Impulsiveness needs the guidance of direction, or enthusiasm turns into panic.
 - id: wands_12
   name: Knight of Wands
   name_zh: 权杖骑士
@@ -814,6 +1284,16 @@
   - 不切实际
   meaning_upright: 猫从柜顶纵身跃向对面的书架，空中划出一道完美的弧线，四肢在空中完全伸展。充满活力的冒险精神与果断的直觉行动——此刻的你有着不可阻挡的冲劲。
   meaning_reversed: 猫跳到了摇摇晃晃的晾衣架上，爪子打滑身体悬空。过于鲁莽的冲动让你忽视了脚下的风险，行动之前先看清落点。
+  keywords_upright_en:
+  - adventure
+  - vitality
+  - instinctive action
+  keywords_reversed_en:
+  - recklessness
+  - impulsiveness
+  - unrealistic
+  meaning_upright_en: A cat launches from the top of a cabinet toward the opposite bookshelf, cutting a perfect arc through the air, limbs fully outstretched. Adventurous vitality and bold instinctive action — you have an unstoppable drive right now.
+  meaning_reversed_en: The cat leaps onto a wobbling drying rack, claws scrabbling as its body swings in midair. Reckless impulsiveness made you ignore the risk beneath your feet — look before you leap, and find your landing first.
 - id: wands_13
   name: Queen of Wands
   name_zh: 权杖王后
@@ -831,6 +1311,16 @@
   - 操控
   meaning_upright: 猫在午后阳光下优雅地伸展身体，金色的毛发闪闪发光，眼神里满是自信的光芒。魅力与热情从内而外地散发——你就是自己生活里最耀眼的存在。
   meaning_reversed: 猫咪不允许任何别的猫踏入它划定的领地，低沉的嘶吼充满威胁。嫉妒和过强的占有欲正在侵蚀你的魅力，控制欲只会赶走真心。
+  keywords_upright_en:
+  - confidence
+  - charisma
+  - passion
+  keywords_reversed_en:
+  - jealousy
+  - possessiveness
+  - control
+  meaning_upright_en: A cat stretches elegantly in the afternoon sun, golden fur gleaming, eyes blazing with self-assurance. Charisma and passion radiate from the inside out — you are the most dazzling presence in your own life.
+  meaning_reversed_en: The cat refuses to let any other feline set paw in its marked territory, a low growl rumbling with menace. Jealousy and an overbearing possessiveness are eroding your charm, and the need to control will only drive away genuine hearts.
 - id: wands_14
   name: King of Wands
   name_zh: 权杖国王
@@ -848,6 +1338,16 @@
   - 缺乏远见
   meaning_upright: 猫王站在高处俯瞰整片领地，目光沉稳而深远。它不怒自威，每个决定都充满魄力——天生的领导力与远见卓识让你成为众人追随的核心。
   meaning_reversed: 猫王欺负领地里最弱小的那只猫，把自己的意志强加于每个角落。独断专行正在取代真正的领导，缺乏包容只会让追随者变成旁观者。
+  keywords_upright_en:
+  - leadership
+  - vision
+  - boldness
+  keywords_reversed_en:
+  - autocracy
+  - tyranny
+  - lack of vision
+  meaning_upright_en: The king cat stands on high ground surveying its entire territory, gaze steady and far-seeing. It commands respect without raising a voice, every decision full of resolve — natural leadership and vision make you the core that others follow.
+  meaning_reversed_en: The king cat bullies the weakest member of the territory, imposing its will on every corner. Autocracy is replacing true leadership, and a lack of inclusiveness turns followers into bystanders.
 - id: swords_01
   name: Ace of Swords
   name_zh: 宝剑王牌
@@ -865,6 +1365,16 @@
   - 滥用力量
   meaning_upright: 猫一爪划破了遮挡阳光的厚重窗帘，锐利的光线瞬间涌入。思维的迷雾被劈开，真相一览无余——思想的突破与清晰的洞察力正在到来。
   meaning_reversed: 猫的爪子被厚重的布料缠住了，越挣越紧，急得在空中胡乱挥舞。思维的混乱让你看不清方向，力量用错了地方只会适得其反。
+  keywords_upright_en:
+  - breakthrough
+  - clarity
+  - truth
+  keywords_reversed_en:
+  - confusion
+  - lack of clarity
+  - misused power
+  meaning_upright_en: A cat's claw slashes through the heavy curtain blocking the sunlight, and brilliant rays flood in instantly. The fog of thought is cleaved apart and truth lies plain — a mental breakthrough and crystal-clear insight are arriving.
+  meaning_reversed_en: The cat's claws get tangled in the thick fabric, the more it struggles the tighter it wraps, flailing helplessly in the air. Muddled thinking obscures your direction, and power applied in the wrong place only makes things worse.
 - id: swords_02
   name: Two of Swords
   name_zh: 宝剑二
@@ -882,6 +1392,16 @@
   - 真相大白
   meaning_upright: 猫蹲在两个阳光斑之间，左看看右看看，身体纹丝不动。两难之间的抉择让它僵在了原地——有些决定无法回避，但此刻你还不想面对。
   meaning_reversed: 猫咪终于起身走向了其中一个阳光斑，舒展身体趴了下来，眯起眼睛享受温暖。犹豫被打破的那一刻，真相也随之浮出了水面。
+  keywords_upright_en:
+  - balance
+  - difficult choice
+  - stalemate
+  keywords_reversed_en:
+  - making a decision
+  - breaking the deadlock
+  - truth revealed
+  meaning_upright_en: A cat sits frozen between two patches of sunlight, looking left then right, body utterly still. Caught in a dilemma, it is locked in place — some decisions cannot be avoided, but for now you are not ready to face them.
+  meaning_reversed_en: The cat finally rises and pads toward one of the sunbeams, stretching out and settling down, half-closing its eyes in the warmth. The moment hesitation breaks, the truth rises to the surface as well.
 - id: swords_03
   name: Three of Swords
   name_zh: 宝剑三
@@ -899,6 +1419,16 @@
   - 走出阴影
   meaning_upright: 猫蹲在紧闭的门前，爪子轻轻搭在门缝上，耳朵低垂。门那边曾经有温暖的灯光和熟悉的声音——心碎与分离的痛楚是真实的，请允许自己悲伤。
   meaning_reversed: 门终于开了一条缝，光从缝隙中透进来，猫慢慢抬起了头，眼睛里有了新的期待。痛苦的释放与疗愈正在开始，伤口终会愈合。
+  keywords_upright_en:
+  - heartbreak
+  - sorrow
+  - separation
+  keywords_reversed_en:
+  - healing
+  - releasing pain
+  - emerging from shadow
+  meaning_upright_en: A cat sits before a closed door, paw resting lightly on the gap at the threshold, ears flattened. On the other side there used to be warm lamplight and familiar voices — the pain of heartbreak and separation is real. Allow yourself to grieve.
+  meaning_reversed_en: The door finally cracks open, light spilling through the gap, and the cat slowly raises its head with a glimmer of new hope in its eyes. The release of pain and the beginning of healing are underway — wounds will close in time.
 - id: swords_04
   name: Four of Swords
   name_zh: 宝剑四
@@ -916,6 +1446,16 @@
   - 无法放松
   meaning_upright: 猫蜷成一团沉睡在阳光最深处，呼吸均匀而缓慢。世界在它周围安静下来——必要的休息与恢复不是偷懒，而是为下一场征途积蓄力量。
   meaning_reversed: 猫咪在睡梦中还不停地抽动着爪子和胡须，无法真正沉入安宁。过度劳累让休息变成了煎熬，身心的紧绷需要被认真对待。
+  keywords_upright_en:
+  - rest
+  - recovery
+  - meditation
+  keywords_reversed_en:
+  - exhaustion
+  - overwork
+  - inability to relax
+  meaning_upright_en: A cat curls into a tight ball and sleeps in the deepest pool of sunlight, breathing slow and even. The world quiets down around it — necessary rest and recovery are not laziness, but gathering strength for the next journey ahead.
+  meaning_reversed_en: The cat twitches its paws and whiskers through its sleep, never sinking into true stillness. Overwork has turned rest into torment, and the tension gripping body and mind needs to be taken seriously.
 - id: swords_05
   name: Five of Swords
   name_zh: 宝剑五
@@ -933,6 +1473,16 @@
   - 重建
   meaning_upright: 猫打架后独自躲在角落舔着伤口，耳朵上缺了一角，眼神疲惫。冲突带来的失败感让它既愤怒又沮丧——赢了一场架却输了整个战场，值吗？
   meaning_reversed: 猫咪试探性地走向曾经打过架的对手，尾巴微微下垂，发出低低的咕噜声。和解的可能就在一个勇敢的举动之间，放下过去才能重建信任。
+  keywords_upright_en:
+  - conflict
+  - defeat
+  - hostility
+  keywords_reversed_en:
+  - reconciliation
+  - letting go
+  - rebuilding
+  meaning_upright_en: After a fight the cat hides alone in the corner licking its wounds, a notch missing from its ear, eyes weary. The sting of conflict and defeat leaves it angry yet deflated — you won the scuffle but lost the larger battle. Was it worth it?
+  meaning_reversed_en: The cat tentatively approaches its former rival, tail lowered softly, offering a low, gentle purr. Reconciliation is possible through one brave gesture, and letting go of the past is the only way to rebuild trust.
 - id: swords_06
   name: Six of Swords
   name_zh: 宝剑六
@@ -950,6 +1500,16 @@
   - 反复
   meaning_upright: 猫安静地坐在猫包里望向窗外，熟悉的街道在身后渐渐远去。离开并不容易，但更好的地方正在前方等待——一段从痛苦走向平静的过渡正在展开。
   meaning_reversed: 猫咪在猫包里不停地叫唤，爪子抓着网格想要回去，满眼都是对未知的恐惧。对改变的抵抗让你停滞不前，过去在拉扯着你无法迈步。
+  keywords_upright_en:
+  - transition
+  - leaving pain behind
+  - journey
+  keywords_reversed_en:
+  - stagnation
+  - unable to move forward
+  - relapse
+  meaning_upright_en: A cat sits quietly in its carrier watching through the window as familiar streets slip away behind. Leaving is not easy, but a better place waits ahead — a passage from pain toward peace is unfolding.
+  meaning_reversed_en: The cat meows endlessly inside the carrier, claws clutching the mesh, wanting to go back, eyes full of fear of the unknown. Resistance to change keeps you stuck, and the past is pulling too hard to take a step forward.
 - id: swords_07
   name: Seven of Swords
   name_zh: 宝剑七
@@ -967,6 +1527,16 @@
   - 放弃欺骗
   meaning_upright: 猫趁同伴不注意，轻手轻脚地把另一只猫的零食拖到自己角落里。策略与机智在此刻派上了用场——但要小心，小聪明和欺骗之间只有一线之隔。
   meaning_reversed: 猫咪偷零食被当场抓住，僵在原地不知所措。策略的失败不可怕，可怕的是不敢面对真相——是时候坦诚地重新审视一切了。
+  keywords_upright_en:
+  - strategy
+  - deception
+  - cleverness
+  keywords_reversed_en:
+  - coming clean
+  - rethinking
+  - abandoning deceit
+  meaning_upright_en: While the others are not looking, a cat quietly drags a fellow feline's treats into its own corner. Strategy and cleverness serve you well in this moment — but be careful, for the line between a shrewd move and outright deception is razor-thin.
+  meaning_reversed_en: The cat is caught red-pawed stealing treats and freezes on the spot, unsure what to do. A failed strategy is nothing to fear — what matters is whether you dare face the truth. It is time to come clean and rethink everything honestly.
 - id: swords_08
   name: Eight of Swords
   name_zh: 宝剑八
@@ -984,6 +1554,16 @@
   - 突破限制
   meaning_upright: 猫被毛线团缠住了身体，越挣扎缠得越紧。它看不到身后就有一把剪刀——感到被困与自我设限的困境中，但也许束缚并没有你想象的那么牢不可破。
   meaning_reversed: 猫轻轻一挣就从毛线团里脱身了，原来那团线根本没有打结。限制大多是自己想象的，突破的契机近在咫尺，只差一个转念。
+  keywords_upright_en:
+  - entrapment
+  - predicament
+  - self-limitation
+  keywords_reversed_en:
+  - release
+  - shifting perspective
+  - breaking free
+  meaning_upright_en: A cat gets tangled in a ball of yarn, and the more it struggles the tighter the threads wind. It cannot see the pair of scissors right behind it — feeling trapped and self-limited in a bind, but perhaps the restraints are not as unbreakable as they seem.
+  meaning_reversed_en: The cat gives one gentle tug and slips free of the yarn — the ball was never actually knotted at all. Most limitations are self-made illusions, and the key to breaking through is close enough to touch, needing only a shift of thought.
 - id: swords_09
   name: Nine of Swords
   name_zh: 宝剑九
@@ -1001,6 +1581,16 @@
   - 走出焦虑
   meaning_upright: 猫在半夜突然从梦中惊醒，瞳孔放大，心跳加速。黑暗中的影子看起来如此狰狞——深层的焦虑与恐惧正在吞噬安宁，但最坏的情况往往只存在于想象中。
   meaning_reversed: 猫咪发现刚才的恐惧不过是一场噩梦，打了个哈欠重新蜷好。开始面对恐惧的那一刻，焦虑便开始消散，黎明终将到来。
+  keywords_upright_en:
+  - anxiety
+  - fear
+  - nightmares
+  keywords_reversed_en:
+  - recovery
+  - facing fear
+  - emerging from anxiety
+  meaning_upright_en: A cat jolts awake in the middle of the night, pupils blown wide, heart racing. The shadows in the dark look so menacing — deep-seated anxiety and fear are devouring your peace, but the worst-case scenario almost always exists only in imagination.
+  meaning_reversed_en: The cat realizes the terror was only a bad dream, yawns broadly, and curls up again. The moment you start facing fear head-on, anxiety begins to dissolve, and dawn will always arrive.
 - id: swords_10
   name: Ten of Swords
   name_zh: 宝剑十
@@ -1018,6 +1608,16 @@
   - 接受结束
   meaning_upright: 猫的尾巴被重重地踩了一下，它尖叫一声后趴在地上不动了，眼睛里闪过一丝不甘。痛苦的终结已经触底——但请记住，触底的那一刻，就是反弹的起点。
   meaning_reversed: 猫咪的尾巴慢慢恢复了知觉，它试探性地摇了摇，然后站了起来。痛苦的结束意味着重生的开始，接受终结才能拥抱新生。
+  keywords_upright_en:
+  - ending
+  - betrayal
+  - rock bottom
+  keywords_reversed_en:
+  - rebirth
+  - bouncing back
+  - accepting the end
+  meaning_upright_en: A cat's tail gets stepped on hard — it shrieks once then lies flat on the floor, a flash of defiance in its eyes. Painful endings have hit rock bottom — but remember, the moment you hit bottom is also the moment the bounce begins.
+  meaning_reversed_en: The cat's tail slowly regains feeling, it gives an experimental swish, then rises to its feet. The end of pain means the beginning of rebirth — accept the ending so you can embrace what comes next.
 - id: swords_11
   name: Page of Swords
   name_zh: 宝剑侍从
@@ -1035,6 +1635,16 @@
   - 好奇心过盛
   meaning_upright: 小猫蹲在地上全神贯注地研究一只蚂蚁的行进路线，眼睛一眨不眨。对知识的渴望与新思想的火花正在闪烁——保持好奇，真相藏在细节里。
   meaning_reversed: 小猫研究蚂蚁到一半被飞过的蝴蝶吸引了注意力，又去追蝴蝶然后被另一只虫子分心。分散的精力让你什么都看不清，专注才是通往答案的路。
+  keywords_upright_en:
+  - curiosity
+  - eagerness to learn
+  - new ideas
+  keywords_reversed_en:
+  - lack of focus
+  - naivety
+  - scattered curiosity
+  meaning_upright_en: A kitten crouches on the ground, utterly absorbed in studying an ant's marching trail, eyes unblinking. A thirst for knowledge and the spark of new ideas are flickering — stay curious, for truth hides in the details.
+  meaning_reversed_en: Midway through studying the ants, the kitten is distracted by a butterfly fluttering by, then abandons the chase for a beetle — scattered energy leaves everything blurry. Focus is the road that leads to answers.
 - id: swords_12
   name: Knight of Swords
   name_zh: 宝剑骑士
@@ -1052,6 +1662,16 @@
   - 不计后果
   meaning_upright: 猫毫不犹豫地从柜顶跃向目标，空中姿态凌厉如剑，毛发被风压压得紧贴身体。果断的行动力在关键时刻不可或缺——但速度与准确之间，你还需要找到平衡。
   meaning_reversed: 猫一腔热血跳向了关闭的窗户，"砰"地撞在上面又弹了回来。行动之前缺少思考让你伤痕累累，鲁莽不等于勇敢。
+  keywords_upright_en:
+  - action
+  - impulse
+  - decisiveness
+  keywords_reversed_en:
+  - carelessness
+  - recklessness
+  - unforeseen consequences
+  meaning_upright_en: A cat leaps from the top of the cabinet toward its target without a second thought, cutting through the air like a blade, fur flattened by the wind. Decisive action is indispensable at critical moments — but between speed and precision, you still need to find your balance.
+  meaning_reversed_en: The cat charges headlong into a closed window with a loud thunk and bounces right off. Acting without thinking leaves you bruised, and recklessness is not the same as bravery.
 - id: swords_13
   name: Queen of Swords
   name_zh: 宝剑王后
@@ -1069,6 +1689,16 @@
   - 孤立
   meaning_upright: 猫独自坐在窗台上，眼神锐利如刀锋，周围的一切都逃不过它的审视。独立的思考与清晰的判断力——它不需要群体的认同也能洞悉真相。
   meaning_reversed: 猫对每个靠近的同伴都哈气，竖起的刺让人无法靠近。过度的独立变成了孤立，尖锐的言辞正在割伤你在乎的人。
+  keywords_upright_en:
+  - independence
+  - sharp perception
+  - clarity
+  keywords_reversed_en:
+  - coldness
+  - harshness
+  - isolation
+  meaning_upright_en: A cat sits alone on the windowsill, gaze sharp as a blade, missing nothing in its survey of the surroundings. Independent thinking and clear judgment — it does not need the approval of the group to see the truth.
+  meaning_reversed_en: The cat hisses at every companion who draws near, its raised hackles keeping everyone at bay. Excessive independence curdles into isolation, and barbed words are cutting the very people you care about.
 - id: swords_14
   name: King of Swords
   name_zh: 宝剑国王
@@ -1086,6 +1716,16 @@
   - 滥用权力
   meaning_upright: 老猫端坐在高处审视着领地上的一切，目光如炬，每一个判断都精准无误。清晰的理智与公正的权威——真正的力量在于用智慧而非蛮力来决断。
   meaning_reversed: 老猫用居高临下的目光俯视同伴，用爪子无情地拍开靠近的小猫。冷酷与不公正正在腐蚀你的权威，滥用的权力终将失去人心。
+  keywords_upright_en:
+  - judgment
+  - authority
+  - decisiveness
+  keywords_reversed_en:
+  - injustice
+  - coldness
+  - abuse of power
+  meaning_upright_en: An elder cat sits on high ground, surveying everything in its territory with piercing eyes, every judgment precise and unerring. Clear reason and impartial authority — true power lies in deciding with wisdom, not brute force.
+  meaning_reversed_en: The elder cat looks down on its companions with a superior gaze and swats away a kitten that dares approach. Coldness and unfairness are corroding your authority, and abused power will eventually lose the hearts of those who followed.
 - id: pentacles_01
   name: Ace of Pentacles
   name_zh: 星币王牌
@@ -1103,6 +1743,16 @@
   - 物质焦虑
   meaning_upright: 猫咪用爪子刨开角落的垫子，发现了一个从未注意过的藏零食的秘密地点。新的物质机遇正在向你招手——这是财富与稳固根基的起点。
   meaning_reversed: 猫咪路过了那个藏满零食的角落却浑然不觉，继续在空食盆前焦急地叫唤。机会就在身边却被忽视，对物质的焦虑蒙蔽了你的眼睛。
+  keywords_upright_en:
+  - new opportunity
+  - wealth
+  - foundation
+  keywords_reversed_en:
+  - missed opportunity
+  - lack of planning
+  - material anxiety
+  meaning_upright_en: A cat scratches aside the corner cushion and discovers a secret stash of treats it never knew was there. A new material opportunity is waving you forward — this is the starting point of wealth and a solid foundation.
+  meaning_reversed_en: The cat walks right past the treasure trove of hidden treats without noticing, and keeps meowing anxiously at an empty food bowl. The opportunity is right beside you yet goes unseen, and material anxiety has blinded your eyes.
 - id: pentacles_02
   name: Two of Pentacles
   name_zh: 星币二
@@ -1120,6 +1770,16 @@
   - 捉襟见肘
   meaning_upright: 猫在窄窄的围墙上优雅地走平衡木，左右各有一个食盆在等它。在多个目标之间灵活地切换——平衡的艺术在于懂得何时前进、何时停顿。
   meaning_reversed: 猫从窄墙上掉了下来，摔了个四脚朝天，两个食盆都没够着。顾此失彼的失衡感正在困扰你，太多的目标让每一个都变得模糊。
+  keywords_upright_en:
+  - balance
+  - adaptability
+  - flexibility
+  keywords_reversed_en:
+  - imbalance
+  - overcommitment
+  - stretched thin
+  meaning_upright_en: A cat walks a narrow garden wall with the grace of a tightrope walker, a food bowl waiting on either side. Switching nimbly between multiple goals — the art of balance lies in knowing when to step forward and when to pause.
+  meaning_reversed_en: The cat tumbles off the narrow wall and lands flat on its back, reaching neither food bowl. The feeling of being pulled in every direction is dragging you down, and too many goals make each one blur together.
 - id: pentacles_03
   name: Three of Pentacles
   name_zh: 星币三
@@ -1137,6 +1797,16 @@
   - 独自作业
   meaning_upright: 三只猫各就各位，一只推一只拉一只扶，配合默契，合力把柜子推倒。每只猫都贡献了自己独特的技能——团队合作让不可能变成了可能。
   meaning_reversed: 三只猫围着柜子各推各的方向，力气互相抵消，柜子纹丝不动。缺乏协调的合作不如单干，目标不一致只会白费力气。
+  keywords_upright_en:
+  - collaboration
+  - skill
+  - teamwork
+  keywords_reversed_en:
+  - lack of cooperation
+  - poor quality
+  - working alone
+  meaning_upright_en: Three cats take their positions — one pushes, one pulls, one steadies — working in perfect coordination to topple the cabinet. Each cat contributes its own unique skill — teamwork turns the impossible into the possible.
+  meaning_reversed_en: Three cats crowd around the cabinet pushing in different directions, their efforts canceling each other out, the cabinet not budging an inch. Uncoordinated teamwork is worse than working alone, and misaligned goals are just a waste of energy.
 - id: pentacles_04
   name: Four of Pentacles
   name_zh: 星币四
@@ -1154,6 +1824,16 @@
   - 物质执念
   meaning_upright: 猫紧紧地用身体护住自己的零食堆，前爪环绕，后腿收拢，眼神警惕地扫视四周。对物质安全的需求与储蓄的智慧无可厚非——但别让保护变成了封闭。
   meaning_reversed: 猫藏了一屋子零食还在不停地囤，眼睛盯着每一颗干粮粒不肯分享。贪婪和过度的物质执念让拥有变成了被拥有。
+  keywords_upright_en:
+  - security
+  - conservation
+  - control
+  keywords_reversed_en:
+  - greed
+  - unwillingness to share
+  - material attachment
+  meaning_upright_en: A cat hunches protectively over its pile of treats, front paws wrapped around the stash, hind legs tucked in, eyes darting warily in every direction. The need for material security and the wisdom of saving are perfectly fine — just do not let protection become a prison.
+  meaning_reversed_en: The cat has hoarded treats all over the house and keeps stashing more, eyes glued to every single kibble, refusing to share a crumb. Greed and excessive material attachment mean that possessing has turned into being possessed.
 - id: pentacles_05
   name: Five of Pentacles
   name_zh: 星币五
@@ -1171,6 +1851,16 @@
   - 走出困境
   meaning_upright: 流浪猫在寒风中瑟缩着身体，毛发凌乱，眼神里满是疲惫。身后那扇亮着灯的门一直在等它——物质的困境与孤独是真实的，但帮助也许就在转身之间。
   meaning_reversed: 有人推开了那扇门，温暖的灯光涌出来，流浪猫小心翼翼地踏进了门槛。困境中出现了转机，接受帮助不是耻辱而是勇气。
+  keywords_upright_en:
+  - hardship
+  - loneliness
+  - material scarcity
+  keywords_reversed_en:
+  - recovery
+  - finding help
+  - emerging from hardship
+  meaning_upright_en: A stray cat shivers in the cold wind, coat matted and eyes heavy with exhaustion. Behind it, a door stands ajar with warm light pouring out, waiting for it to enter — material hardship and loneliness are real, but help may be only a turn away.
+  meaning_reversed_en: Someone pushes that door open, warm light flooding out, and the stray cat steps cautiously across the threshold. A turning point appears in the midst of hardship, and accepting help is not a shame but an act of courage.
 - id: pentacles_06
   name: Six of Pentacles
   name_zh: 星币六
@@ -1188,6 +1878,16 @@
   - 过度施舍
   meaning_upright: 猫把辛苦捕到的猎物叼到主人脚边，骄傲地叫了一声，尾巴高高翘起。慷慨分享与互帮互助是美德——给予的人同样在被需要中找到了自己的价值。
   meaning_reversed: 猫叼走了食盆里所有的食物，连碎屑都不留给同伴。自私让分享变成了奢侈，而过度施舍也可能让人失去自立的能力。
+  keywords_upright_en:
+  - generosity
+  - sharing
+  - giving
+  keywords_reversed_en:
+  - selfishness
+  - debt
+  - over-giving
+  meaning_upright_en: A cat proudly carries its hard-caught prize to its human's feet, meowing with tail held high. Generous sharing and mutual aid are true virtues — the giver finds their own value in being needed.
+  meaning_reversed_en: The cat swipes every last morsel from the food bowl, not leaving a single crumb for its companions. Selfishness turns sharing into a luxury, and over-giving can strip others of the ability to stand on their own.
 - id: pentacles_07
   name: Seven of Pentacles
   name_zh: 星币七
@@ -1205,6 +1905,16 @@
   - 目光短浅
   meaning_upright: 猫一动不动地蹲在老鼠洞口，耳朵微微转动，胡须在昏暗中轻轻颤动，耐心等待着那个即将出现的身影。投资需要耐心，长期的回报不会辜负每一刻的等待。
   meaning_reversed: 猫等了片刻就按捺不住跑走了，刚离开老鼠就从洞口探出了头。缺乏耐心的急躁让之前的等待全部白费，目光短浅将一无所获。
+  keywords_upright_en:
+  - investment
+  - patience
+  - long-term reward
+  keywords_reversed_en:
+  - impatience
+  - poor investment
+  - short-sightedness
+  meaning_upright_en: A cat sits utterly motionless beside a mouse hole, ears swiveling slightly, whiskers trembling in the dim light, patiently waiting for that shape about to appear. Investment demands patience, and the long-term reward will not betray a single moment of the wait.
+  meaning_reversed_en: The cat waits a few moments then cannot hold still and bounds away — the instant it leaves, a mouse pokes its head out of the hole. Impatience wastes all the waiting that came before, and short-sightedness yields nothing at all.
 - id: pentacles_08
   name: Eight of Pentacles
   name_zh: 星币八
@@ -1222,6 +1932,16 @@
   - 倦怠
   meaning_upright: 猫专注地用前爪一遍又一遍地拨弄着拼图玩具，每一块都精确地放到该放的位置。精湛的技艺来自日复一日的专注——匠心精神是你此刻最闪亮的品质。
   meaning_reversed: 猫把拼图推到一边，盯着散落的碎片发呆。完美主义的倦怠让你失去了创作的热情，也许是时候允许自己不够完美了。
+  keywords_upright_en:
+  - focus
+  - mastery
+  - craftsmanship
+  keywords_reversed_en:
+  - perfectionism
+  - lack of inspiration
+  - burnout
+  meaning_upright_en: A cat concentrates on working a puzzle toy with its front paws over and over, each piece placed exactly where it belongs. Masterful skill comes from day-after-day focus — the spirit of craftsmanship is your most shining quality right now.
+  meaning_reversed_en: The cat shoves the puzzle aside and stares blankly at the scattered pieces. Perfectionism-driven burnout has drained the passion for creation — maybe it is time to allow yourself to be less than perfect.
 - id: pentacles_09
   name: Nine of Pentacles
   name_zh: 星币九
@@ -1239,6 +1959,16 @@
   - 失去联系
   meaning_upright: 猫在果实累累的花园里悠闲漫步，阳光洒在它光泽的毛发上，每一步都从容不迫。物质上的丰盛与精神上的独立相得益彰——享受你亲手创造的美好吧。
   meaning_reversed: 猫在花园里迷了路，被美丽的花朵吸引了全部注意力，忘了回家的路。过度依赖外在的物质享受或虚荣正在让你与内在失去联系。
+  keywords_upright_en:
+  - abundance
+  - independence
+  - enjoyment
+  keywords_reversed_en:
+  - over-dependence
+  - vanity
+  - disconnection
+  meaning_upright_en: A cat strolls leisurely through a garden heavy with fruit, sunlight washing over its glossy coat, every step unhurried and graceful. Material abundance and spiritual independence complement each other beautifully — enjoy the beauty you have built with your own paws.
+  meaning_reversed_en: The cat loses its way in the garden, so captivated by the beautiful flowers that it forgets the way home. Over-dependence on external pleasures or vanity is pulling you out of touch with your inner self.
 - id: pentacles_10
   name: Ten of Pentacles
   name_zh: 星币十
@@ -1256,6 +1986,16 @@
   - 代际冲突
   meaning_upright: 猫咪家族世代居住在同一个温暖的屋檐下，老猫教小猫，小猫在老猫身边打滚。传承的不仅是领地更是爱——家族的根基越深，枝叶便越繁茂。
   meaning_reversed: 小猫和老猫为争夺最好的猫窝吵得不可开交，传统与新意碰撞出了火花。代际之间的冲突正在撕裂本该紧密的家庭纽带。
+  keywords_upright_en:
+  - legacy
+  - family
+  - lasting stability
+  keywords_reversed_en:
+  - family disputes
+  - tradition-bound
+  - generational conflict
+  meaning_upright_en: A family of cats has lived under the same warm roof for generations — the old teach the young, and the young tumble at the old cats' sides. What is passed down is not just territory but love — the deeper the family roots, the lusher the branches grow.
+  meaning_reversed_en: A kitten and an elder cat quarrel fiercely over the best sleeping spot, tradition and new ideas clashing in a shower of sparks. Generational conflict is tearing at the family bonds that should hold tight.
 - id: pentacles_11
   name: Page of Pentacles
   name_zh: 星币侍从
@@ -1273,6 +2013,16 @@
   - 浪费机会
   meaning_upright: 小猫蹲在厨房门口认真地观察主人开罐头的每一个步骤，眼神专注而好奇。务实的学习精神与对物质世界的好奇——每掌握一项技能，就多了一扇可能性的门。
   meaning_reversed: 小猫玩着罐头的拉环却对里面的食物毫无兴趣，错失了真正的奖赏。懒散和缺乏目标让你浪费了成长中最珍贵的机遇。
+  keywords_upright_en:
+  - learning
+  - practicality
+  - new possibilities
+  keywords_reversed_en:
+  - lack of purpose
+  - laziness
+  - wasted opportunity
+  meaning_upright_en: A kitten crouches at the kitchen door, intently observing every step of its human opening a can, eyes focused and curious. A pragmatic learning spirit and curiosity about the material world — every skill you master opens another door of possibility.
+  meaning_reversed_en: The kitten plays with the can's pull-tab and ignores the food inside, missing the real prize. Laziness and aimlessness are wasting the most precious opportunities for growth.
 - id: pentacles_12
   name: Knight of Pentacles
   name_zh: 星币骑士
@@ -1290,6 +2040,16 @@
   - 拖延
   meaning_upright: 猫每天准时出现在门口等候主人回家，风雨无阻。可靠与勤奋不是轰轰烈烈的壮举——脚踏实地把每一件小事做好，日积月累便是最大的成就。
   meaning_reversed: 猫在应该守门的时候睡在了猫窝里，连主人回来的脚步声都没听到。不可靠和懒惰正在侵蚀你在他人心中的信任。
+  keywords_upright_en:
+  - reliability
+  - diligence
+  - steadfastness
+  keywords_reversed_en:
+  - laziness
+  - unreliability
+  - procrastination
+  meaning_upright_en: A cat appears at the door every day right on time to welcome its human home, rain or shine. Reliability and diligence are not grand spectacles — doing every small thing with steady feet adds up, day by day, into the greatest accomplishment.
+  meaning_reversed_en: The cat sleeps in its bed when it should be guarding the door, not even hearing its human's footsteps on the approach. Unreliability and laziness are eroding the trust others place in you.
 - id: pentacles_13
   name: Queen of Pentacles
   name_zh: 星币王后
@@ -1307,6 +2067,16 @@
   - 物质焦虑
   meaning_upright: 猫在柔软温暖的毯子上舒适地打盹，身旁摆着新鲜的水和满满一碗猫粮。物质的滋养与丰盛的关怀让它安心入眠——照顾好自己，才有余力温暖他人。
   meaning_reversed: 猫在空空的食盆前焦虑地来回踱步，叫声里带着不安。物质上的不安全感正在动摇你的根基，别忘了也该照顾一下自己的需求。
+  keywords_upright_en:
+  - nurturing
+  - abundance
+  - care
+  keywords_reversed_en:
+  - insecurity
+  - self-neglect
+  - material anxiety
+  meaning_upright_en: A cat naps comfortably on a soft warm blanket, fresh water and a full bowl of kibble placed within easy reach. Material nourishment and abundant care let it drift off with peace of mind — tend to yourself first, so you have the warmth left to tend to others.
+  meaning_reversed_en: A cat paces anxiously back and forth in front of an empty food bowl, meowing with unmistakable unease. Material insecurity is shaking your foundations — do not forget that your own needs deserve attention too.
 - id: pentacles_14
   name: King of Pentacles
   name_zh: 星币国王
@@ -1324,3 +2094,13 @@
   - 缺乏内在
   meaning_upright: 猫在自己的领地上悠然自得地巡视，每一寸领地都被打理得井井有条。物质上的成功与稳固的安全感是实实在在的——你的根基扎实，未来可期。
   meaning_reversed: 猫守着一屋子的囤积零食，眼睛还在盯着柜子上的新到货。过度的物质主义让占有代替了享受，内在的空虚是再多的囤积也填不满的。
+  keywords_upright_en:
+  - wealth
+  - success
+  - security
+  keywords_reversed_en:
+  - greed
+  - materialism
+  - inner emptiness
+  meaning_upright_en: A cat surveys its territory at a leisurely pace, every inch kept in impeccable order. Material success and rock-solid security are real and tangible — your foundation is firm, and the future looks bright.
+  meaning_reversed_en: The cat guards a house stuffed with hoarded treats, eyes still glued to the newest arrivals on the shelf. Excessive materialism has replaced enjoyment with possession, and no amount of hoarding can fill the emptiness inside.

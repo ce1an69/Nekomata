@@ -1,0 +1,123 @@
+{
+  "arcana_labels": {
+    "all": "All",
+    "major": "Major Arcana",
+    "cups": "Cups",
+    "wands": "Wands",
+    "swords": "Swords",
+    "pentacles": "Pentacles"
+  },
+  "loading_messages": [
+    "A cat is parting the mist of cards...",
+    "Soft paws brush against destiny...",
+    "Nekomata listens to the whisper of stars...",
+    "The tarot cat gathers inspiration...",
+    "Moonlit kitten reads the cards...",
+    "A tail sweeps across the crystal ball...",
+    "The divining cat hunts for inspiration...",
+    "Cat ears catch a distant omen...",
+    "The cat carries your question to the stars...",
+    "A feline shadow takes shape on the table..."
+  ],
+  "loading_frames": ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
+  "ornament": "─── ✦ ───",
+  "stream_tick_ms": 25,
+  "stream_chars_per_tick": 3,
+  "loading_interval_ms": 80,
+  "loading_message_interval_s": 2.0,
+
+  "errors": {
+    "api_key_missing": "API key not configured. Set api_key in .neko/settings.json",
+    "interp_failed": "Interpretation failed: {error}"
+  },
+
+  "home": {
+    "title": "Nekomata",
+    "placeholder": "> ask your question...",
+    "hints": "Enter confirm · / commands · Q quit",
+    "commands": {
+      "/browse": ["card_browser", "Browse all 78 cards"],
+      "/browse_short": ["card_browser", "Browse all"],
+      "/browse_cards": ["card_browser", "cards"],
+      "/help": ["help", "Show available commands"],
+      "/status": ["status", "Show current configuration"],
+      "/quit": ["quit", "Exit application"]
+    }
+  },
+
+  "setup": {
+    "title": "Setup",
+    "subtitle": "Configure your API connection",
+    "field_api_url": "API URL",
+    "field_api_key": "API Key",
+    "field_model": "Model",
+    "field_lang": "Language",
+    "save_label": "Save",
+    "error_url_required": "API URL is required",
+    "error_model_required": "Model is required",
+    "error_key_required": "API Key is required",
+    "hints": "Enter next / save · Tab switch"
+  },
+
+  "spread_select": {
+    "prompt": "Choose a spread",
+    "back_label": "Q   Back",
+    "back_desc": "Return to the question prompt.",
+    "hints": "↑/↓/←/→ move · Enter confirm · Q back"
+  },
+
+  "draw": {
+    "pick_label": "── Pick ({picked}/{total}) ──",
+    "pick_next": "── Spread · {remaining} more · Next: {name} ──",
+    "pick_done": "── Spread · Picking complete ──",
+    "flip_label": "── Flip · {unrevealed} remaining ──",
+    "done_label": "── ✦ Spread ready ✦ ──",
+    "hint_pick": "← → choose  Enter pick",
+    "hint_flip": "← → choose  Enter flip",
+    "hint_done": "← → choose  {detail_hint}  I interpret  Q back",
+    "detail_show": "D detail",
+    "detail_hide": "D hide",
+    "interp_title": "Interpret",
+    "interp_close_hint": "Q close",
+    "interp_done_hint": "── Done ──  Q close",
+    "confirm_exit_title": "Exit interpretation?",
+    "confirm_exit_body": "Current reading will stop and return to home.",
+    "confirm_exit_hints": "Enter confirm · Esc cancel",
+    "label_position": "Position",
+    "label_status": "Status",
+    "label_keywords": "Keywords",
+    "label_meaning": "Meaning"
+  },
+
+  "card_browser": {
+    "card_count": "{filtered}/{total} cards",
+    "reversed_preview": "  (reversed preview)",
+    "select_placeholder": "Select a card",
+    "suit": "Suit",
+    "hints": "↑/↓ cards · ←/→ filter · R reversal · Q back"
+  },
+
+  "card_detail": {
+    "element": "Element",
+    "astrology": "Astrology",
+    "upright": "Upright",
+    "reversed": "Reversed",
+    "status_upright": "Upright",
+    "status_reversed": "Reversed"
+  },
+
+  "common": {
+    "back": "← Back",
+    "detail": "Detail",
+    "hide_detail": "Hide detail"
+  },
+  "status": {
+    "title": "Current Config",
+    "api_url": "API URL",
+    "api_key": "API Key",
+    "api_key_set": "(configured)",
+    "api_key_not_set": "(not set)",
+    "model": "Model",
+    "render": "Render"
+  }
+}

@@ -73,7 +73,7 @@ def main() -> None:
 
         if debug:
             print(f"[debug] opening webview window → {url}")
-        webview.create_window("Nekomata 猫又", url, width=1200, height=800, min_size=(800, 600))
+        webview.create_window("Nekomata", url, width=1200, height=800, min_size=(800, 600))
         webview.start(debug=debug)
     except Exception:
         import webbrowser

@@ -1,0 +1,123 @@
+{
+  "arcana_labels": {
+    "all": "全部",
+    "major": "大阿卡纳",
+    "cups": "圣杯",
+    "wands": "权杖",
+    "swords": "宝剑",
+    "pentacles": "星币"
+  },
+  "loading_messages": [
+    "猫咪正在拨开牌雾...",
+    "猫爪轻点命运牌面...",
+    "猫又正在听取星星的低语...",
+    "塔罗猫在整理灵感...",
+    "月光下的小猫正在解牌...",
+    "猫尾轻扫水晶球...",
+    "占卜猫正在翻找灵感小鱼...",
+    "猫耳捕捉远方的预兆...",
+    "猫咪把问题叼给星辰...",
+    "牌桌上的猫影正在成形..."
+  ],
+  "loading_frames": ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
+  "ornament": "─── ✦ ───",
+  "stream_tick_ms": 25,
+  "stream_chars_per_tick": 3,
+  "loading_interval_ms": 80,
+  "loading_message_interval_s": 2.0,
+
+  "errors": {
+    "api_key_missing": "API key 未配置，请在 .neko/settings.json 中设置 api_key",
+    "interp_failed": "解读失败: {error}"
+  },
+
+  "home": {
+    "title": "Nekomata",
+    "placeholder": "> 输入你的问题...",
+    "hints": "Enter 确认 · / 命令 · Q 退出",
+    "commands": {
+      "/browse": ["card_browser", "浏览全部 78 张牌"],
+      "/browse_short": ["card_browser", "浏览全部"],
+      "/browse_cards": ["card_browser", "张牌"],
+      "/help": ["help", "显示可用命令"],
+      "/status": ["status", "显示当前配置"],
+      "/quit": ["quit", "退出应用"]
+    }
+  },
+
+  "setup": {
+    "title": "初始配置",
+    "subtitle": "配置你的 API 连接",
+    "field_api_url": "API URL",
+    "field_api_key": "API Key",
+    "field_model": "模型",
+    "field_lang": "语言",
+    "save_label": "保存",
+    "error_url_required": "请填写 API URL",
+    "error_model_required": "请填写模型名称",
+    "error_key_required": "请填写 API Key",
+    "hints": "Enter 下一步/保存 · Tab 切换"
+  },
+
+  "spread_select": {
+    "prompt": "选择牌阵",
+    "back_label": "Q   返回",
+    "back_desc": "返回问题输入。",
+    "hints": "↑/↓/←/→ 移动 · Enter 确认 · Q 返回"
+  },
+
+  "draw": {
+    "pick_label": "── 选牌 ({picked}/{total}) ──",
+    "pick_next": "── 牌阵 · 还需选 {remaining} 张 · 下一个: {name} ──",
+    "pick_done": "── 牌阵 · 选牌完成 ──",
+    "flip_label": "── 翻牌 · 剩余 {unrevealed} 张 ──",
+    "done_label": "── ✦ 牌阵已就绪 ✦ ──",
+    "hint_pick": "← → 选牌  Enter 抽牌",
+    "hint_flip": "← → 选择  Enter 翻牌",
+    "hint_done": "← → 选牌  {detail_hint}  I 解读  Q 返回",
+    "detail_show": "D 详情",
+    "detail_hide": "D 隐藏详情",
+    "interp_title": "解读",
+    "interp_close_hint": "Q 关闭",
+    "interp_done_hint": "── 完成 ──  Q 关闭",
+    "confirm_exit_title": "退出解读？",
+    "confirm_exit_body": "当前解读将停止，并直接返回首页。",
+    "confirm_exit_hints": "Enter 确认退出 · Esc 取消",
+    "label_position": "位置",
+    "label_status": "状态",
+    "label_keywords": "关键词",
+    "label_meaning": "牌义"
+  },
+
+  "card_browser": {
+    "card_count": "{filtered}/{total} 张牌",
+    "reversed_preview": "  (逆位预览)",
+    "select_placeholder": "选择一张牌",
+    "suit": "牌组",
+    "hints": "↑/↓ 选牌 · ←/→ 筛选 · R 逆位 · Q 返回"
+  },
+
+  "card_detail": {
+    "element": "元素",
+    "astrology": "星座",
+    "upright": "正位",
+    "reversed": "逆位",
+    "status_upright": "正位",
+    "status_reversed": "逆位"
+  },
+
+  "common": {
+    "back": "← 返回",
+    "detail": "详情",
+    "hide_detail": "隐藏详情"
+  },
+  "status": {
+    "title": "当前配置",
+    "api_url": "API URL",
+    "api_key": "API Key",
+    "api_key_set": "(已设置)",
+    "api_key_not_set": "(未设置)",
+    "model": "模型",
+    "render": "渲染"
+  }
+}

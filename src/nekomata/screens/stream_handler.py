@@ -15,9 +15,6 @@ _UI_STRINGS = all_strings()
 _LOADING_FRAMES = tuple(_UI_STRINGS["loading_frames"])
 _LOADING_INTERVAL = _UI_STRINGS["loading_interval_ms"] / 1000.0
 _LOADING_MESSAGE_INTERVAL = _UI_STRINGS["loading_message_interval_s"]
-_LOADING_MESSAGES = tuple(_UI_STRINGS["loading_messages"])
-_DRAW_STR = _UI_STRINGS["draw"]
-_ERR_STR = _UI_STRINGS["errors"]
 
 STREAM_TYPE_INTERVAL = _UI_STRINGS["stream_tick_ms"] / 1000.0
 STREAM_CHARS_PER_TICK = _UI_STRINGS["stream_chars_per_tick"]
@@ -81,12 +78,13 @@ class StreamHandler:
             self._loading_timer = None
 
     def _tick_loading(self) -> None:
+        msgs = all_strings()["loading_messages"]
         frame = _LOADING_FRAMES[self._loading_frame % len(_LOADING_FRAMES)]
         msg_idx = int(
             self._loading_frame * _LOADING_INTERVAL / _LOADING_MESSAGE_INTERVAL
-        ) % len(_LOADING_MESSAGES)
+        ) % len(msgs)
         self._loading_frame += 1
-        self._render_hints(Text(f"{frame} {_LOADING_MESSAGES[msg_idx]}", style=C_OVERLAY0))
+        self._render_hints(Text(f"{frame} {msgs[msg_idx]}", style=C_OVERLAY0))
 
     def stop(self, stop_loading: bool = True) -> None:
         if stop_loading:
@@ -148,7 +146,7 @@ class StreamHandler:
     def _render(self) -> None:
         parts = []
         if self._content_chars:
-            parts.append(Text(_DRAW_STR["interp_title"], style=f"bold {C_MAUVE}"))
+            parts.append(Text(all_strings()["draw"]["interp_title"], style=f"bold {C_MAUVE}"))
             parts.append(Markdown("".join(self._content_chars), style=C_TEXT))
         self._render_content(parts)
 
@@ -165,7 +163,7 @@ class StreamHandler:
     def _finish(self) -> None:
         self.stop()
         self.streaming = False
-        self._render_hints(Text(_DRAW_STR["interp_done_hint"], style=C_OVERLAY0))
+        self._render_hints(Text(all_strings()["draw"]["interp_done_hint"], style=C_OVERLAY0))
 
     async def run(self, drawn_cards, question, cancelled_check) -> None:
         try:
@@ -185,16 +183,17 @@ class StreamHandler:
         except InterpretationError as exc:
             if not self._screen.is_mounted or cancelled_check():
                 return
-            self._show_error(_ERR_STR["interp_failed"].format(error=exc))
+            self._show_error(all_strings()["errors"]["interp_failed"].format(error=exc))
             return
         except Exception as exc:
             if not self._screen.is_mounted or cancelled_check():
                 return
             msg = str(exc)
+            err = all_strings()["errors"]
             if "api_key" in msg.lower() or "unauthorized" in msg.lower():
-                self._show_error(_ERR_STR["api_key_missing"])
+                self._show_error(err["api_key_missing"])
             else:
-                self._show_error(_ERR_STR["interp_failed"].format(error=exc))
+                self._show_error(err["interp_failed"].format(error=exc))
             return
         if not self._screen.is_mounted or cancelled_check():
             return
