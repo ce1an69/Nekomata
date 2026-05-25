@@ -19,13 +19,15 @@ from textual.widgets import Static
 from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
 from nekomata.render.card_renderer import clear_cache, preload_all_async, preload_card_image_async
-from nekomata.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_SUBTEXT0, C_TEXT, EASE
+from nekomata.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_SUBTEXT0, C_TEXT, EASE, EASE_SPRING
 from nekomata.screens.box_manager import BoxManager
 from nekomata.screens.draw_css import DRAW_SCREEN_CSS
 from nekomata.screens.draw_dialog import InterpretationDialog
 from nekomata.screens.draw_detail import DetailPanel
 from nekomata.screens.draw_widgets import (
+    DECK_ENTRANCE_FADE, DECK_ENTRANCE_STAGGER,
     DECK_HIDE_DELAY, DECK_ROW_COUNT, NUM_DECK_CARDS, PICK_COMPLETE_DELAY,
+    SPREAD_SLOT_ENTRANCE_FADE, SPREAD_SLOT_ENTRANCE_STAGGER,
     SLOT_PLACE_DURATION, SLOT_PLACE_OFFSET, SPREAD_RECENTER_DURATION, SPREAD_RECENTER_OFFSET,
     ConfirmExitInterpretation, DeckCard, SpreadSlot,
 )
@@ -69,6 +71,7 @@ class DrawScreen(Screen):
         self._pick_index = 0
         self._phase = Phase.PICK
         self._cancelled = False
+        self._dealing = False
         self._n_positions = len(self._spread.positions)
         self._last_preview_id: str | None = None
         self._deck_exit_started = False
@@ -205,9 +208,10 @@ class DrawScreen(Screen):
         self._w_main_area.display = False
         self._update_phase_ui()
         self._animate_deck_entrance()
-        deck_cards = list(self.query(DeckCard))
-        if deck_cards:
-            deck_cards[0].focus()
+        if not self._dealing:
+            deck_cards = list(self.query(DeckCard))
+            if deck_cards:
+                deck_cards[0].focus()
         self._box.active_box = "deck"
         self._box.update_highlights()
 
@@ -253,15 +257,29 @@ class DrawScreen(Screen):
     def _animate_deck_entrance(self) -> None:
         if not self.app.animation_enabled:
             return
-        for i, card in enumerate(self.query(DeckCard)):
+        self._dealing = True
+        cards = list(self.query(DeckCard))
+        for i, card in enumerate(cards):
             card.styles.opacity = 0
             card.styles.offset = (0, 1)
-            self.set_timer(0.01 + i * 0.025, lambda c=card: self._reveal_deck_card(c))
+            self.set_timer(
+                0.01 + i * DECK_ENTRANCE_STAGGER,
+                lambda c=card: self._reveal_deck_card(c),
+            )
+        total = 0.01 + len(cards) * DECK_ENTRANCE_STAGGER + DECK_ENTRANCE_FADE + 0.05
+        self.set_timer(total, self._enable_deck_selection)
 
     @staticmethod
     def _reveal_deck_card(card: DeckCard) -> None:
-        card.styles.animate("opacity", 1.0, duration=0.32, easing=EASE)
+        card.styles.animate("opacity", 1.0, duration=DECK_ENTRANCE_FADE, easing=EASE)
         card.styles.offset = (0, 0)
+
+    def _enable_deck_selection(self) -> None:
+        """Enable card selection after dealing animation completes."""
+        self._dealing = False
+        deck_cards = list(self.query(DeckCard))
+        if deck_cards:
+            deck_cards[0].focus()
 
     # -- Phase UI --
 
@@ -300,7 +318,7 @@ class DrawScreen(Screen):
     # -- Pick phase --
 
     async def on_deck_card_picked(self, event: DeckCard.Picked) -> None:
-        if self._phase != Phase.PICK:
+        if self._phase != Phase.PICK or self._dealing:
             return
         event.stop()
 
@@ -334,13 +352,41 @@ class DrawScreen(Screen):
         for i, dc in enumerate(self._drawn_cards):
             slots[self._display_order[i]].place_card(dc)
 
+        self._deck_exit_started = True
         self._phase = Phase.FLIP
         self._box.active_box = "spread"
         self._box.update_highlights()
         self._update_phase_ui()
+
+        if self.app.animation_enabled:
+            for slot in slots:
+                slot.styles.opacity = 0
+                slot.styles.offset = (0, 2)
+            for i, slot in enumerate(slots):
+                self.set_timer(
+                    0.05 + i * SPREAD_SLOT_ENTRANCE_STAGGER,
+                    lambda s=slot: self._animate_slot_entrance(s),
+                )
+            total = 0.05 + len(slots) * SPREAD_SLOT_ENTRANCE_STAGGER + SPREAD_SLOT_ENTRANCE_FADE
+            self.set_timer(total, self._focus_first_slot)
+        else:
+            self._focus_first_slot()
+
+    def _focus_first_slot(self) -> None:
+        """Focus the first unrevealed slot after entrance animation."""
         unrevealed = [s for s in self.query(SpreadSlot) if not s.is_revealed]
         if unrevealed:
             unrevealed[0].focus()
+
+    @staticmethod
+    def _animate_slot_entrance(slot: SpreadSlot) -> None:
+        slot.styles.animate("opacity", 1.0, duration=SPREAD_SLOT_ENTRANCE_FADE, easing=EASE)
+        slot.styles.animate(
+            "offset",
+            ScalarOffset.from_offset(Offset(0, 0)),
+            duration=SPREAD_SLOT_ENTRANCE_FADE,
+            easing=EASE_SPRING,
+        )
 
     # -- Flip phase --
 

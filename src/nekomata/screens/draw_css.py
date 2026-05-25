@@ -124,16 +124,18 @@ DrawScreen {{
 #card-preview.box-active {{
     border: round {C_MAUVE};
 }}
-#card-preview .card-origin {{
-    width: 50%;
-    height: auto;
-    background: {C_MANTLE};
-}}
 #card-preview .card-origin-frame {{
     width: 100%;
     height: auto;
-    align: center top;
-    background: {C_MANTLE};
+    align: center middle;
+    background: {C_CRUST};
+    border: round {C_LAVENDER};
+    padding: 1 1;
+}}
+#card-preview .card-origin {{
+    width: 100%;
+    height: auto;
+    background: {C_CRUST};
 }}
 #card-preview Static {{
     background: {C_MANTLE};
