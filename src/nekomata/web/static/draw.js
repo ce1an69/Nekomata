@@ -4,7 +4,7 @@ import { Deck } from './cards.js';
 import { InterpretationController } from './interpret.js';
 import { CardCarousel } from './carousel.js';
 import { state } from './state.js';
-import { showScreen, cardImgUrl, makeBtn, resumeHome } from './utils.js';
+import { showScreen, cardImgUrl, makeBtn, resumeHome, t } from './utils.js';
 
 // -- Keyboard handler for draw screen --
 
@@ -51,6 +51,35 @@ export function initDrawKeyboard() {
             }
         }
     });
+}
+
+// -- Helpers --
+
+function _isEn() {
+    return state.config.lang === 'en';
+}
+
+function _cardName(c) {
+    return _isEn() ? c.name : (c.name_zh || c.name);
+}
+
+function _keywords(c, reversed) {
+    if (_isEn() && c.keywords_upright_en && c.keywords_upright_en.length) {
+        return reversed ? c.keywords_reversed_en : c.keywords_upright_en;
+    }
+    return reversed ? c.keywords_reversed : c.keywords_upright;
+}
+
+function _meaning(c, reversed) {
+    if (_isEn() && c.meaning_upright_en) {
+        return reversed ? c.meaning_reversed_en : c.meaning_upright_en;
+    }
+    return reversed ? c.meaning_reversed : c.meaning_upright;
+}
+
+function _statusLabel(reversed) {
+    const cd = state.strings.card_detail || {};
+    return reversed ? (cd.reversed || 'Reversed') : (cd.upright || 'Upright');
 }
 
 // -- Draw screen lifecycle --
@@ -330,17 +359,22 @@ function updateDetailContent() {
     const c = dc.card;
     const panel = document.getElementById('detail-content');
     const imgHtml = c.has_image ? cardImgUrl(c) : '';
-    const keywords = dc.isReversed ? c.keywords_reversed : c.keywords_upright;
-    const meaning = dc.isReversed ? c.meaning_reversed : c.meaning_upright;
-    const statusLabel = dc.isReversed ? '逆位' : '正位';
+    const keywords = _keywords(c, dc.isReversed);
+    const meaning = _meaning(c, dc.isReversed);
+    const statusLabel = _statusLabel(dc.isReversed);
+    const posLabel = t('draw.label_position', 'Position');
+    const statusLbl = t('draw.label_status', 'Status');
+    const kwLabel = t('draw.label_keywords', 'Keywords');
+    const meaningLbl = t('draw.label_meaning', 'Meaning');
+    const elemAstroLabel = `${t('card_detail.element', 'Element')} · ${t('card_detail.astrology', 'Astrology')}`;
 
     panel.innerHTML = imgHtml +
-        `<div class="detail-field"><div class="label">${c.name_zh} ${c.name}</div></div>` +
-        `<div class="detail-field"><div class="label">位置</div><div class="value">${dc.position.name} — ${dc.position.description}</div></div>` +
-        `<div class="detail-field"><div class="label">状态</div><div class="value">${statusLabel}</div></div>` +
-        `<div class="detail-field"><div class="label">关键词</div><div class="value sub">${keywords.join(', ')}</div></div>` +
-        `<div class="detail-field"><div class="label">牌义</div><div class="value sub">${meaning}</div></div>` +
-        `<div class="detail-field"><div class="label">元素 · 星座</div><div class="value sub">${c.element} · ${c.astrology}</div></div>`;
+        `<div class="detail-field"><div class="label">${_cardName(c)} ${c.name}</div></div>` +
+        `<div class="detail-field"><div class="label">${posLabel}</div><div class="value">${dc.position.name} — ${dc.position.description}</div></div>` +
+        `<div class="detail-field"><div class="label">${statusLbl}</div><div class="value">${statusLabel}</div></div>` +
+        `<div class="detail-field"><div class="label">${kwLabel}</div><div class="value sub">${keywords.join(', ')}</div></div>` +
+        `<div class="detail-field"><div class="label">${meaningLbl}</div><div class="value sub">${meaning}</div></div>` +
+        `<div class="detail-field"><div class="label">${elemAstroLabel}</div><div class="value sub">${c.element} · ${c.astrology}</div></div>`;
 }
 
 // -- Action buttons --
@@ -351,19 +385,19 @@ function updateDrawActions() {
     btnsEl.innerHTML = '';
 
     if (state.phase === 'pick') {
-        hintEl.textContent = `点击选牌 (${state.pickIndex}/${state.spread.positions.length}) · 拖拽浏览`;
-        btnsEl.appendChild(makeBtn('← 返回', '', () => {
+        hintEl.textContent = `${t('draw.hint_pick', 'Click to pick')} (${state.pickIndex}/${state.spread.positions.length})`;
+        btnsEl.appendChild(makeBtn(t('common.back', '← Back'), '', () => {
             if (state.carousel) state.carousel.destroy();
             showScreen('home');
             resumeHome();
         }));
     } else if (state.phase === 'flip') {
-        hintEl.textContent = `点击牌面翻开 (${state.flipIndex}/${state.spread.positions.length})`;
-        btnsEl.appendChild(makeBtn('← 返回', '', () => { showScreen('home'); resumeHome(); }));
+        hintEl.textContent = `${t('draw.hint_flip', 'Click to flip')} (${state.flipIndex}/${state.spread.positions.length})`;
+        btnsEl.appendChild(makeBtn(t('common.back', '← Back'), '', () => { showScreen('home'); resumeHome(); }));
     } else {
-        hintEl.textContent = '点击牌面查看详情';
+        hintEl.textContent = t('draw.hint_done', 'Click card for details').replace(/\s*\{detail_hint\}\s*/g, ' ').trim();
         btnsEl.appendChild(makeBtn(
-            state.showDetail ? '隐藏详情' : '详情',
+            state.showDetail ? t('common.hide_detail', 'Hide detail') : t('common.detail', 'Detail'),
             state.showDetail ? 'active' : '',
             () => {
                 state.showDetail = !state.showDetail;
@@ -373,9 +407,9 @@ function updateDrawActions() {
             },
         ));
         if (!state.showInterp) {
-            btnsEl.appendChild(makeBtn('解读', 'btn-primary', () => startInterpretation()));
+            btnsEl.appendChild(makeBtn(t('draw.interp_title', 'Interpret'), 'btn-primary', () => startInterpretation()));
         }
-        btnsEl.appendChild(makeBtn('← 返回', '', () => { showScreen('home'); resumeHome(); }));
+        btnsEl.appendChild(makeBtn(t('common.back', '← Back'), '', () => { showScreen('home'); resumeHome(); }));
     }
 }
 

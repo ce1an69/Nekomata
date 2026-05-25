@@ -7,7 +7,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Static
 
 from nekomata.card.data import load_all_cards
-from nekomata.card.types import Arcana, ARCANA_ZH, Card, DrawnCard, Position, ROMAN
+from nekomata.card.types import Arcana, Card, DrawnCard, Position, ROMAN, arcana_display
 from nekomata.render.animations import animate_entrance
 from nekomata.render.card_renderer import render_card_detail, render_card_full_detail_widgets
 from nekomata.render.styles import (
@@ -21,19 +21,12 @@ from nekomata.render.styles import (
     C_SURFACE1,
     C_TEXT,
 )
-from nekomata.strings import section, all_strings
+from nekomata.i18n import lazy_section, ui_section
 
-_STR = section("card_browser")
-_ARCANA_LABELS = all_strings()["arcana_labels"]
+_STR = lazy_section("card_browser")
 
-SUIT_FILTERS = [
-    (_ARCANA_LABELS["all"], None),
-    (_ARCANA_LABELS["major"], Arcana.MAJOR),
-    (_ARCANA_LABELS["cups"], Arcana.CUPS),
-    (_ARCANA_LABELS["wands"], Arcana.WANDS),
-    (_ARCANA_LABELS["swords"], Arcana.SWORDS),
-    (_ARCANA_LABELS["pentacles"], Arcana.PENTACLES),
-]
+_SUIT_ARCANAS = [None, Arcana.MAJOR, Arcana.CUPS, Arcana.WANDS, Arcana.SWORDS, Arcana.PENTACLES]
+_ARCANA_KEYS = ["all", "major", "cups", "wands", "swords", "pentacles"]
 
 # Reusable position for card browser preview
 _BROWSER_POS = Position(name="Browser", name_zh="浏览", description="Card browser")
@@ -129,10 +122,11 @@ class CardBrowserScreen(Screen):
         self._active_arcana: Arcana | None = None
 
     def compose(self) -> ComposeResult:
+        labels = ui_section("arcana_labels")
         with Horizontal(id="filter-bar"):
-            for label, arcana in SUIT_FILTERS:
+            for key, arcana in zip(_ARCANA_KEYS, _SUIT_ARCANAS):
                 btn_id = f"filter-{arcana.value}" if arcana else "filter-all"
-                button = Button(label, id=btn_id)
+                button = Button(labels[key], id=btn_id)
                 if btn_id == "filter-all":
                     button.add_class("active-filter")
                 yield button
@@ -175,7 +169,7 @@ class CardBrowserScreen(Screen):
 
     def _update_filter_highlight(self, active_btn_id: str) -> None:
         """Highlight the active filter button and dim all others."""
-        for _, arcana in SUIT_FILTERS:
+        for arcana in _SUIT_ARCANAS:
             btn_id = f"filter-{arcana.value}" if arcana else "filter-all"
             btn = self.query_one(f"#{btn_id}", Button)
             btn.set_class(btn_id == active_btn_id, "active-filter")
@@ -187,7 +181,7 @@ class CardBrowserScreen(Screen):
             self.app.pop_screen()
             return
 
-        for i, (_, arcana) in enumerate(SUIT_FILTERS):
+        for i, arcana in enumerate(_SUIT_ARCANAS):
             filter_id = f"filter-{arcana.value}" if arcana else "filter-all"
             if btn_id == filter_id:
                 self._apply_filter_by_index(i)
@@ -227,11 +221,11 @@ class CardBrowserScreen(Screen):
     def _cycle_filter(self, delta: int) -> None:
         """Switch filter tab left or right."""
         current_idx = 0
-        for i, (_, arcana) in enumerate(SUIT_FILTERS):
+        for i, arcana in enumerate(_SUIT_ARCANAS):
             if arcana == self._active_arcana:
                 current_idx = i
                 break
-        new_idx = (current_idx + delta) % len(SUIT_FILTERS)
+        new_idx = (current_idx + delta) % len(_SUIT_ARCANAS)
         self._apply_filter_by_index(new_idx)
 
     def _focus_next_visible_card(self, delta: int) -> None:
@@ -280,8 +274,8 @@ class CardBrowserScreen(Screen):
 
     def _apply_filter_by_index(self, index: int) -> None:
         """Apply a suit filter by index into SUIT_FILTERS."""
-        if 0 <= index < len(SUIT_FILTERS):
-            _, arcana = SUIT_FILTERS[index]
+        if 0 <= index < len(_SUIT_ARCANAS):
+            arcana = _SUIT_ARCANAS[index]
             filter_id = f"filter-{arcana.value}" if arcana else "filter-all"
             self._update_filter_highlight(filter_id)
             self._show_placeholder_detail()
@@ -333,7 +327,7 @@ class CardListItem(Static):
 
     def __init__(self, card: Card) -> None:
         self._card = card
-        suit = ARCANA_ZH.get(card.arcana, card.arcana.value)
+        suit = arcana_display(card.arcana)
         num = ROMAN[card.number] if card.arcana == Arcana.MAJOR and card.number < len(ROMAN) else str(card.number)
         super().__init__(f"{num:>3s}  {card.name} [{suit}]")
 

@@ -11,10 +11,9 @@ from rich.panel import Panel
 from rich.text import Text
 
 from nekomata.card.types import Card, DrawnCard
+from nekomata.i18n import get_lang
 from nekomata.render.themes import get_theme
 from nekomata.strings import section
-
-_DETAIL_STR = section("card_detail")
 
 _ORIGIN_MAX_SIZE = (1024, 1536)
 _DETAIL_MAX_SIZE = (256, 384)
@@ -162,23 +161,38 @@ def create_card_origin_widget(drawn: DrawnCard):
     return TUIImage(img, classes="card-origin")
 
 
+def _kw(card: Card, reversed: bool) -> tuple[str, ...]:
+    en = card.keywords_reversed_en if reversed else card.keywords_upright_en
+    if get_lang() == "en" and en:
+        return en
+    return card.keywords_reversed if reversed else card.keywords_upright
+
+
+def _mean(card: Card, reversed: bool) -> str:
+    en = card.meaning_reversed_en if reversed else card.meaning_upright_en
+    if get_lang() == "en" and en:
+        return en
+    return card.meaning_reversed if reversed else card.meaning_upright
+
+
 def _build_detail_text(drawn: DrawnCard) -> Text:
     """Build the rich Text content for a card's full detail view."""
+    labels = section("card_detail")
     card = drawn.card
     text = Text()
     text.append(f"[{drawn.position.name}] {card.name_zh} ({card.name})  [{drawn.status_label}]\n", style="bold")
-    text.append(f"{_DETAIL_STR['element']}: {card.element}  ·  {_DETAIL_STR['astrology']}: {card.astrology}\n\n")
+    text.append(f"{labels['element']}: {card.element}  ·  {labels['astrology']}: {card.astrology}\n\n")
 
-    text.append(f"{_DETAIL_STR['upright']}: ", style="bold")
-    text.append(", ".join(card.keywords_upright))
+    text.append(f"{labels['upright']}: ", style="bold")
+    text.append(", ".join(_kw(card, False)))
     text.append("\n")
-    text.append(card.meaning_upright)
+    text.append(_mean(card, False))
     text.append("\n\n")
 
-    text.append(f"{_DETAIL_STR['reversed']}: ", style="bold")
-    text.append(", ".join(card.keywords_reversed))
+    text.append(f"{labels['reversed']}: ", style="bold")
+    text.append(", ".join(_kw(card, True)))
     text.append("\n")
-    text.append(card.meaning_reversed)
+    text.append(_mean(card, True))
     return text
 
 

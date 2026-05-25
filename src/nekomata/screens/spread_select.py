@@ -17,10 +17,10 @@ from nekomata.render.styles import (
     C_SURFACE0,
     C_TEXT,
 )
-from nekomata.strings import section
+from nekomata.i18n import lazy_section
 from nekomata.spread import SPREAD_REGISTRY, get_spread
 
-_STR = section("spread_select")
+_STR = lazy_section("spread_select")
 
 
 class SpreadOption(Static):

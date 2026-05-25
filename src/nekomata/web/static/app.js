@@ -2,11 +2,14 @@
 
 import { Starfield } from './particles.js';
 import { state } from './state.js';
-import { showScreen, showToast, showModal, resumeHome, needsInit, onShow } from './utils.js';
+import { showScreen, showToast, showModal, resumeHome, needsInit, onShow, t, applyI18n } from './utils.js';
 import { showBrowserScreen } from './browser.js';
 import { showDrawScreen, initDrawKeyboard } from './draw.js';
 
 let starfield = null;
+
+// Expose state globally for utils.t()
+window.__nekoState = state;
 
 // ---------------------------------------------------------------------------
 // Init
@@ -23,9 +26,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (state.cards.length === 0) {
         document.body.innerHTML = '<div style="padding:2em;color:var(--red);text-align:center">' +
-            '<h2>加载失败</h2><p>无法加载卡牌数据，请刷新页面重试。</p></div>';
+            '<h2>Load failed</h2><p>Unable to load card data. Please refresh the page.</p></div>';
         return;
     }
+
+    applyI18n();
 
     if (!state.config.has_api_key) {
         showScreen('setup');
@@ -86,11 +91,13 @@ function initSetupScreen() {
     const urlInput = document.getElementById('setup-url');
     const keyInput = document.getElementById('setup-key');
     const modelInput = document.getElementById('setup-model');
+    const langSelect = document.getElementById('setup-lang');
 
     if (state.config.api_url) urlInput.value = state.config.api_url;
     if (state.config.api_key) keyInput.value = state.config.api_key;
-    else if (state.config.has_api_key) { keyInput.value = ''; keyInput.placeholder = '•••••••• (已设置)'; }
+    else if (state.config.has_api_key) { keyInput.value = ''; keyInput.placeholder = '•••••••• (configured)'; }
     if (state.config.model) modelInput.value = state.config.model;
+    if (state.config.lang) langSelect.value = state.config.lang;
 
     if (!needsInit('setup')) return;
 
@@ -103,15 +110,21 @@ async function saveSetup() {
     const api_url = document.getElementById('setup-url').value.trim();
     const api_key = document.getElementById('setup-key').value.trim();
     const model = document.getElementById('setup-model').value.trim();
+    const lang = document.getElementById('setup-lang').value;
     const errEl = document.getElementById('setup-error');
 
-    if (!api_url || !model) {
-        errEl.textContent = 'API URL 和 Model 为必填项';
+    if (!api_url) {
+        errEl.textContent = t('setup.error_url_required', 'API URL is required');
+        errEl.classList.remove('hidden');
+        return;
+    }
+    if (!model) {
+        errEl.textContent = t('setup.error_model_required', 'Model is required');
         errEl.classList.remove('hidden');
         return;
     }
     if (!api_key && !state.config.has_api_key) {
-        errEl.textContent = '请输入 API Key';
+        errEl.textContent = t('setup.error_key_required', 'Please enter an API Key');
         errEl.classList.remove('hidden');
         return;
     }
@@ -121,13 +134,15 @@ async function saveSetup() {
         const r = await fetch('/api/config', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ api_url, api_key, model }),
+            body: JSON.stringify({ api_url, api_key, model, lang }),
         });
         if (!r.ok) {
             const errBody = await r.json().catch(() => ({}));
-            throw new Error(errBody.detail || `保存失败 (${r.status})`);
+            throw new Error(errBody.detail || `Save failed (${r.status})`);
         }
         state.config = await r.json();
+        await loadStrings();
+        applyI18n();
         showScreen('home');
     } catch (e) {
         errEl.textContent = e.message;
@@ -141,8 +156,8 @@ async function saveSetup() {
 
 function slashDesc(cmd) {
     switch (cmd) {
-        case '/browse': return `浏览全部 ${state.cards.length || 78} 张牌`;
-        case '/status': return '当前配置';
+        case '/browse': return `${t('home.commands./browse_short.1', 'Browse all')} ${state.cards.length || 78} ${t('home.commands./browse_cards.1', 'cards')}`;
+        case '/status': return t('status.title', 'Current Config');
     }
 }
 
@@ -236,7 +251,7 @@ function handleSlashCommand(cmd) {
             showBrowserScreen();
             break;
         case '/status':
-            showToast('当前配置', `API: ${state.config.api_url}  Model: ${state.config.model}`);
+            showToast(t('status.title', 'Current Config'), `API: ${state.config.api_url}  Model: ${state.config.model}`);
             break;
     }
 }
@@ -266,8 +281,9 @@ function initSpreadSelect() {
         const opt = document.createElement('div');
         opt.className = 'spread-option';
         opt.dataset.key = sp.key;
+        const cardsLabel = state.config.lang === 'zh' ? '张' : 'cards';
         opt.innerHTML = `<span class="sname">${sp.name}</span>` +
-            `<span class="scount">${sp.card_count} 张</span>`;
+            `<span class="scount">${sp.card_count} ${cardsLabel}</span>`;
         opt.addEventListener('mouseenter', () => showSpreadPreview(sp));
         opt.addEventListener('click', () => selectSpread(sp.key));
         btnContainer.appendChild(opt);
@@ -275,7 +291,7 @@ function initSpreadSelect() {
 
     const back = document.createElement('button');
     back.className = 'spread-back';
-    back.textContent = '← 返回';
+    back.textContent = '← Back';
     back.addEventListener('click', () => {
         showScreen('home');
         resumeHome();
@@ -316,8 +332,9 @@ function initSpreadSelect() {
 
 function showSpreadPreview(sp) {
     const preview = document.getElementById('spread-preview');
+    const cardsLabel = state.config.lang === 'zh' ? '张牌' : 'cards';
     preview.innerHTML = `<h3>${sp.name}</h3>` +
-        `<p class="subtext">${sp.description} · ${sp.card_count} 张牌</p>` +
+        `<p class="subtext">${sp.description} · ${sp.card_count} ${cardsLabel}</p>` +
         `<ul class="pos-list">${sp.positions.map((p, i) =>
             `<li><span class="pos-idx">${i + 1}.</span>${p.name} — ${p.description}</li>`
         ).join('')}</ul>`;

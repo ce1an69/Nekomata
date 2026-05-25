@@ -31,10 +31,11 @@ from nekomata.screens.draw_widgets import (
 )
 from nekomata.screens.stream_handler import StreamHandler
 from nekomata.screens.widgets import go_home
-from nekomata.strings import ORNAMENT, section
+from nekomata.i18n import lazy_section
+from nekomata.strings import ORNAMENT
 from nekomata.spread import get_spread
 
-_STR = section("draw")
+_STR = lazy_section("draw")
 
 
 class Phase(Enum):

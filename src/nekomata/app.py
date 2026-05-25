@@ -17,6 +17,7 @@ from nekomata.render.styles import (
 from nekomata.render.terminal import get_render_mode
 from nekomata.render.themes import set_default_theme
 from nekomata.screens.home import HomeScreen
+from nekomata.i18n import set_lang
 from nekomata.storage.config import AppConfig
 
 
@@ -96,6 +97,7 @@ class NekomataApp(App):
         self.spread_name: str = ""
         self.render_mode: str = "compact"
         self.config: AppConfig = AppConfig.load()
+        set_lang(self.config.lang)
         self.animation_enabled: bool = True
         self.reversal_prob: float = 0.5
         self.theme_name: str = "catppuccin"

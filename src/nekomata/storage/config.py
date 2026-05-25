@@ -16,6 +16,7 @@ class AppConfig:
     api_url: str = ""
     api_key: str | None = None
     model: str = ""
+    lang: str = "en"
 
     @classmethod
     def config_exists(cls) -> bool:
@@ -33,16 +34,16 @@ class AppConfig:
         return Path.home() / _SETTINGS_DIR / _SETTINGS_FILE
 
     @classmethod
-    def save(cls, api_url: str, api_key: str, model: str) -> AppConfig:
+    def save(cls, api_url: str, api_key: str, model: str, lang: str = "en") -> AppConfig:
         """Write settings and return the new config."""
         path = cls._resolve_save_path()
         path.parent.mkdir(parents=True, exist_ok=True)
-        data: dict[str, str] = {"api_url": api_url, "model": model}
+        data: dict[str, str] = {"api_url": api_url, "model": model, "lang": lang}
         if api_key:
             data["api_key"] = api_key
         path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
         normalized_key = api_key if api_key and api_key.strip() else None
-        return cls(api_url=api_url, api_key=normalized_key, model=model)
+        return cls(api_url=api_url, api_key=normalized_key, model=model, lang=lang)
 
     @classmethod
     def load(cls) -> AppConfig:
@@ -73,4 +74,5 @@ class AppConfig:
             api_url=data.get("api_url", ""),
             api_key=raw_key,
             model=data.get("model", ""),
+            lang=data.get("lang", "en"),
         )
