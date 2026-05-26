@@ -1,6 +1,7 @@
 """PyWebView desktop entry point — opens a native window for the Web UI."""
 
 import argparse
+import queue
 import socket
 import sys
 import threading
@@ -14,16 +15,42 @@ def find_free_port() -> int:
         return s.getsockname()[1]
 
 
-def _wait_for_server(host: str, port: int, timeout: float = 10) -> None:
+def _wait_for_server(
+    host: str,
+    port: int,
+    timeout: float = 10,
+    errors: "queue.SimpleQueue[BaseException] | None" = None,
+) -> None:
     """Block until the server accepts connections."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
+        if errors is not None:
+            try:
+                raise errors.get_nowait()
+            except queue.Empty:
+                pass
         try:
             with socket.create_connection((host, port), timeout=0.5):
                 return
         except OSError:
             time.sleep(0.1)
     raise RuntimeError(f"Server did not start within {timeout}s")
+
+
+def _run_server(
+    app,
+    host: str,
+    port: int,
+    log_level: str,
+    errors: "queue.SimpleQueue[BaseException]",
+) -> None:
+    """Run uvicorn and pass background-thread startup failures to the caller."""
+    try:
+        import uvicorn
+
+        uvicorn.run(app, host=host, port=port, log_level=log_level, log_config=None)
+    except BaseException as exc:
+        errors.put(exc)
 
 
 def main() -> None:
@@ -36,8 +63,6 @@ def main() -> None:
         print("[debug] starting Nekomata desktop...")
 
     from nekomata.web.server import create_app
-    import uvicorn
-
     port = find_free_port()
     if debug:
         print(f"[debug] using port {port}")
@@ -47,15 +72,15 @@ def main() -> None:
         print("[debug] FastAPI app created")
 
     log_level = "info" if debug else "warning"
+    server_errors: queue.SimpleQueue[BaseException] = queue.SimpleQueue()
 
     server_thread = threading.Thread(
-        target=uvicorn.run,
-        args=(app,),
-        kwargs={"host": "127.0.0.1", "port": port, "log_level": log_level},
+        target=_run_server,
+        args=(app, "127.0.0.1", port, log_level, server_errors),
         daemon=True,
     )
     server_thread.start()
-    _wait_for_server("127.0.0.1", port)
+    _wait_for_server("127.0.0.1", port, errors=server_errors)
 
     url = f"http://127.0.0.1:{port}"
     if debug:
@@ -66,23 +91,12 @@ def main() -> None:
         except Exception as e:
             print(f"[debug] GET {url} → ERROR: {e}")
 
-    # Try native webview; fall back to system browser (pythonnet can't
-    # initialize inside PyInstaller bundles on some Windows setups).
-    try:
-        import webview
+    import webview
 
-        if debug:
-            print(f"[debug] opening webview window → {url}")
-        webview.create_window("Nekomata", url, width=1200, height=800, min_size=(800, 600))
-        webview.start(debug=debug)
-    except Exception:
-        import webbrowser
-
-        if debug:
-            print(f"[debug] webview unavailable, opening browser → {url}")
-        webbrowser.open(url)
-        # Keep process alive — server runs until killed.
-        server_thread.join()
+    if debug:
+        print(f"[debug] opening webview window → {url}")
+    webview.create_window("Nekomata", url, width=1200, height=800, min_size=(800, 600))
+    webview.start(debug=debug)
 
 
 if __name__ == "__main__":

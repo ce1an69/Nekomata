@@ -16,6 +16,13 @@ SPEC = ROOT / "nekomata.spec"
 
 
 def main():
+    if sys.platform == "win32" and sys.version_info >= (3, 14):
+        raise SystemExit(
+            "Windows desktop build requires Python 3.13 because pywebview's "
+            "WinForms backend depends on pythonnet, which does not support "
+            "Python 3.14 yet. Use .venv-win\\Scripts\\python.exe."
+        )
+
     if "--clean" in sys.argv:
         for d in (ROOT / "build", ROOT / "dist"):
             if d.exists():
@@ -27,7 +34,11 @@ def main():
         cwd=ROOT,
     )
 
-    if sys.platform == "darwin":
+    if sys.platform == "win32":
+        exe = ROOT / "dist" / "Nekomata.exe"
+        if exe.exists():
+            print(f"\nBuilt: {exe} ({exe.stat().st_size / 1024 / 1024:.1f} MB)")
+    elif sys.platform == "darwin":
         app = ROOT / "dist" / "Nekomata.app"
         if app.exists():
             size = sum(f.stat().st_size for f in app.rglob("*") if f.is_file())

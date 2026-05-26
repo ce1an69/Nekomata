@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "nekomata"
 version = "0.1.0"
 description = "像素风猫咪塔罗牌终端占卜应用"
-requires-python = ">=3.14"
+requires-python = ">=3.13"
 license = {text = "MIT"}
 dependencies = [
     "textual>=0.50",
@@ -25,6 +25,7 @@ desktop = [
     "pywebview>=5.0",
     "fastapi>=0.115",
     "uvicorn>=0.30",
+    "pyinstaller>=6.20.0",
 ]
 dev = [
     "pytest>=8.0",

@@ -45,9 +45,6 @@ export function initDrawKeyboard() {
                     ? (idx - 1 + slots.length) % slots.length
                     : (idx + 1) % slots.length;
                 selectSlot(idx);
-            } else if (e.key === 'Enter' && !state.showInterp) {
-                e.preventDefault();
-                startInterpretation();
             }
         }
     });
@@ -395,7 +392,7 @@ function updateDrawActions() {
         hintEl.textContent = `${t('draw.hint_flip', 'Click to flip')} (${state.flipIndex}/${state.spread.positions.length})`;
         btnsEl.appendChild(makeBtn(t('common.back', '← Back'), '', () => { showScreen('home'); resumeHome(); }));
     } else {
-        hintEl.textContent = t('draw.hint_done', 'Click card for details').replace(/\s*\{detail_hint\}\s*/g, ' ').trim();
+        hintEl.textContent = state.config.lang === 'zh' ? '点击牌面查看详情' : 'Click a card for details';
         btnsEl.appendChild(makeBtn(
             state.showDetail ? t('common.hide_detail', 'Hide detail') : t('common.detail', 'Detail'),
             state.showDetail ? 'active' : '',
