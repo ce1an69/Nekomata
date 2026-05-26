@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 
 from PIL import Image as PILImage
+from PIL import ImageChops
+from PIL import ImageDraw
 from rich.panel import Panel
 from rich.text import Text
 
@@ -78,12 +80,26 @@ def _load_image(
     return img
 
 
-def _load_runtime_image(card: Card, upside_down: bool = False) -> PILImage.Image | None:
+def _load_runtime_image(card: Card, upside_down: bool = False, *, rounded: bool = True) -> PILImage.Image | None:
     """Load the smaller runtime image, falling back to capped origin if needed."""
     img = _load_image(get_preview_path(card), upside_down, _DETAIL_MAX_SIZE)
     if img is not None:
-        return img
-    return _load_image(get_origin_path(card), upside_down, _DETAIL_MAX_SIZE)
+        return _with_rounded_corners(img) if rounded else img
+    img = _load_image(get_origin_path(card), upside_down, _DETAIL_MAX_SIZE)
+    if img is None:
+        return None
+    return _with_rounded_corners(img) if rounded else img
+
+
+def _with_rounded_corners(img: PILImage.Image) -> PILImage.Image:
+    """Clip spread cards to rounded corners so the image matches the slot shape."""
+    rounded = img.convert("RGBA")
+    radius = max(2, min(rounded.size) // 14)
+    mask = PILImage.new("L", rounded.size, 0)
+    draw = ImageDraw.Draw(mask)
+    draw.rounded_rectangle((0, 0, rounded.width, rounded.height), radius=radius, fill=255)
+    rounded.putalpha(ImageChops.multiply(rounded.getchannel("A"), mask))
+    return rounded
 
 
 def _cache_key(card: Card, is_reversed: bool) -> str:
@@ -152,7 +168,7 @@ def create_card_origin_widget(drawn: DrawnCard):
     key = _cache_key(drawn.card, is_reversed=False)
     img = _origin_cache.get(key)
     if img is None:
-        img = _load_runtime_image(drawn.card, upside_down=False)
+        img = _load_runtime_image(drawn.card, upside_down=False, rounded=False)
         if img is not None:
             _origin_cache[key] = img
     if img is None:
@@ -175,12 +191,16 @@ def _mean(card: Card, reversed: bool) -> str:
     return card.meaning_reversed if reversed else card.meaning_upright
 
 
+def _display_name(card: Card) -> str:
+    return card.name if get_lang() == "en" else card.name_zh
+
+
 def _build_detail_text(drawn: DrawnCard) -> Text:
     """Build the rich Text content for a card's full detail view."""
     labels = section("card_detail")
     card = drawn.card
     text = Text()
-    text.append(f"[{drawn.position.name}] {card.name_zh} ({card.name})  [{drawn.status_label}]\n", style="bold")
+    text.append(f"{_display_name(card)}  [{drawn.status_label}]\n", style="bold")
     text.append(f"{labels['element']}: {card.element}  ·  {labels['astrology']}: {card.astrology}\n\n")
 
     text.append(f"{labels['upright']}: ", style="bold")
@@ -243,7 +263,7 @@ def render_card_detail(drawn: DrawnCard, width: int = 60) -> Panel:
 
     return Panel(
         _build_detail_text(drawn),
-        title=f"[{drawn.position.name}] — {drawn.card.name_zh}",
+        title=_display_name(drawn.card),
         border_style=border_style,
         width=width,
         padding=(1, 2),

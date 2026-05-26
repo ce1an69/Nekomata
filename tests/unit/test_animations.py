@@ -128,7 +128,7 @@ def test_pick_complete_transition_is_gentle():
     assert "transition: opacity 420ms" in css
     assert "offset 420ms" in css
     assert DECK_HIDE_DELAY == pytest.approx(0.42)
-    assert PICK_COMPLETE_DELAY == pytest.approx(0.35)
+    assert PICK_COMPLETE_DELAY == pytest.approx(0.0)
 
 
 def test_spread_recenters_with_motion_after_deck_exit():

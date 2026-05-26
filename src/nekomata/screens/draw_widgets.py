@@ -50,7 +50,7 @@ SPREAD_SLOT_HEIGHT = 12
 
 # Animation timing constants
 DECK_HIDE_DELAY = 0.42
-PICK_COMPLETE_DELAY = 0.35
+PICK_COMPLETE_DELAY = 0.0
 SPREAD_RECENTER_OFFSET = 4
 SPREAD_RECENTER_DURATION = 0.28
 SLOT_PLACE_OFFSET = 2
@@ -223,29 +223,35 @@ class SpreadSlot(Widget):
         background: {C_SURFACE1};
     }}
     SpreadSlot.revealed {{
-        background: {C_MANTLE};
-        border: round {C_LAVENDER};
+        background: {C_CRUST};
+        border: none;
+        outline: round {C_LAVENDER};
     }}
     SpreadSlot.reversed {{
-        border: round {C_MAUVE};
+        outline: round {C_MAUVE};
     }}
     SpreadSlot.reversed:focus {{
-        border: round {C_PINK};
+        outline: round {C_PINK};
     }}
     SpreadSlot.revealed:focus {{
-        border: round {C_PINK};
-        background: {C_SURFACE1};
+        border: none;
+        outline: round {C_PINK};
+        background: {C_CRUST};
     }}
     SpreadSlot.selected {{
-        border: round {C_LAVENDER};
+        border: none;
+        outline: round {C_LAVENDER};
+        background: {C_CRUST};
     }}
     SpreadSlot.selected:focus {{
-        border: round {C_PINK};
-        background: {C_SURFACE1};
+        border: none;
+        outline: round {C_PINK};
+        background: {C_CRUST};
     }}
     SpreadSlot.glow {{
-        border: round {C_PINK};
-        background: {C_SURFACE0};
+        border: none;
+        outline: round {C_PINK};
+        background: {C_CRUST};
         text-style: bold;
     }}
     SpreadSlot .card-face {{

@@ -3,6 +3,7 @@ from pathlib import Path
 from rich.panel import Panel
 
 from nekomata.card.types import Arcana, Card, DrawnCard, Position
+from nekomata.i18n import get_lang, set_lang
 from nekomata.render.card_renderer import (
     render_card_text,
     render_card_detail,
@@ -25,6 +26,10 @@ def make_drawn(reversed: bool = False) -> DrawnCard:
         keywords_reversed=("鲁莽", "冒失", "停滞"),
         meaning_upright="一段新旅程的开始。",
         meaning_reversed="过于鲁莽。",
+        keywords_upright_en=("new beginning", "innocence", "adventure"),
+        keywords_reversed_en=("recklessness", "carelessness", "stagnation"),
+        meaning_upright_en="The start of a new journey.",
+        meaning_reversed_en="Too reckless.",
     )
     pos = Position(name="Daily", name_zh="今日指引", description="今日灵感")
     return DrawnCard(card=card, position=pos, is_reversed=reversed)
@@ -61,18 +66,36 @@ def test_render_card_detail_returns_panel():
 
 def test_render_card_detail_shows_full_info():
     s = str(render_card_detail(make_drawn()).renderable)
-    assert "愚者" in s
+    assert "The Fool" in s
+    assert "愚者" not in s
     assert "air" in s
     assert "Uranus" in s
-    assert "新开始" in s
-    assert "鲁莽" in s
-    assert "一段新旅程的开始" in s
+    assert "new beginning" in s
+    assert "recklessness" in s
+    assert "The start of a new journey" in s
+    assert "Daily" not in s
 
 
 def test_render_card_detail_reversed():
     s = str(render_card_detail(make_drawn(reversed=True)).renderable)
     assert "reversed" in s
-    assert "过于鲁莽" in s
+    assert "Too reckless" in s
+
+
+def test_render_card_detail_uses_zh_locale_without_spread_name():
+    previous = get_lang()
+    set_lang("zh")
+    try:
+        panel = render_card_detail(make_drawn())
+        s = str(panel.renderable)
+        assert "愚者" in s
+        assert "The Fool" not in s
+        assert "新开始" in s
+        assert "Daily" not in s
+        assert "今日指引" not in s
+        assert str(panel.title) == "愚者"
+    finally:
+        set_lang(previous)
 
 
 def test_get_preview_path():
@@ -200,4 +223,6 @@ def test_preload_and_cache():
     assert cached is not None
     assert cached.size[0] <= 256
     assert cached.size[1] <= 384
+    assert cached.mode == "RGBA"
+    assert cached.getpixel((0, 0))[3] == 0
     clear_cache()

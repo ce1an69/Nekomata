@@ -259,6 +259,59 @@ async def test_draw_screen_spread_slots_use_all_arrow_keys_after_pick():
 
 
 @pytest.mark.asyncio
+async def test_draw_screen_enters_flip_immediately_after_final_pick():
+    """The final picked card should move straight into the flip phase."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "final pick transition"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+
+        from nekomata.screens.draw import DrawScreen, Phase
+        from nekomata.screens.draw_widgets import SpreadSlot
+
+        assert isinstance(app.screen, DrawScreen)
+        await pilot.press("enter")
+        await pilot.pause(0.1)
+
+        slots = list(app.screen.query(SpreadSlot))
+        assert app.screen._phase == Phase.FLIP
+        assert app.screen.focused is slots[0]
+
+
+@pytest.mark.asyncio
+async def test_draw_screen_accepts_final_pick_during_deck_entrance():
+    """A focused card can be picked before the entrance timer finishes."""
+    app = NekomataApp()
+    app.animation_enabled = True
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "early final pick"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause(0.05)
+
+        from nekomata.screens.draw import DrawScreen, Phase
+        from nekomata.screens.draw_widgets import SpreadSlot
+
+        assert isinstance(app.screen, DrawScreen)
+        assert app.screen._dealing
+        await pilot.press("right")
+        await pilot.press("enter")
+        await pilot.pause(0.1)
+
+        slots = list(app.screen.query(SpreadSlot))
+        assert app.screen._phase == Phase.FLIP
+        assert app.screen._pick_index == 1
+        assert app.screen.focused is slots[0]
+
+
+@pytest.mark.asyncio
 async def test_draw_escape_goes_home():
     app = NekomataApp()
     async with app.run_test() as pilot:
