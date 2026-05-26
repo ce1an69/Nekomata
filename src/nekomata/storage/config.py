@@ -1,5 +1,7 @@
 """Application configuration loaded from JSON (.neko/settings.json)."""
 
+from __future__ import annotations
+
 import json
 import logging
 from dataclasses import dataclass

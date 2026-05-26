@@ -1,6 +1,7 @@
 """Tests for desktop entry point."""
 
 import sys
+import queue
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -39,13 +40,14 @@ def test_main_starts_server_and_webview():
             host="127.0.0.1",
             port=9999,
             log_level="warning",
+            log_config=None,
         )
 
         mock_webview.create_window.assert_called_once()
         call_args = mock_webview.create_window.call_args
         assert "http://127.0.0.1:9999" in call_args.args
 
-        mock_webview.start.assert_called_once()
+        mock_webview.start.assert_called_once_with(debug=False)
 
 
 def test_server_runs_in_daemon_thread():
@@ -70,3 +72,23 @@ def test_server_runs_in_daemon_thread():
         mock_thread.assert_called_once()
         _, kwargs = mock_thread.call_args
         assert kwargs["daemon"] is True
+
+
+def test_wait_for_server_raises_thread_error():
+    from nekomata.desktop import _wait_for_server
+
+    errors: queue.SimpleQueue[BaseException] = queue.SimpleQueue()
+    errors.put(RuntimeError("server failed"))
+
+    with pytest.raises(RuntimeError, match="server failed"):
+        _wait_for_server("127.0.0.1", 9, timeout=0.1, errors=errors)
+
+
+def test_wait_for_server_timeout_defaults_to_ten_seconds():
+    from nekomata.desktop import _wait_for_server
+
+    with (
+        patch("nekomata.desktop.time.monotonic", side_effect=[100, 111]),
+        pytest.raises(RuntimeError, match="within 10s"),
+    ):
+        _wait_for_server("127.0.0.1", 9)

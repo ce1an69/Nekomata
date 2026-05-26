@@ -151,7 +151,10 @@ class OpenAIInterpreter:
                         return
                     if line.startswith("data: "):
                         data = json.loads(line[6:])
-                        delta = data["choices"][0].get("delta", {})
+                        choices = data.get("choices") or []
+                        if not choices:
+                            continue
+                        delta = choices[0].get("delta", {})
                         if thinking:
                             reasoning = (
                                 delta.get("reasoning_content")

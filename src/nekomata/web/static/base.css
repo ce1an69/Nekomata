@@ -26,7 +26,7 @@
 body {
     background: linear-gradient(180deg, var(--crust) 0%, var(--mantle) 100%);
     color: var(--text);
-    font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+    font-family: "Inter", "SF Pro Text", "Segoe UI", "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", sans-serif;
     font-size: 14px;
     line-height: 1.6;
     height: 100vh;

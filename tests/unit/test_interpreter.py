@@ -171,6 +171,19 @@ def test_interpret_stream_skips_empty_delta():
     assert chunks == [StreamChunk("Hi"), StreamChunk("!")]
 
 
+def test_interpret_stream_skips_empty_choices_usage_chunk():
+    sse_lines = [
+        'data: {"choices":[{"delta":{"content":"Done"}}]}',
+        'data: {"choices":[],"usage":{"prompt_tokens":1,"completion_tokens":1}}',
+        'data: [DONE]',
+    ]
+    mock_resp = _mock_stream_urlopen(sse_lines)
+    with patch("nekomata.ai.interpreter.urllib.request.urlopen", return_value=mock_resp):
+        interp = OpenAIInterpreter(model="test-model", api_key="test-key")
+        chunks = list(interp.interpret_stream(make_drawn_cards(1), "test"))
+    assert chunks == [StreamChunk("Done")]
+
+
 def test_interpret_stream_yields_reasoning_chunks():
     sse_lines = [
         'data: {"choices":[{"delta":{"reasoning_content":"Thinking"}}]}',

@@ -12,7 +12,7 @@ ICON_ICNS = ICON_DIR / "nekomata.icns"
 ICON_ICO = ICON_DIR / "nekomata.ico"
 APP_ICON = ICON_ICO if sys.platform == "win32" else ICON_ICNS if sys.platform == "darwin" else None
 
-# UPX can corrupt .NET/pythonnet DLLs on Windows
+# UPX can corrupt some bundled native DLLs on Windows
 _USE_UPX = sys.platform != "win32"
 
 # --- Collect data files ---
@@ -87,8 +87,10 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz,
     a.scripts,
-    [],
-    exclude_binaries=True,
+    a.binaries if sys.platform == "win32" else [],
+    a.zipfiles if sys.platform == "win32" else [],
+    a.datas if sys.platform == "win32" else [],
+    exclude_binaries=sys.platform != "win32",
     name="Nekomata",
     debug=False,
     bootloader_ignore_signals=False,
@@ -98,16 +100,17 @@ exe = EXE(
     icon=str(APP_ICON) if APP_ICON else None,
 )
 
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    strip=False,
-    upx=_USE_UPX,
-    upx_exclude=[],
-    name="Nekomata",
-)
+if sys.platform != "win32":
+    coll = COLLECT(
+        exe,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        strip=False,
+        upx=_USE_UPX,
+        upx_exclude=[],
+        name="Nekomata",
+    )
 
 # macOS .app bundle (skipped on other platforms)
 if sys.platform == "darwin":

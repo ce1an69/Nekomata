@@ -12,7 +12,10 @@ dist/
 
 # Virtual environments
 .venv/
+.venv-win/
 venv/
+.uv-cache/
+.uv-python/
 
 # Testing / coverage
 .pytest_cache/
