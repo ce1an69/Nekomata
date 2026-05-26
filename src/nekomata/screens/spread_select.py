@@ -166,10 +166,8 @@ class SpreadSelectScreen(Screen):
                     for key, cls in SPREAD_REGISTRY:
                         spread = get_spread(key)
                         n_pos = len(spread.positions)
-                        yield SpreadOption(
-                            f"{spread.name:<28s}{n_pos}",
-                            f"spread-{key}",
-                        )
+                        label = f"{spread.name:<{34 - len(str(n_pos))}}{n_pos}"
+                        yield SpreadOption(label, f"spread-{key}")
                     yield SpreadOption(_STR["back_label"], "back", back=True)
                 with Vertical(id="spread-preview"):
                     yield Static("", id="preview-title")

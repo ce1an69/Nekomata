@@ -106,6 +106,15 @@ class DetailPanel:
             return
         self._last_preview_id = preview_id
 
+        if self._screen.app.animation_enabled and self._w_preview.children:
+            self._w_preview.styles.animate("opacity", 0.0, duration=0.12, easing=EASE)
+            self._screen.set_timer(0.12, lambda: self._render_slot(dc))
+            self._screen.set_timer(0.14, self._fade_in_preview)
+        else:
+            self._render_slot(dc)
+
+    def _render_slot(self, dc) -> None:
+        """Render card detail content into the preview panel."""
         self._w_preview.remove_children()
 
         if self._screen.app.render_mode != "text":
@@ -118,3 +127,7 @@ class DetailPanel:
                 return
 
         self._w_preview.mount(Static(render_card_detail(dc)))
+
+    def _fade_in_preview(self) -> None:
+        """Fade the preview panel back in after content swap."""
+        self._w_preview.styles.animate("opacity", 1.0, duration=0.18, easing=EASE)
