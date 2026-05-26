@@ -17,11 +17,18 @@ def test_main_starts_server_and_webview():
     mock_webview = MagicMock()
     mock_uvicorn = MagicMock()
     mock_app = MagicMock()
+    mock_server = MagicMock()
+    mock_server.create_app.return_value = mock_app
 
     with (
-        patch.dict(sys.modules, {"webview": mock_webview, "uvicorn": mock_uvicorn}),
-        patch("nekomata.web.server.create_app", return_value=mock_app),
+        patch.dict(sys.modules, {
+            "webview": mock_webview,
+            "uvicorn": mock_uvicorn,
+            "nekomata.web.server": mock_server,
+        }),
         patch("nekomata.desktop.find_free_port", return_value=9999),
+        patch("nekomata.desktop._wait_for_server"),
+        patch("sys.argv", ["nekomata-desktop"]),
     ):
         from nekomata.desktop import main
 
@@ -42,11 +49,19 @@ def test_main_starts_server_and_webview():
 
 
 def test_server_runs_in_daemon_thread():
+    mock_server = MagicMock()
+    mock_server.create_app.return_value = MagicMock()
+
     with (
-        patch.dict(sys.modules, {"webview": MagicMock(), "uvicorn": MagicMock()}),
-        patch("nekomata.web.server.create_app", return_value=MagicMock()),
+        patch.dict(sys.modules, {
+            "webview": MagicMock(),
+            "uvicorn": MagicMock(),
+            "nekomata.web.server": mock_server,
+        }),
         patch("nekomata.desktop.find_free_port", return_value=9999),
+        patch("nekomata.desktop._wait_for_server"),
         patch("nekomata.desktop.threading.Thread") as mock_thread,
+        patch("sys.argv", ["nekomata-desktop"]),
     ):
         from nekomata.desktop import main
 

@@ -57,7 +57,7 @@ def _cards_info(drawn_cards: list[DrawnCard]) -> str:
     return "\n".join(lines)
 
 
-def _build_messages(style: str, question: str, drawn_cards: list[DrawnCard], spread_key: str = "") -> list[dict]:
+def build_messages(style: str, question: str, drawn_cards: list[DrawnCard], spread_key: str = "") -> list[dict]:
     """Build the system + user message list for the OpenAI chat API."""
     system_content = load_system_prompt().format(style=style)
     spread_prompt = load_spread_prompt(spread_key) if spread_key else ""
@@ -99,7 +99,7 @@ class OpenAIInterpreter:
         """Send cards and question to the API and return the interpretation."""
         req = self._make_request({
             "model": self._model,
-            "messages": _build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key),
+            "messages": build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key),
             "stream": False,
         })
         try:
@@ -117,18 +117,30 @@ class OpenAIInterpreter:
     def interpret_stream(
         self, drawn_cards: list[DrawnCard], question: str, spread_key: str = ""
     ) -> Generator[StreamChunk, None, None]:
-        """Yield text chunks from the streaming API (SSE).
+        """Yield text chunks from the streaming API (SSE)."""
+        messages = build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key)
+        yield from self.stream_raw(messages)
+
+    def stream_raw(
+        self, messages: list[dict], *, thinking: bool = True
+    ) -> Generator[StreamChunk, None, None]:
+        """Yield text chunks from pre-built messages (for follow-up conversations).
 
         Parses Server-Sent Events line by line. Each event is "data: {json}".
         The delta object may contain reasoning (chain-of-thought) and/or
         content (the actual response). Different providers use different
         field names for reasoning — we check all common variants.
+
+        Set thinking=False to disable reasoning output (faster responses).
         """
-        req = self._make_request({
+        payload: dict = {
             "model": self._model,
-            "messages": _build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key),
+            "messages": messages,
             "stream": True,
-        })
+        }
+        if not thinking:
+            payload["enable_thinking"] = False
+        req = self._make_request(payload)
         try:
             with urllib.request.urlopen(req, timeout=_DEFAULT_TIMEOUT) as resp:
                 for raw_line in resp:
@@ -140,16 +152,16 @@ class OpenAIInterpreter:
                     if line.startswith("data: "):
                         data = json.loads(line[6:])
                         delta = data["choices"][0].get("delta", {})
-                        # Check multiple field names for reasoning content
-                        reasoning = (
-                            delta.get("reasoning_content")
-                            or delta.get("reasoning")
-                            or delta.get("thinking")
-                            or delta.get("think")
-                            or ""
-                        )
-                        if reasoning:
-                            yield StreamChunk(str(reasoning), "thinking")
+                        if thinking:
+                            reasoning = (
+                                delta.get("reasoning_content")
+                                or delta.get("reasoning")
+                                or delta.get("thinking")
+                                or delta.get("think")
+                                or ""
+                            )
+                            if reasoning:
+                                yield StreamChunk(str(reasoning), "thinking")
                         content = delta.get("content", "")
                         if content:
                             yield StreamChunk(str(content), "content")

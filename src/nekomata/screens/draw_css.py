@@ -2,7 +2,7 @@
 
 from nekomata.render.styles import (
     C_CRUST, C_LAVENDER, C_MANTLE, C_MAUVE, C_OVERLAY0,
-    C_SUBTEXT0, C_SURFACE0, C_SURFACE1, C_SURFACE2, C_TEXT,
+    C_PINK, C_SUBTEXT0, C_SURFACE0, C_SURFACE1, C_SURFACE2, C_TEXT,
     EASE_OUT, EASE_SPRING,
 )
 from nekomata.screens.draw_dialog import DETAIL_PANEL_WIDTH, INTERP_PANEL_HEIGHT, INTERP_MIN_HEIGHT, INTERP_MAX_HEIGHT
@@ -189,6 +189,31 @@ DrawScreen {{
     color: {C_OVERLAY0};
     height: 1;
     margin: 0;
+}}
+#followup-section {{
+    height: 3;
+    margin: 0 0 0 0;
+    padding: 0;
+    display: none;
+    opacity: 0;
+    offset: 0 1;
+    transition: opacity 200ms {EASE_OUT}, offset 240ms {EASE_SPRING};
+}}
+#followup-section.visible {{
+    display: block;
+    opacity: 1;
+    offset: 0 0;
+}}
+#followup-input {{
+    width: 1fr;
+    height: 3;
+    padding: 0 1;
+    border: round {C_MAUVE};
+    background: {C_CRUST};
+    color: {C_TEXT};
+}}
+#followup-input:focus {{
+    border: round {C_PINK};
 }}
 #status {{
     text-align: center;

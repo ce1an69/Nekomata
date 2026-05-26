@@ -5,6 +5,8 @@ import logging
 from enum import Enum, auto
 
 from rich.console import Group
+from rich.markdown import Markdown
+from rich.rule import Rule
 from rich.text import Text
 
 from textual.app import ComposeResult
@@ -15,7 +17,7 @@ from textual.css.query import NoMatches
 from textual.events import DescendantFocus, Key, Resize
 from textual.geometry import Offset
 from textual.screen import Screen
-from textual.widgets import Static
+from textual.widgets import Input, Static
 
 from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
@@ -80,6 +82,15 @@ class DrawScreen(Screen):
         self._display_order = self._spread.display_order
         self._ordered_positions = [self._spread.positions[i] for i in self._display_order]
 
+        # Follow-up state
+        self._followup_remaining: int = self._n_positions
+        self._followup_visible: bool = False
+        self._followup_active: bool = False
+        self._followup_question: str = ""
+        self._first_interp_done: bool = False
+        self._prev_interp_content: str = ""
+        self._messages_history: list[dict] = []
+
         self._box = BoxManager(self, self._available_boxes)
         self._stream = StreamHandler(
             screen=self,
@@ -87,6 +98,7 @@ class DrawScreen(Screen):
             render_hints=self._on_stream_hints,
             scroll_to_bottom=self._on_stream_scroll,
             show_error=self._on_stream_error,
+            on_done=self._on_stream_done,
         )
         self._dialog = InterpretationDialog(self, self._box, self._stream)
         self._detail = DetailPanel(self)
@@ -96,6 +108,15 @@ class DrawScreen(Screen):
     def _on_stream_render(self, parts) -> None:
         if parts is None:
             self._w_interp_content.update("")
+        elif self._followup_active and self._prev_interp_content:
+            combined = [
+                Markdown(self._prev_interp_content, style=C_TEXT),
+                Rule(style=C_MAUVE),
+                Text(self._followup_question, style=C_LAVENDER),
+                Rule(style=C_MAUVE),
+            ]
+            combined.extend(parts)
+            self._w_interp_content.update(Group(*combined))
         else:
             self._w_interp_content.update(Group(*parts))
 
@@ -115,6 +136,30 @@ class DrawScreen(Screen):
             sync_layout=self._sync_interp_layout,
             fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
         )
+
+    def _on_stream_done(self) -> None:
+        """Called when streaming interpretation finishes (initial or follow-up)."""
+        new_content = "".join(self._stream._content_chars)
+
+        if self._followup_active:
+            self._prev_interp_content += (
+                f"\n\n---\n\n> {self._followup_question}\n\n---\n\n{new_content}"
+            )
+            self._followup_active = False
+            self._w_interp_content.update(Markdown(self._prev_interp_content, style=C_TEXT))
+            self._messages_history.append({"role": "assistant", "content": new_content})
+        else:
+            self._prev_interp_content = new_content
+            self._messages_history = list(self._stream.messages) + [
+                {"role": "assistant", "content": new_content}
+            ]
+            self._first_interp_done = True
+
+        self._dialog._streaming = False
+        self._update_followup_hints()
+
+        if self._followup_remaining > 0 and self._dialog.is_visible:
+            self._show_followup()
 
     # Exposed for integration tests (test_flow.py)
     @property
@@ -181,6 +226,8 @@ class DrawScreen(Screen):
         with VerticalScroll(id="interp-dialog"):
             yield Static(_STR["interp_title"], id="interp-dialog-title")
             yield Static("", id="interp-dialog-content")
+            with Vertical(id="followup-section"):
+                yield Input(placeholder=_STR["followup_placeholder"], id="followup-input")
             yield Static(_STR["interp_close_hint"], id="interp-dialog-hints")
 
     # -- Mount / Unmount --
@@ -197,6 +244,8 @@ class DrawScreen(Screen):
         self._w_interp = self.query_one("#interp-dialog")
         self._w_interp_content = self.query_one("#interp-dialog-content", Static)
         self._w_interp_hints = self.query_one("#interp-dialog-hints", Static)
+        self._w_followup_section = self.query_one("#followup-section")
+        self._w_followup_input = self.query_one("#followup-input", Input)
         self._w_footer = self.query_one("#draw-footer", Static)
 
         self._dialog.cache_widgets()
@@ -317,7 +366,9 @@ class DrawScreen(Screen):
             self._w_deck_section.display = False
             self._w_spread_label.update(Text(_STR["done_label"], style=lbl))
             d_hint = _STR["detail_hide"] if self._detail.visible else _STR["detail_show"]
-            self._w_footer.update(Text(_STR["hint_done"].format(detail_hint=d_hint), style=C_OVERLAY0))
+            f_hint = _STR["followup_remaining"].format(remaining=self._followup_remaining) if self._first_interp_done and self._followup_remaining > 0 else ""
+            parts = [d_hint, f_hint, "I interpret", "Q back"]
+            self._w_footer.update(Text("  ".join(p for p in parts if p), style=C_OVERLAY0))
 
     # -- Pick phase --
 
@@ -481,6 +532,97 @@ class DrawScreen(Screen):
                 slots[0].focus()
         self._update_phase_ui()
 
+    # -- Follow-up --
+
+    def key_f(self, event: Key) -> None:
+        """Toggle follow-up input box (only when interp is visible and idle)."""
+        if self._phase != Phase.DONE:
+            return
+        if not self._dialog.is_visible or self._dialog.is_streaming:
+            return
+        if self._followup_remaining <= 0 and not self._followup_visible:
+            return
+        event.stop()
+        self._toggle_followup()
+
+    def _toggle_followup(self) -> None:
+        if self._followup_visible:
+            self._hide_followup()
+        else:
+            self._show_followup()
+
+    def _show_followup(self) -> None:
+        """Show the follow-up input box with entrance animation."""
+        self._followup_visible = True
+        self._w_followup_input.value = ""
+        self._w_followup_section.display = True
+        if self.app.animation_enabled:
+            self._w_followup_section.styles.opacity = 0
+            self._w_followup_section.styles.offset = (0, 1)
+        self._w_followup_section.add_class("visible")
+        if self.app.animation_enabled:
+            self._w_followup_section.styles.animate("opacity", 1.0, duration=0.20, easing=EASE)
+            self._w_followup_section.styles.animate(
+                "offset",
+                ScalarOffset.from_offset(Offset(0, 0)),
+                duration=0.26,
+                easing=EASE_SPRING,
+            )
+        self._w_followup_input.focus()
+
+    def _hide_followup(self) -> None:
+        """Hide the follow-up input box with exit animation."""
+        self._followup_visible = False
+        if self.app.animation_enabled:
+            self._w_followup_section.styles.animate("opacity", 0.0, duration=0.14, easing=EASE)
+            self._w_followup_section.styles.animate(
+                "offset",
+                ScalarOffset.from_offset(Offset(0, 1)),
+                duration=0.18,
+                easing=EASE,
+            )
+            self.set_timer(0.18, self._finish_followup_hide)
+        else:
+            self._finish_followup_hide()
+
+    def _finish_followup_hide(self) -> None:
+        self._w_followup_section.remove_class("visible")
+        self._w_followup_section.display = False
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Handle follow-up question submission."""
+        if event.input.id != "followup-input":
+            return
+        event.stop()
+        question = event.value.strip()
+        if not question:
+            return
+        self._hide_followup()
+        self._followup_remaining -= 1
+        self._start_followup(question)
+
+    def _start_followup(self, question: str) -> None:
+        """Start streaming a follow-up interpretation."""
+        self._followup_question = question
+        self._followup_active = True
+        self._dialog._streaming = True
+        self._stream.streaming = True
+        self._stream.reset(append=True)
+        self._dialog.fit_height(self._w_main_area, self._detail.visible)
+        self.run_worker(
+            self._stream.run_followup(self._messages_history, question, lambda: self._cancelled),
+            exclusive=True,
+        )
+
+    def _update_followup_hints(self) -> None:
+        """Update interp hints bar with follow-up availability."""
+        if self._followup_remaining > 0:
+            hint = _STR["followup_done_hint"].format(remaining=self._followup_remaining)
+        else:
+            hint = _STR["followup_exhausted_hint"]
+        self._w_interp_hints.update(Text(hint, style=C_OVERLAY0))
+        self._update_phase_ui()
+
     # -- Layout helpers --
 
     def _sync_interp_layout(self) -> None:
@@ -506,6 +648,9 @@ class DrawScreen(Screen):
             self._dialog.run(self._drawn_cards, self._question, lambda: self._cancelled)
 
     def action_handle_back(self) -> None:
+        if self._followup_visible:
+            self._hide_followup()
+            return
         if self._dialog.is_visible:
             def on_confirm(confirmed: bool) -> None:
                 if confirmed:

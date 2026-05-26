@@ -38,3 +38,8 @@ def _load_user_template() -> str:
 def build_user_prompt(question: str, cards_info: str) -> str:
     """Build the user message for AI interpretation."""
     return _load_user_template().format(question=question, cards_info=cards_info)
+
+
+def build_followup_prompt(question: str) -> str:
+    """Build the user message for a follow-up question."""
+    return f"追问：{question}\n请针对这个追问进行补充解读。"
