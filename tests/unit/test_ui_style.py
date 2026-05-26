@@ -175,7 +175,7 @@ def test_draw_stream_content_renders_markdown():
     source = inspect.getsource(StreamHandler._render)
 
     assert 'Markdown("".join(self._content_chars)' in source
-    assert "C_MAUVE" in source
+    assert "C_TEXT" in source
     assert "self._render_content(parts)" in source
 
 

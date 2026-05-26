@@ -8,7 +8,7 @@ from rich.markdown import Markdown
 from rich.text import Text
 
 from nekomata.ai.interpreter import InterpretationError, StreamChunk, get_interpreter
-from nekomata.render.styles import C_MAUVE, C_OVERLAY0, C_TEXT
+from nekomata.render.styles import C_OVERLAY0, C_TEXT
 from nekomata.strings import all_strings
 
 _UI_STRINGS = all_strings()

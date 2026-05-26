@@ -1,6 +1,7 @@
 """Draw screen — pick cards from a face-down deck, then flip to reveal."""
 
 import asyncio
+import logging
 from enum import Enum, auto
 
 from rich.console import Group
@@ -38,6 +39,7 @@ from nekomata.strings import ORNAMENT
 from nekomata.spread import get_spread
 
 _STR = lazy_section("draw")
+log = logging.getLogger(__name__)
 
 
 class Phase(Enum):
@@ -277,6 +279,8 @@ class DrawScreen(Screen):
     def _enable_deck_selection(self) -> None:
         """Enable card selection after dealing animation completes."""
         self._dealing = False
+        if self._phase != Phase.PICK:
+            return
         deck_cards = list(self.query(DeckCard))
         if deck_cards:
             deck_cards[0].focus()
@@ -318,7 +322,7 @@ class DrawScreen(Screen):
     # -- Pick phase --
 
     async def on_deck_card_picked(self, event: DeckCard.Picked) -> None:
-        if self._phase != Phase.PICK or self._dealing:
+        if self._phase != Phase.PICK:
             return
         event.stop()
 
@@ -327,6 +331,9 @@ class DrawScreen(Screen):
             return
         if self._pick_index >= len(self._planned_cards):
             return
+        if self._dealing:
+            log.debug("Accepting pick while deck entrance animation is still active")
+            self._dealing = False
         dc = self._planned_cards[self._pick_index]
         self._drawn_cards.append(dc)
 
@@ -335,20 +342,27 @@ class DrawScreen(Screen):
 
         self._pick_index += 1
         self._update_phase_ui()
+        log.debug(
+            "Picked card %s/%s in %s phase",
+            self._pick_index,
+            self._n_positions,
+            self._phase.name,
+        )
 
         if self._pick_index >= self._n_positions:
-            self.run_worker(self._transition_to_flip(), exclusive=True)
+            await self._transition_to_flip()
 
     async def _transition_to_flip(self) -> None:
-        """Brief pause then reveal spread — runs as a worker to avoid blocking."""
-        await asyncio.sleep(PICK_COMPLETE_DELAY)
+        """Reveal spread after the final pick."""
+        log.debug("Transitioning to flip phase with %s drawn card(s)", len(self._drawn_cards))
+        if PICK_COMPLETE_DELAY:
+            await asyncio.sleep(PICK_COMPLETE_DELAY)
         await self._reveal_spread()
 
     async def _reveal_spread(self) -> None:
         """Show spread area, ensure all images cached, then enter FLIP phase."""
-        await preload_all_async(
-            [(dc.card, dc.is_reversed) for dc in self._drawn_cards]
-        )
+        log.debug("Revealing spread and entering flip phase")
+        await preload_all_async([(dc.card, dc.is_reversed) for dc in self._drawn_cards])
         self._w_deck_section.display = False
         self._w_main_area.display = True
 
