@@ -56,7 +56,7 @@
 }
 
 .spread-option .sname { flex: 1; }
-.spread-option .scount { color: var(--subtext0); font-size: 0.85em; }
+.spread-option .scount { color: var(--subtext0); font-size: 0.85em; min-width: 1.2em; text-align: right; }
 
 .spread-preview {
     flex: 1;
@@ -71,11 +71,6 @@
 .spread-preview h3 { color: var(--gold); margin-bottom: 8px; }
 .spread-preview .pos-list { list-style: none; margin-top: 10px; }
 .spread-preview .pos-list li { padding: 5px 0; color: var(--subtext0); }
-.spread-preview .pos-list li .pos-idx {
-    color: var(--gold);
-    font-weight: bold;
-    margin-right: 6px;
-}
 
 .spread-back {
     padding: 10px 14px;
