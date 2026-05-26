@@ -163,11 +163,11 @@ class SpreadSelectScreen(Screen):
             yield Static(_STR["prompt"], id="prompt")
             with Horizontal(id="spread-body"):
                 with Vertical(id="spread-buttons"):
-                    for i, (key, cls) in enumerate(SPREAD_REGISTRY, 1):
+                    for key, cls in SPREAD_REGISTRY:
                         spread = get_spread(key)
                         n_pos = len(spread.positions)
                         yield SpreadOption(
-                            f"{i:02d}  {spread.name:<28s} {n_pos:>2d}",
+                            f"{spread.name:<28s}{n_pos}",
                             f"spread-{key}",
                         )
                     yield SpreadOption(_STR["back_label"], "back", back=True)
@@ -203,8 +203,8 @@ class SpreadSelectScreen(Screen):
             if btn_id == f"spread-{key}":
                 spread = get_spread(key)
                 positions = "\n".join(
-                    f"{idx:02d}  {position.name}"
-                    for idx, position in enumerate(spread.positions, 1)
+                    f"{position.name}"
+                    for position in spread.positions
                 )
                 title.update(spread.name)
                 desc_text.update(spread.description)

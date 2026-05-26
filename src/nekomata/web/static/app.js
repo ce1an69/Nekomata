@@ -281,9 +281,8 @@ function initSpreadSelect() {
         const opt = document.createElement('div');
         opt.className = 'spread-option';
         opt.dataset.key = sp.key;
-        const cardsLabel = state.config.lang === 'zh' ? '张' : 'cards';
         opt.innerHTML = `<span class="sname">${sp.name}</span>` +
-            `<span class="scount">${sp.card_count} ${cardsLabel}</span>`;
+            `<span class="scount">${sp.card_count}</span>`;
         opt.addEventListener('mouseenter', () => showSpreadPreview(sp));
         opt.addEventListener('click', () => selectSpread(sp.key));
         btnContainer.appendChild(opt);
@@ -336,7 +335,7 @@ function showSpreadPreview(sp) {
     preview.innerHTML = `<h3>${sp.name}</h3>` +
         `<p class="subtext">${sp.description} · ${sp.card_count} ${cardsLabel}</p>` +
         `<ul class="pos-list">${sp.positions.map((p, i) =>
-            `<li><span class="pos-idx">${i + 1}.</span>${p.name} — ${p.description}</li>`
+            `<li>${p.name} — ${p.description}</li>`
         ).join('')}</ul>`;
 }
 
