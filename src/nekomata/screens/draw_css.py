@@ -175,6 +175,9 @@ DrawScreen {{
     opacity: 1;
     offset: 0 0;
 }}
+#interp-dialog.spread-hidden {{
+    max-height: 999;
+}}
 #interp-dialog-title {{
     color: {C_MAUVE};
     text-style: bold;

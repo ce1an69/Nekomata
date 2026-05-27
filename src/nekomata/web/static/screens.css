@@ -184,6 +184,16 @@
     grid-column: 1 / -1;
 }
 
+#screen-draw.interpreting.spread-hidden .spread-area {
+    display: none !important;
+}
+
+#screen-draw.interpreting.spread-hidden .interp-panel {
+    grid-column: 1 / -1;
+    grid-row: 4 / 6;
+    max-height: none;
+}
+
 .spread-area {
     display: flex;
     flex-wrap: wrap;
