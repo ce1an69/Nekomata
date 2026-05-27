@@ -54,7 +54,7 @@ class SetupScreen(Screen):
     """First-launch setup screen for API URL, API Key, and language."""
 
     BINDINGS = [
-        Binding("q", "quit", "Quit"),
+        Binding("q", "go_back", "Back"),
     ]
 
     DEFAULT_CSS = f"""
@@ -195,6 +195,9 @@ class SetupScreen(Screen):
             yield SetupButton(_STR["save_label"], id="save-btn")
             yield Static("", id="setup-error")
             yield Static(_STR["hints"], id="setup-hints")
+
+    def action_go_back(self) -> None:
+        self.dismiss(None)
 
     def on_mount(self) -> None:
         self.query_one("#api-url-input", Input).focus()

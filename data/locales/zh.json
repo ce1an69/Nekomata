@@ -34,13 +34,13 @@
   "home": {
     "title": "Nekomata",
     "placeholder": "> 输入你的问题...",
-    "hints": "Enter 确认 · / 命令 · Q 退出",
+    "hints": "Enter 确认 · / 命令 · Ctrl+Q 退出",
+    "unknown_command": "未知命令",
     "commands": {
       "/browse": ["card_browser", "浏览全部 78 张牌"],
       "/browse_short": ["card_browser", "浏览全部"],
       "/browse_cards": ["card_browser", "张牌"],
-      "/help": ["help", "显示可用命令"],
-      "/status": ["status", "显示当前配置"],
+      "/config": ["config", "修改 API 设置"],
       "/quit": ["quit", "退出应用"]
     }
   },
@@ -56,7 +56,7 @@
     "error_url_required": "请填写 API URL",
     "error_model_required": "请填写模型名称",
     "error_key_required": "请填写 API Key",
-    "hints": "Enter 下一步/保存 · Tab 切换"
+    "hints": "Enter 下一步/保存 · Tab 切换 · Q 返回"
   },
 
   "spread_select": {
@@ -74,7 +74,8 @@
     "done_label": "── ✦ 牌阵已就绪 ✦ ──",
     "hint_pick": "← → 选牌  Enter 抽牌",
     "hint_flip": "← → 选择  Enter 翻牌",
-    "hint_done": "← → 选牌  {detail_hint}  I 解读  Q 返回",
+    "hint_interpret": "I 解读",
+    "hint_back": "Q 返回",
     "detail_show": "D 详情",
     "detail_hide": "D 隐藏详情",
     "interp_title": "解读",
@@ -114,14 +115,5 @@
     "back": "← 返回",
     "detail": "详情",
     "hide_detail": "隐藏详情"
-  },
-  "status": {
-    "title": "当前配置",
-    "api_url": "API URL",
-    "api_key": "API Key",
-    "api_key_set": "(已设置)",
-    "api_key_not_set": "(未设置)",
-    "model": "模型",
-    "render": "渲染"
   }
 }

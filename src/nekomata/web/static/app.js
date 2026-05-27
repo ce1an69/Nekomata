@@ -86,6 +86,7 @@ async function loadStrings() {
 // ---------------------------------------------------------------------------
 
 document.querySelector('#setup-save')?.addEventListener('click', saveSetup);
+document.querySelector('#setup-back')?.addEventListener('click', () => { showScreen('home'); resumeHome(); });
 
 function initSetupScreen() {
     const urlInput = document.getElementById('setup-url');
@@ -98,6 +99,7 @@ function initSetupScreen() {
     else if (state.config.has_api_key) { keyInput.value = ''; keyInput.placeholder = '•••••••• (configured)'; }
     if (state.config.model) modelInput.value = state.config.model;
     if (state.config.lang) langSelect.value = state.config.lang;
+    document.getElementById('setup-error').classList.add('hidden');
 
     if (!needsInit('setup')) return;
 
@@ -157,11 +159,11 @@ async function saveSetup() {
 function slashDesc(cmd) {
     switch (cmd) {
         case '/browse': return `${t('home.commands./browse_short.1', 'Browse all')} ${state.cards.length || 78} ${t('home.commands./browse_cards.1', 'cards')}`;
-        case '/status': return t('status.title', 'Current Config');
+        case '/config': return t('home.commands./config.1', 'Edit API settings');
     }
 }
 
-const SLASH_COMMANDS = ['/browse', '/status'];
+const SLASH_COMMANDS = ['/browse', '/config'];
 
 export function initHomeScreen() {
     const input = document.getElementById('home-input');
@@ -250,8 +252,8 @@ function handleSlashCommand(cmd) {
         case '/browse':
             showBrowserScreen();
             break;
-        case '/status':
-            showToast(t('status.title', 'Current Config'), `API: ${state.config.api_url}  Model: ${state.config.model}`);
+        case '/config':
+            showScreen('setup');
             break;
     }
 }
