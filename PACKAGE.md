@@ -34,7 +34,9 @@ uv sync --extra desktop
 python scripts/build_desktop.py
 ```
 
-产物：`dist/Nekomata.app`
+产物：`dist/Nekomata.app` + `dist/Nekomata.dmg`
+
+打开 DMG 后将 Nekomata.app 拖入 Applications 文件夹即可使用。
 
 ### 4. 清理重建
 

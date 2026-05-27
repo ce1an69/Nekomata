@@ -9,10 +9,36 @@ Usage:
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = ROOT / "nekomata.spec"
+
+
+def create_dmg(app_path: Path) -> None:
+    """Create a macOS DMG with drag-to-Applications layout."""
+    dmg_path = ROOT / "dist" / "Nekomata.dmg"
+
+    with tempfile.TemporaryDirectory(prefix="nekomata-dmg-") as tmp:
+        staging = Path(tmp)
+        shutil.copytree(app_path, staging / app_path.name)
+        (staging / "Applications").symlink_to("/Applications")
+
+        if dmg_path.exists():
+            dmg_path.unlink()
+
+        subprocess.check_call([
+            "hdiutil", "create",
+            "-volname", "Nekomata",
+            "-srcfolder", str(staging),
+            "-ov",
+            "-format", "UDZO",
+            str(dmg_path),
+        ])
+
+    size_mb = dmg_path.stat().st_size / 1024 / 1024
+    print(f"DMG:  {dmg_path} ({size_mb:.1f} MB)")
 
 
 def main():
@@ -42,7 +68,8 @@ def main():
         app = ROOT / "dist" / "Nekomata.app"
         if app.exists():
             size = sum(f.stat().st_size for f in app.rglob("*") if f.is_file())
-            print(f"\nBuilt: {app} ({size / 1024 / 1024:.1f} MB)")
+            print(f"\nApp:  {app} ({size / 1024 / 1024:.1f} MB)")
+            create_dmg(app)
     else:
         dist = ROOT / "dist" / "Nekomata"
         if dist.exists():
