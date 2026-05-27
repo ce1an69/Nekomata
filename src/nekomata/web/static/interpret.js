@@ -9,10 +9,17 @@ export class InterpretationController {
         this._abortController = null;
         this._loadFrame = 0;
         this._loadTimer = null;
+        this.initialText = '';
+        this._onComplete = null;
+        this._onError = null;
     }
+
+    set onComplete(fn) { this._onComplete = fn; }
+    set onError(fn) { this._onError = fn; }
 
     async start(drawnCards, question, strings, spreadKey = '') {
         this._container.innerHTML = '';
+        this.initialText = '';
         this._showLoading(true, strings);
         this._abortController = new AbortController();
 
@@ -68,6 +75,7 @@ export class InterpretationController {
                         if (chunk.error) {
                             this._appendError(chunk.error);
                             this._showLoading(false);
+                            if (this._onError) this._onError(chunk.error);
                             return;
                         }
                         if (chunk.kind === 'thinking') continue;
@@ -79,6 +87,7 @@ export class InterpretationController {
                             this._container.appendChild(currentEl);
                         }
                         currentEl._raw = (currentEl._raw || '') + chunk.text;
+                        if (chunk.kind === 'content') this.initialText += chunk.text;
                         if (!renderTimer) {
                             renderTimer = setTimeout(flushRender, 60);
                         }
@@ -92,10 +101,14 @@ export class InterpretationController {
             doneEl.className = 'interp-done';
             doneEl.textContent = '─── ✦ ───';
             this._container.appendChild(doneEl);
+            if (this._onComplete) this._onComplete(this.initialText);
 
         } catch (e) {
             if (renderTimer) { clearTimeout(renderTimer); flushRender(); }
-            if (e.name !== 'AbortError') this._appendError(e.message);
+            if (e.name !== 'AbortError') {
+                this._appendError(e.message);
+                if (this._onError) this._onError(e.message);
+            }
             this._showLoading(false);
         }
     }
@@ -162,7 +175,7 @@ function renderMarkdown(text) {
 function renderBlock(lines) {
     const first = lines[0].trim();
 
-    if (lines.length === 1 && /^[-*_]{3,}$/.test(first)) return '<hr>';
+    if (lines.length === 1 && /^[-*_]{3,}$/.test(first)) return '<hr/>';
 
     const h = first.match(/^(#{1,3})\s+(.+)$/);
     if (h && lines.length === 1) return `<h${h[1].length}>${fmt(h[2])}</h${h[1].length}>`;
@@ -174,9 +187,9 @@ function renderBlock(lines) {
         return '<ol>' + lines.map(l => `<li>${fmt(l.replace(/^\s*\d+\.\s+/, ''))}</li>`).join('') + '</ol>';
 
     if (lines.every(l => /^&gt;\s?/.test(l)))
-        return '<blockquote><p>' + lines.map(l => fmt(l.replace(/^&gt;\s?/, ''))).join('<br>') + '</p></blockquote>';
+        return '<blockquote><p>' + lines.map(l => fmt(l.replace(/^&gt;\s?/, ''))).join('<br/>') + '</p></blockquote>';
 
-    return '<p>' + lines.map(l => fmt(l)).join('<br>') + '</p>';
+    return '<p>' + lines.map(l => fmt(l)).join('<br/>') + '</p>';
 }
 
 function fmt(text) {

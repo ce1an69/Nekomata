@@ -172,12 +172,13 @@
     border: 1px solid var(--surface0);
     border-radius: 12px;
     max-height: var(--interp-height, 340px);
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     animation: slideUp 0.3s ease;
     box-shadow: 0 4px 24px var(--shadow);
 }
 
-.interp-content { padding: 18px; }
+.interp-content { padding: 18px; overflow-y: auto; flex: 1; min-height: 0; }
 .interp-loading { color: var(--mauve); margin-bottom: 10px; }
 .interp-loading .spinner { display: inline-block; margin-right: 8px; }
 .interp-loading .load-msg { color: var(--subtext0); font-style: italic; }
@@ -228,4 +229,33 @@
     margin-top: 12px;
     font-size: 0.85em;
     text-align: center;
+}
+
+/* Interpretation action buttons */
+.interp-actions {
+    display: flex;
+    gap: 8px;
+    padding: 10px 18px;
+    border-top: 1px solid var(--surface1);
+    flex-shrink: 0;
+    background: var(--panel-bg);
+    border-radius: 0 0 12px 12px;
+}
+
+.interp-actions .btn-sm {
+    font-size: 0.8em;
+    padding: 5px 12px;
+    border: 1px solid var(--surface1);
+    border-radius: 6px;
+    background: var(--surface0);
+    color: var(--subtext0);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    font-family: inherit;
+}
+
+.interp-actions .btn-sm:hover {
+    border-color: var(--mauve);
+    color: var(--mauve);
+    background: var(--surface1);
 }

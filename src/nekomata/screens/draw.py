@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import os
 from enum import Enum, auto
 
 from rich.console import Group
@@ -21,8 +22,11 @@ from textual.widgets import Input, Static
 
 from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
+from nekomata.clipboard import copy_text as _copy_text_to_clipboard
+from nekomata.clipboard import copy_image as _copy_image_to_clipboard
 from nekomata.render.card_renderer import clear_cache, preload_all_async, preload_card_image_async
 from nekomata.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_SUBTEXT0, C_TEXT, EASE, EASE_SPRING
+from nekomata.render.image_export import render_interp_image, save_image as _save_tmp_image
 from nekomata.screens.box_manager import BoxManager
 from nekomata.screens.draw_css import DRAW_SCREEN_CSS
 from nekomata.screens.draw_dialog import InterpretationDialog
@@ -89,6 +93,7 @@ class DrawScreen(Screen):
         self._followup_question: str = ""
         self._first_interp_done: bool = False
         self._prev_interp_content: str = ""
+        self._initial_interp_content: str = ""
         self._messages_history: list[dict] = []
 
         self._box = BoxManager(self, self._available_boxes)
@@ -150,6 +155,7 @@ class DrawScreen(Screen):
             self._messages_history.append({"role": "assistant", "content": new_content})
         else:
             self._prev_interp_content = new_content
+            self._initial_interp_content = new_content
             self._messages_history = list(self._stream.messages) + [
                 {"role": "assistant", "content": new_content}
             ]
@@ -177,7 +183,9 @@ class DrawScreen(Screen):
             return ["deck"]
         if self._phase == Phase.FLIP:
             return ["spread"]
-        boxes = ["spread"]
+        boxes = []
+        if not self._dialog.spread_hidden:
+            boxes.append("spread")
         if self._detail.visible:
             boxes.append("detail")
         if self._dialog.is_visible:
@@ -615,13 +623,67 @@ class DrawScreen(Screen):
         )
 
     def _update_followup_hints(self) -> None:
-        """Update interp hints bar with follow-up availability."""
+        """Update interp hints bar with follow-up and export availability."""
+        parts = [_STR["done_marker"]]
         if self._followup_remaining > 0:
-            hint = _STR["followup_done_hint"].format(remaining=self._followup_remaining)
-        else:
-            hint = _STR["followup_exhausted_hint"]
-        self._w_interp_hints.update(Text(hint, style=C_OVERLAY0))
+            parts.append(f"F {_STR['followup_remaining'].format(remaining=self._followup_remaining)}")
+        parts.append(f"H {_STR['spread_hide' if not self._dialog.spread_hidden else 'spread_show']}")
+        parts.append(f"C {_STR['copy_text']}")
+        parts.append(f"E {_STR['export_image']}")
+        parts.append(_STR["close_hint"])
+        self._w_interp_hints.update(Text("  ".join(parts), style=C_OVERLAY0))
         self._update_phase_ui()
+
+    # -- Spread toggle / Copy / Export --
+
+    def key_h(self, event: Key) -> None:
+        """Toggle spread visibility during interpretation."""
+        if self._phase != Phase.DONE or not self._dialog.is_visible or self._dialog.is_streaming:
+            return
+        event.stop()
+        self._dialog.toggle_spread(self._w_main_area)
+        self._update_followup_hints()
+
+    def key_c(self, event: Key) -> None:
+        """Copy initial interpretation text to clipboard."""
+        if self._phase != Phase.DONE or not self._first_interp_done or self._dialog.is_streaming:
+            return
+        if not self._dialog.is_visible:
+            return
+        event.stop()
+        if self._initial_interp_content:
+            ok = _copy_text_to_clipboard(self._initial_interp_content)
+            msg = _STR["copy_success"] if ok else _STR["copy_failed"]
+            self._w_interp_hints.update(Text(msg, style=C_MAUVE if ok else C_OVERLAY0))
+            self.set_timer(2.0, self._update_followup_hints)
+
+    def key_e(self, event: Key) -> None:
+        """Export initial interpretation as image to clipboard."""
+        if self._phase != Phase.DONE or not self._first_interp_done or self._dialog.is_streaming:
+            return
+        if not self._dialog.is_visible:
+            return
+        event.stop()
+        if self._initial_interp_content:
+            self.run_worker(self._export_image(), exclusive=True)
+
+    async def _export_image(self) -> None:
+        """Render interpretation to image and copy to clipboard."""
+        tmp_path = ""
+        try:
+            img = render_interp_image(self._initial_interp_content)
+            tmp_path = _save_tmp_image(img)
+            ok = _copy_image_to_clipboard(tmp_path)
+        except Exception:
+            ok = False
+        if tmp_path:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+        msg = _STR["export_success"] if ok else _STR["export_failed"]
+        self._w_interp_hints.update(Text(msg, style=C_MAUVE if ok else C_OVERLAY0))
+        self.set_timer(2.0, self._update_followup_hints)
 
     # -- Layout helpers --
 

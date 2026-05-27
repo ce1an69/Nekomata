@@ -29,6 +29,7 @@ class InterpretationDialog:
         self._box = box_manager
         self._stream = stream
         self._streaming = False
+        self._spread_hidden = False
         # Cache widget references (set after mount)
         self._w_interp = None
         self._w_content = None
@@ -50,6 +51,26 @@ class InterpretationDialog:
         return self._streaming
 
     # -- Layout --
+
+    @property
+    def spread_hidden(self) -> bool:
+        return self._spread_hidden
+
+    def toggle_spread(self, main_area) -> None:
+        """Toggle spread area visibility and adjust interp panel."""
+        self._spread_hidden = not self._spread_hidden
+        spread_area = self._screen.query_one("#spread-area")
+        if self._spread_hidden:
+            spread_area.display = False
+            self._w_interp.add_class("spread-hidden")
+            if self._box.active_box == "spread":
+                self._box.active_box = "interp"
+                self._box.update_highlights()
+                self._box.focus_widget()
+        else:
+            spread_area.display = True
+            self._w_interp.remove_class("spread-hidden")
+        self.fit_height(main_area, self._screen._detail.visible)
 
     def sync_layout(self, detail_visible: bool, screen_width: int) -> None:
         """Adjust interp dialog width to share space with the detail panel.

@@ -4,7 +4,7 @@ import { Deck } from './cards.js';
 import { InterpretationController } from './interpret.js';
 import { CardCarousel } from './carousel.js';
 import { state } from './state.js';
-import { showScreen, cardImgUrl, makeBtn, resumeHome, t } from './utils.js';
+import { showScreen, cardImgUrl, makeBtn, resumeHome, t, showToast } from './utils.js';
 
 // -- Keyboard handler for draw screen --
 
@@ -94,6 +94,7 @@ export function showDrawScreen() {
     state.selectedSlotIdx = -1;
     state.showDetail = true;
     state.showInterp = false;
+    state.spreadHidden = false;
 
     showScreen('draw');
 
@@ -116,6 +117,10 @@ export function showDrawScreen() {
         document.getElementById('interp-spinner'),
         document.getElementById('interp-load-msg'),
     );
+    state.interpCtrl.onComplete = () => showInterpActions();
+    state.interpCtrl.onError = () => {
+        document.getElementById('interp-actions').classList.add('hidden');
+    };
 }
 
 // -- Carousel --
@@ -414,9 +419,128 @@ function updateDrawActions() {
 
 async function startInterpretation() {
     state.showInterp = true;
+    document.getElementById('interp-actions').classList.add('hidden');
     document.getElementById('screen-draw').classList.add('interpreting');
     syncDrawLayoutState();
     document.getElementById('interp-panel').classList.remove('hidden');
     updateDrawActions();
     await state.interpCtrl.start(state.spread.drawnCards, state.question, state.strings, state.spreadKey);
+}
+
+function showInterpActions() {
+    const actions = document.getElementById('interp-actions');
+    if (!actions) return;
+    actions.classList.remove('hidden');
+
+    const btnToggle = document.getElementById('btn-toggle-spread');
+    const btnCopy = document.getElementById('btn-copy-text');
+    const btnExport = document.getElementById('btn-export-image');
+
+    btnToggle.textContent = t('draw.btn_hide_cards', 'Hide Cards');
+    btnToggle.onclick = () => {
+        state.spreadHidden = !state.spreadHidden;
+        const spreadArea = document.getElementById('spread-area');
+        spreadArea.style.display = state.spreadHidden ? 'none' : '';
+        const screen = document.getElementById('screen-draw');
+        screen.classList.toggle('spread-hidden', state.spreadHidden);
+        btnToggle.textContent = t(
+            state.spreadHidden ? 'draw.btn_show_cards' : 'draw.btn_hide_cards',
+            state.spreadHidden ? 'Show Cards' : 'Hide Cards'
+        );
+    };
+
+    btnCopy.textContent = t('draw.btn_copy_text', 'Copy Text');
+    btnCopy.onclick = async () => {
+        if (!state.interpCtrl.initialText.trim()) {
+            showToast(t('draw.copy_failed', 'Nothing to copy'));
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(state.interpCtrl.initialText);
+            showToast(t('draw.copy_success', '✦ Copied to clipboard'));
+        } catch {
+            showToast(t('draw.copy_failed', 'Copy failed'));
+        }
+    };
+
+    btnExport.textContent = t('draw.btn_export_image', 'Export Image');
+    btnExport.onclick = () => exportInterpImage();
+}
+
+async function exportInterpImage() {
+    const content = document.querySelector('#interp-text .content');
+    if (!content) return;
+
+    try {
+        const rect = content.getBoundingClientRect();
+        const scale = 2;
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.ceil(rect.width) * scale;
+        canvas.height = Math.ceil(rect.height) * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(scale, scale);
+
+        // Draw background
+        const bg = getComputedStyle(document.documentElement).getPropertyValue('--crust').trim() || '#11111b';
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, rect.width, rect.height);
+
+        // Use foreignObject SVG approach
+        const cssRules = [];
+        for (const sheet of document.styleSheets) {
+            try {
+                for (const rule of sheet.cssRules) {
+                    if (rule.cssText && (rule.cssText.includes('.interp-text') || rule.cssText.includes('.content'))) {
+                        cssRules.push(rule.cssText);
+                    }
+                }
+            } catch { /* cross-origin */ }
+        }
+
+        const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.ceil(rect.width)}" height="${Math.ceil(rect.height)}">
+            <foreignObject width="100%" height="100%">
+                <div xmlns="http://www.w3.org/1999/xhtml" style="padding:20px;background:${bg};color:#cdd6f4;font-family:system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.7;">
+                    ${content.innerHTML}
+                </div>
+            </foreignObject>
+        </svg>`;
+
+        const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = async () => {
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(url);
+
+            canvas.toBlob(async (pngBlob) => {
+                if (!pngBlob) {
+                    showToast(t('draw.export_failed', 'Export failed'));
+                    return;
+                }
+                try {
+                    await navigator.clipboard.write([
+                        new ClipboardItem({ 'image/png': pngBlob })
+                    ]);
+                    showToast(t('draw.export_success', '✦ Image exported to clipboard'));
+                } catch {
+                    // Fallback: download as file
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(pngBlob);
+                    a.download = 'nekomata-reading.png';
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                    showToast(t('draw.export_success', '✦ Image exported'));
+                }
+            }, 'image/png');
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            showToast(t('draw.export_failed', 'Export failed'));
+        };
+        img.src = url;
+    } catch {
+        showToast(t('draw.export_failed', 'Export failed'));
+    }
 }

@@ -16,6 +16,7 @@ export const state = {
     selectedSlotIdx: -1,
     showDetail: true,
     showInterp: false,
+    spreadHidden: false,
     interpCtrl: null,
     reversalProb: 0.5,
     browserReversed: false,
