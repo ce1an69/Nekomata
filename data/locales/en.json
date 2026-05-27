@@ -34,13 +34,13 @@
   "home": {
     "title": "Nekomata",
     "placeholder": "> ask your question...",
-    "hints": "Enter confirm · / commands · Q quit",
+    "hints": "Enter confirm · / commands · Ctrl+Q quit",
+    "unknown_command": "Unknown command",
     "commands": {
       "/browse": ["card_browser", "Browse all 78 cards"],
       "/browse_short": ["card_browser", "Browse all"],
       "/browse_cards": ["card_browser", "cards"],
-      "/help": ["help", "Show available commands"],
-      "/status": ["status", "Show current configuration"],
+      "/config": ["config", "Edit API settings"],
       "/quit": ["quit", "Exit application"]
     }
   },
@@ -56,7 +56,7 @@
     "error_url_required": "API URL is required",
     "error_model_required": "Model is required",
     "error_key_required": "API Key is required",
-    "hints": "Enter next / save · Tab switch"
+    "hints": "Enter next / save · Tab switch · Q back"
   },
 
   "spread_select": {
@@ -74,7 +74,8 @@
     "done_label": "── ✦ Spread ready ✦ ──",
     "hint_pick": "← → choose  Enter pick",
     "hint_flip": "← → choose  Enter flip",
-    "hint_done": "← → choose  {detail_hint}  I interpret  Q back",
+    "hint_interpret": "I interpret",
+    "hint_back": "Q back",
     "detail_show": "D detail",
     "detail_hide": "D hide",
     "interp_title": "Interpret",
@@ -114,14 +115,5 @@
     "back": "← Back",
     "detail": "Detail",
     "hide_detail": "Hide detail"
-  },
-  "status": {
-    "title": "Current Config",
-    "api_url": "API URL",
-    "api_key": "API Key",
-    "api_key_set": "(configured)",
-    "api_key_not_set": "(not set)",
-    "model": "Model",
-    "render": "Render"
   }
 }

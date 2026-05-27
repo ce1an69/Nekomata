@@ -367,7 +367,7 @@ class DrawScreen(Screen):
             self._w_spread_label.update(Text(_STR["done_label"], style=lbl))
             d_hint = _STR["detail_hide"] if self._detail.visible else _STR["detail_show"]
             f_hint = _STR["followup_remaining"].format(remaining=self._followup_remaining) if self._first_interp_done and self._followup_remaining > 0 else ""
-            parts = [d_hint, f_hint, "I interpret", "Q back"]
+            parts = [d_hint, f_hint, _STR["hint_interpret"], _STR["hint_back"]]
             self._w_footer.update(Text("  ".join(p for p in parts if p), style=C_OVERLAY0))
 
     # -- Pick phase --

@@ -10,11 +10,18 @@
 
 /* Setup */
 .setup-panel { max-width: 560px; }
-.setup-panel .btn-primary {
-    display: block;
-    width: 100%;
+.setup-actions {
+    display: flex;
+    gap: 10px;
     margin-top: 16px;
+}
+.setup-actions .btn-primary {
+    flex: 1;
     padding: 10px;
+    text-align: center;
+}
+.setup-actions .btn {
+    padding: 10px 16px;
     text-align: center;
 }
 

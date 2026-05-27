@@ -1,6 +1,7 @@
 """Nekomata TUI application entry point."""
 
 from textual.app import App
+from textual.binding import Binding
 from textual.events import Resize
 
 from nekomata.render.styles import (
@@ -26,6 +27,10 @@ class NekomataApp(App):
 
     TITLE = "Nekomata"
     CSS_PATH = None
+
+    BINDINGS = [
+        Binding("ctrl+q", "quit", "Quit", priority=True),
+    ]
 
     DEFAULT_CSS = f"""
     Screen {{
@@ -113,6 +118,10 @@ class NekomataApp(App):
 
     def _on_setup_done(self, _result: None) -> None:
         """Transition from setup screen to home screen."""
+        if not AppConfig.config_exists():
+            from nekomata.screens.setup import SetupScreen
+            self.push_screen(SetupScreen(), callback=self._on_setup_done)
+            return
         from nekomata.screens.home import HomeScreen
         if isinstance(self.screen, HomeScreen):
             self.screen.resume()

@@ -47,8 +47,8 @@ async def test_home_screen_shows_command_suggestions_while_typing_slash():
         assert suggestions.display
         rendered = str(suggestions.render())
         assert "/browse" in rendered
+        assert "/config" in rendered
         assert "/quit" in rendered
-        assert "Browse" in rendered or "Exit" in rendered
 
 
 @pytest.mark.asyncio
@@ -76,50 +76,24 @@ async def test_home_screen_hides_suggestions_on_exact_match():
 
 
 @pytest.mark.asyncio
-async def test_home_screen_help_command():
-    """The /help command shows a help panel and clears the input."""
+async def test_home_screen_config_command():
+    """The /config command opens the setup screen."""
     app = NekomataApp()
     async with app.run_test() as pilot:
         inp = app.screen.query_one("#prompt-input", Input)
-        await pilot.press("slash")
-        await pilot.press("h")
-        await pilot.press("e")
-        await pilot.press("l")
-        await pilot.press("p")
+        inp.value = "/config"
         await pilot.press("enter")
-        await pilot.pause(0)
-        await pilot.pause(0)
-        from nekomata.screens.home import HomeScreen
-        assert isinstance(app.screen, HomeScreen)
-        assert inp.value == ""
+        await pilot.pause()
+        from nekomata.screens.setup import SetupScreen
+        assert isinstance(app.screen, SetupScreen)
 
 
 @pytest.mark.asyncio
-async def test_home_screen_status_command():
-    """The /status command shows current configuration."""
+async def test_home_screen_ctrl_q_exits():
+    """Pressing Ctrl+Q exits the app."""
     app = NekomataApp()
     async with app.run_test() as pilot:
-        inp = app.screen.query_one("#prompt-input", Input)
-        inp.value = "/status"
-        await pilot.press("enter")
-        await pilot.pause(0)
-        await pilot.pause(0)
-        await pilot.pause(0)
-        from nekomata.screens.home import HomeScreen
-        assert isinstance(app.screen, HomeScreen)
-        suggestions = app.screen.query_one("#command-suggestions")
-        assert suggestions.display
-        rendered = str(suggestions.render())
-        assert "API URL" in rendered or "API Key" in rendered
-        assert inp.value == ""
-
-
-@pytest.mark.asyncio
-async def test_home_screen_q_exits_when_input_empty():
-    """Pressing Q on an empty home prompt exits the app."""
-    app = NekomataApp()
-    async with app.run_test() as pilot:
-        await pilot.press("q")
+        await pilot.press("ctrl+q")
         await pilot.pause()
         assert app._exit
 

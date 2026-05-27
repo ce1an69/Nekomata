@@ -1,7 +1,6 @@
 """Home screen with animated banner, question input, and slash commands."""
 
 from textual.app import ComposeResult
-from textual.binding import Binding
 from textual.containers import Vertical
 from textual.css.scalar import ScalarOffset
 from textual.events import Key
@@ -27,27 +26,18 @@ from nekomata.i18n import lazy_section
 from nekomata.strings import ORNAMENT
 
 _STR = lazy_section("home")
-_STATUS_STR = lazy_section("status")
 
 SLASH_COMMANDS = {k: tuple(v) for k, v in _STR["commands"].items()}
 
 
 class HomePromptInput(Input):
-    """Prompt input that reserves bare Q for quitting from an empty prompt."""
-
-    def on_key(self, event: Key) -> None:
-        if event.key == "q" and not self.value:
-            self.app.exit()
-            event.stop()
-            return
+    """Prompt input — Q does nothing on home screen."""
 
 
 class HomeScreen(Screen):
     """Landing screen with animated banner, question input, and slash commands."""
 
-    BINDINGS = [
-        Binding("q", "quit_if_empty", "Quit", priority=True),
-    ]
+    BINDINGS = []
 
     DEFAULT_CSS = f"""
     HomeScreen {{
@@ -152,24 +142,9 @@ class HomeScreen(Screen):
             stack.styles.opacity = 0.5
             stack.styles.animate("opacity", 1.0, duration=0.25, easing=EASE)
 
-    def _show_help(self) -> None:
-        """Display help text in the command suggestions area."""
-        lines = ["[command-highlight]Commands[/]\n"]
-        for cmd, (_, desc) in SLASH_COMMANDS.items():
-            lines.append(f"  {cmd:<10s} {desc}")
-        lines.append("\nType a question to start a reading")
-        self.set_timer(0.05, lambda: self._show_suggestions("\n".join(lines)))
-
-    def _show_status(self) -> None:
-        """Display current configuration in the command suggestions area."""
-        cfg = self.app.config
-        key_status = _STATUS_STR["api_key_set"] if cfg.api_key else _STATUS_STR["api_key_not_set"]
-        lines = [f"[command-highlight]{_STATUS_STR['title']}[/]\n"]
-        lines.append(f"  {_STATUS_STR['api_url']}    {cfg.api_url}")
-        lines.append(f"  {_STATUS_STR['api_key']}    {key_status}")
-        lines.append(f"  {_STATUS_STR['model']}      {cfg.model}")
-        lines.append(f"  {_STATUS_STR['render']}     {self.app.render_mode}")
-        self.set_timer(0.05, lambda: self._show_suggestions("\n".join(lines)))
+    def _on_config_done(self, _result: None) -> None:
+        """Callback after /config setup screen is dismissed."""
+        self.resume()
 
     def _show_suggestions(self, text: str) -> None:
         """Update and show the command suggestions panel."""
@@ -229,11 +204,6 @@ class HomeScreen(Screen):
             self._navigating_suggestions = False
             return
 
-    def action_quit_if_empty(self) -> None:
-        """Quit from the empty home prompt with Q."""
-        if not self.query_one("#prompt-input", Input).value:
-            self.app.exit()
-
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle Enter: dispatch slash commands or proceed to spread selection."""
         if event.input.id != "prompt-input":
@@ -250,17 +220,17 @@ class HomeScreen(Screen):
                 from nekomata.screens.card_browser import CardBrowserScreen
                 self.app.push_screen(CardBrowserScreen())
                 return
-            if cmd == "help":
+            if cmd == "config":
                 self.query_one("#prompt-input", Input).value = ""
-                self._show_help()
-                return
-            if cmd == "status":
-                self.query_one("#prompt-input", Input).value = ""
-                self._show_status()
+                from nekomata.screens.setup import SetupScreen
+                self.app.push_screen(SetupScreen(), callback=self._on_config_done)
                 return
             if cmd == "quit":
                 self.app.exit()
                 return
+        elif value.startswith("/"):
+            self._show_suggestions(f"[command-highlight]{_STR['unknown_command']}[/]  {value}")
+            return
 
         # Not a command — treat as a divination question
         self.query_one("#prompt-input", Input).value = ""
