@@ -597,6 +597,196 @@ async def test_detail_panel_keeps_interpretation_height_after_toggle():
 
 
 @pytest.mark.asyncio
+async def test_fullscreen_interpretation_keeps_top_visible():
+    """Fullscreen interpretation should not make the whole screen scroll."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test(size=(198, 62)) as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "fullscreen interpretation top visible"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+
+        from nekomata.screens.draw import DrawScreen
+
+        assert isinstance(app.screen, DrawScreen)
+        app.screen._dialog.show(
+            sync_layout=app.screen._sync_interp_layout,
+            fit_height=lambda: app.screen._dialog.fit_height(
+                app.screen._w_main_area,
+                app.screen._detail.visible,
+            ),
+        )
+        await pilot.pause(0.2)
+
+        if app.screen._detail.visible:
+            await pilot.press("d")
+            await pilot.pause(0.2)
+
+        await pilot.press("h")
+        await pilot.pause(0.2)
+
+        dialog = app.screen.query_one("#interp-dialog")
+        divider = app.screen.query_one("#draw-divider")
+        content = app.screen.content_region
+        assert app.screen._dialog.fullscreen
+        assert dialog.region.y == divider.region.y + divider.region.height
+        assert dialog.region.x - content.x == content.right - dialog.region.right
+        assert dialog.region.y + dialog.region.height < app.screen.size.height
+        assert app.screen.max_scroll_y == 0
+
+
+@pytest.mark.asyncio
+async def test_fullscreen_can_toggle_detail_panel():
+    """Fullscreen mode should still allow the detail panel layout."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test(size=(198, 62)) as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "fullscreen detail toggle"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+
+        from nekomata.screens.draw import DrawScreen
+
+        assert isinstance(app.screen, DrawScreen)
+        app.screen._dialog.show(
+            sync_layout=app.screen._sync_interp_layout,
+            fit_height=lambda: app.screen._dialog.fit_height(
+                app.screen._w_main_area,
+                app.screen._detail.visible,
+            ),
+        )
+        await pilot.pause(0.2)
+
+        if app.screen._detail.visible:
+            await pilot.press("d")
+            await pilot.pause(0.2)
+
+        await pilot.press("h")
+        await pilot.pause(0.2)
+
+        dialog = app.screen.query_one("#interp-dialog")
+        full_width = dialog.region.width
+
+        await pilot.press("d")
+        await pilot.pause(0.2)
+
+        preview = app.screen.query_one("#card-preview")
+        assert app.screen._dialog.fullscreen
+        assert app.screen._detail.visible
+        assert preview.has_class("visible")
+        assert dialog.region.width < full_width
+        assert preview.region.x >= dialog.region.right
+        assert app.screen.max_scroll_y == 0
+
+        await pilot.press("d")
+        await pilot.pause(0.2)
+
+        assert not app.screen._detail.visible
+        assert dialog.region.width == full_width
+
+
+@pytest.mark.asyncio
+async def test_fullscreen_hint_hidden_before_interpretation_starts():
+    """The footer should not advertise fullscreen before the dialog exists."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "fullscreen hint hidden"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+
+        from nekomata.screens.draw import DrawScreen
+
+        assert isinstance(app.screen, DrawScreen)
+        footer = app.screen.query_one("#draw-footer")
+        assert "H " not in str(footer.render())
+
+
+@pytest.mark.asyncio
+async def test_footer_hides_interpret_hint_after_interpretation_starts():
+    """Once the dialog is open, the footer should not repeat I interpret."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "footer interpret hint"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+
+        from nekomata.screens.draw import DrawScreen
+
+        assert isinstance(app.screen, DrawScreen)
+        app.screen._dialog.show(
+            sync_layout=app.screen._sync_interp_layout,
+            fit_height=lambda: app.screen._dialog.fit_height(
+                app.screen._w_main_area,
+                app.screen._detail.visible,
+            ),
+        )
+        app.screen._update_footer_fullscreen()
+
+        footer = str(app.screen.query_one("#draw-footer").render())
+        assert "I " not in footer
+        assert "Q " in footer
+
+
+@pytest.mark.asyncio
+async def test_interpretation_hints_do_not_duplicate_shortcut_keys():
+    """Hint strings already include their shortcut keys."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "hint duplication"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+
+        from nekomata.screens.draw import DrawScreen
+
+        assert isinstance(app.screen, DrawScreen)
+        app.screen._first_interp_done = True
+        app.screen._update_followup_hints()
+
+        hints = str(app.screen.query_one("#interp-dialog-hints").render())
+        assert "F F " not in hints
+        assert "C C " not in hints
+        assert "E E " not in hints
+
+
+@pytest.mark.asyncio
 async def test_loading_hint_keeps_rotating_between_stream_chunks():
     """Loading hint should keep animating while the model stream is temporarily quiet."""
     app = NekomataApp()

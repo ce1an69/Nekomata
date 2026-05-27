@@ -94,7 +94,7 @@ export function showDrawScreen() {
     state.selectedSlotIdx = -1;
     state.showDetail = true;
     state.showInterp = false;
-    state.spreadHidden = false;
+    state.fullscreen = false;
 
     showScreen('draw');
 
@@ -398,18 +398,27 @@ function updateDrawActions() {
         btnsEl.appendChild(makeBtn(t('common.back', '← Back'), '', () => { showScreen('home'); resumeHome(); }));
     } else {
         hintEl.textContent = state.config.lang === 'zh' ? '点击牌面查看详情' : 'Click a card for details';
-        btnsEl.appendChild(makeBtn(
-            state.showDetail ? t('common.hide_detail', 'Hide detail') : t('common.detail', 'Detail'),
-            state.showDetail ? 'active' : '',
-            () => {
-                state.showDetail = !state.showDetail;
-                document.getElementById('detail-panel').classList.toggle('hidden', !state.showDetail);
-                syncDrawLayoutState();
-                updateDrawActions();
-            },
-        ));
+        if (!state.showInterp) {
+            btnsEl.appendChild(makeBtn(
+                state.showDetail ? t('common.hide_detail', 'Hide detail') : t('common.detail', 'Detail'),
+                state.showDetail ? 'active' : '',
+                () => {
+                    state.showDetail = !state.showDetail;
+                    document.getElementById('detail-panel').classList.toggle('hidden', !state.showDetail);
+                    syncDrawLayoutState();
+                    updateDrawActions();
+                },
+            ));
+        }
         if (!state.showInterp) {
             btnsEl.appendChild(makeBtn(t('draw.interp_title', 'Interpret'), 'btn-primary', () => startInterpretation()));
+        }
+        if (state.showInterp) {
+            const fsKey = state.fullscreen ? 'draw.btn_exit_fullscreen' : 'draw.btn_fullscreen';
+            const fsLabel = state.fullscreen
+                ? (state.strings?.[fsKey] || 'Exit Fullscreen')
+                : (state.strings?.[fsKey] || 'Fullscreen');
+            btnsEl.appendChild(makeBtn(fsLabel, state.fullscreen ? 'active' : '', () => toggleFullscreen()));
         }
         btnsEl.appendChild(makeBtn(t('common.back', '← Back'), '', () => { showScreen('home'); resumeHome(); }));
     }
@@ -419,6 +428,7 @@ function updateDrawActions() {
 
 async function startInterpretation() {
     state.showInterp = true;
+    state.fullscreen = false;
     document.getElementById('interp-actions').classList.add('hidden');
     document.getElementById('screen-draw').classList.add('interpreting');
     syncDrawLayoutState();
@@ -427,27 +437,20 @@ async function startInterpretation() {
     await state.interpCtrl.start(state.spread.drawnCards, state.question, state.strings, state.spreadKey);
 }
 
+function toggleFullscreen() {
+    state.fullscreen = !state.fullscreen;
+    const screen = document.getElementById('screen-draw');
+    screen.classList.toggle('fullscreen', state.fullscreen);
+    updateDrawActions();
+}
+
 function showInterpActions() {
     const actions = document.getElementById('interp-actions');
     if (!actions) return;
     actions.classList.remove('hidden');
 
-    const btnToggle = document.getElementById('btn-toggle-spread');
     const btnCopy = document.getElementById('btn-copy-text');
     const btnExport = document.getElementById('btn-export-image');
-
-    btnToggle.textContent = t('draw.btn_hide_cards', 'Hide Cards');
-    btnToggle.onclick = () => {
-        state.spreadHidden = !state.spreadHidden;
-        const spreadArea = document.getElementById('spread-area');
-        spreadArea.style.display = state.spreadHidden ? 'none' : '';
-        const screen = document.getElementById('screen-draw');
-        screen.classList.toggle('spread-hidden', state.spreadHidden);
-        btnToggle.textContent = t(
-            state.spreadHidden ? 'draw.btn_show_cards' : 'draw.btn_hide_cards',
-            state.spreadHidden ? 'Show Cards' : 'Hide Cards'
-        );
-    };
 
     btnCopy.textContent = t('draw.btn_copy_text', 'Copy Text');
     btnCopy.onclick = async () => {

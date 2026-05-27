@@ -119,7 +119,7 @@ DrawScreen {{
     opacity: 0;
     display: none;
     offset: 4 0;
-    transition: opacity 240ms {EASE_OUT}, offset 320ms {EASE_SPRING}, border 180ms {EASE_OUT};
+    transition: opacity 280ms {EASE_OUT}, offset 340ms {EASE_SPRING}, border 180ms {EASE_OUT};
 }}
 #card-preview.box-active {{
     border: round {C_MAUVE};
@@ -165,7 +165,7 @@ DrawScreen {{
     margin: 0 1 1 1;
     opacity: 0;
     offset: 0 2;
-    transition: opacity 240ms {EASE_OUT}, offset 320ms {EASE_SPRING}, width 220ms {EASE_OUT}, border 180ms {EASE_OUT};
+    transition: opacity 300ms {EASE_OUT}, offset 340ms {EASE_SPRING}, width 300ms {EASE_OUT}, border 180ms {EASE_OUT};
 }}
 #interp-dialog.box-active {{
     border: round {C_MAUVE};
@@ -175,8 +175,9 @@ DrawScreen {{
     opacity: 1;
     offset: 0 0;
 }}
-#interp-dialog.spread-hidden {{
+#interp-dialog.fullscreen {{
     max-height: 999;
+    margin-top: 0;
 }}
 #interp-dialog-title {{
     color: {C_MAUVE};
@@ -200,7 +201,7 @@ DrawScreen {{
     display: none;
     opacity: 0;
     offset: 0 1;
-    transition: opacity 200ms {EASE_OUT}, offset 240ms {EASE_SPRING};
+    transition: opacity 240ms {EASE_OUT}, offset 300ms {EASE_SPRING};
 }}
 #followup-section.visible {{
     display: block;
