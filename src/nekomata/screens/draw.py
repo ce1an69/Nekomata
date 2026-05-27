@@ -176,6 +176,26 @@ class DrawScreen(Screen):
     def _stream_timer(self):
         return self._stream._timer
 
+    # -- Box change / hints sync --
+
+    def _on_box_changed(self) -> None:
+        """Update interp hints visibility when active box changes."""
+        if self._box.active_box == "interp":
+            self._sync_interp_hints()
+        else:
+            self._w_interp_hints.update("")
+
+    def _sync_interp_hints(self) -> None:
+        """Refresh interp hints when interp box becomes active."""
+        if self._dialog.is_streaming:
+            pass  # streaming handler owns the hints
+        elif self._phase == Phase.DONE and self._first_interp_done:
+            self._update_followup_hints()
+        elif self._phase == Phase.DONE:
+            self._w_interp_hints.update(Text(
+                f"I {_STR['hint_interpret']}", style=C_OVERLAY0
+            ))
+
     # -- BoxManager callback --
 
     def _available_boxes(self) -> list[str]:
@@ -183,9 +203,15 @@ class DrawScreen(Screen):
             return ["deck"]
         if self._phase == Phase.FLIP:
             return ["spread"]
+        if self._dialog.fullscreen:
+            boxes = []
+            if self._detail.visible:
+                boxes.append("detail")
+            if self._dialog.is_visible:
+                boxes.append("interp")
+            return boxes or ["interp"]
         boxes = []
-        if not self._dialog.spread_hidden:
-            boxes.append("spread")
+        boxes.append("spread")
         if self._detail.visible:
             boxes.append("detail")
         if self._dialog.is_visible:
@@ -342,6 +368,17 @@ class DrawScreen(Screen):
         if deck_cards:
             deck_cards[0].focus()
 
+    # -- Footer hints --
+
+    def _update_footer_fullscreen(self) -> None:
+        """Update DONE phase footer with fullscreen toggle hint."""
+        d_hint = _STR["detail_hide"] if self._detail.visible else _STR["detail_show"]
+        f_hint = _STR["followup_remaining"].format(remaining=self._followup_remaining) if self._first_interp_done and self._followup_remaining > 0 else ""
+        h_hint = _STR['fullscreen_exit' if self._dialog.fullscreen else 'fullscreen_enter'] if self._dialog.is_visible else ""
+        i_hint = "" if self._dialog.is_visible else _STR["hint_interpret"]
+        parts = [d_hint, h_hint, f_hint, i_hint, _STR["hint_back"]]
+        self._w_footer.update(Text("  ".join(p for p in parts if p), style=C_OVERLAY0))
+
     # -- Phase UI --
 
     def _update_phase_ui(self) -> None:
@@ -373,10 +410,7 @@ class DrawScreen(Screen):
         elif self._phase == Phase.DONE:
             self._w_deck_section.display = False
             self._w_spread_label.update(Text(_STR["done_label"], style=lbl))
-            d_hint = _STR["detail_hide"] if self._detail.visible else _STR["detail_show"]
-            f_hint = _STR["followup_remaining"].format(remaining=self._followup_remaining) if self._first_interp_done and self._followup_remaining > 0 else ""
-            parts = [d_hint, f_hint, _STR["hint_interpret"], _STR["hint_back"]]
-            self._w_footer.update(Text("  ".join(p for p in parts if p), style=C_OVERLAY0))
+            self._update_footer_fullscreen()
 
     # -- Pick phase --
 
@@ -525,10 +559,11 @@ class DrawScreen(Screen):
             return
         if self._detail.visible:
             if self._box.active_box == "detail":
-                self._box.active_box = "spread"
+                self._box.active_box = "interp" if self._dialog.fullscreen else "spread"
                 self._box.update_highlights()
                 self._box.focus_widget()
-            self._detail.hide(sync_interp=self._sync_interp_layout, center_spread=self._center_spread_area)
+            center_spread = None if self._dialog.fullscreen else self._center_spread_area
+            self._detail.hide(sync_interp=self._sync_interp_layout, center_spread=center_spread)
         else:
             self._detail.show(
                 sync_interp=self._sync_interp_layout,
@@ -537,7 +572,12 @@ class DrawScreen(Screen):
             slots = list(self.query(SpreadSlot))
             if slots:
                 self._detail.update(slots[0])
-                slots[0].focus()
+                if not self._dialog.fullscreen:
+                    slots[0].focus()
+            if self._dialog.fullscreen:
+                self._box.active_box = "detail"
+                self._box.update_highlights()
+                self._box.focus_widget()
         self._update_phase_ui()
 
     # -- Follow-up --
@@ -569,11 +609,11 @@ class DrawScreen(Screen):
             self._w_followup_section.styles.offset = (0, 1)
         self._w_followup_section.add_class("visible")
         if self.app.animation_enabled:
-            self._w_followup_section.styles.animate("opacity", 1.0, duration=0.20, easing=EASE)
+            self._w_followup_section.styles.animate("opacity", 1.0, duration=0.24, easing=EASE)
             self._w_followup_section.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 0)),
-                duration=0.26,
+                duration=0.30,
                 easing=EASE_SPRING,
             )
         self._w_followup_input.focus()
@@ -582,14 +622,14 @@ class DrawScreen(Screen):
         """Hide the follow-up input box with exit animation."""
         self._followup_visible = False
         if self.app.animation_enabled:
-            self._w_followup_section.styles.animate("opacity", 0.0, duration=0.14, easing=EASE)
+            self._w_followup_section.styles.animate("opacity", 0.0, duration=0.18, easing=EASE)
             self._w_followup_section.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 1)),
-                duration=0.18,
+                duration=0.24,
                 easing=EASE,
             )
-            self.set_timer(0.18, self._finish_followup_hide)
+            self.set_timer(0.24, self._finish_followup_hide)
         else:
             self._finish_followup_hide()
 
@@ -626,23 +666,22 @@ class DrawScreen(Screen):
         """Update interp hints bar with follow-up and export availability."""
         parts = [_STR["done_marker"]]
         if self._followup_remaining > 0:
-            parts.append(f"F {_STR['followup_remaining'].format(remaining=self._followup_remaining)}")
-        parts.append(f"H {_STR['spread_hide' if not self._dialog.spread_hidden else 'spread_show']}")
-        parts.append(f"C {_STR['copy_text']}")
-        parts.append(f"E {_STR['export_image']}")
-        parts.append(_STR["close_hint"])
+            parts.append(_STR["followup_remaining"].format(remaining=self._followup_remaining))
+        parts.append(_STR['fullscreen_exit' if self._dialog.fullscreen else 'fullscreen_enter'])
+        parts.append(_STR["copy_text"])
+        parts.append(_STR["export_image"])
         self._w_interp_hints.update(Text("  ".join(parts), style=C_OVERLAY0))
-        self._update_phase_ui()
 
     # -- Spread toggle / Copy / Export --
 
     def key_h(self, event: Key) -> None:
-        """Toggle spread visibility during interpretation."""
-        if self._phase != Phase.DONE or not self._dialog.is_visible or self._dialog.is_streaming:
+        """Toggle fullscreen mode for interpretation dialog."""
+        if self._phase != Phase.DONE or not self._dialog.is_visible:
             return
         event.stop()
-        self._dialog.toggle_spread(self._w_main_area)
+        self._dialog.toggle_fullscreen(self._w_main_area)
         self._update_followup_hints()
+        self._update_footer_fullscreen()
 
     def key_c(self, event: Key) -> None:
         """Copy initial interpretation text to clipboard."""
@@ -671,7 +710,7 @@ class DrawScreen(Screen):
         """Render interpretation to image and copy to clipboard."""
         tmp_path = ""
         try:
-            img = render_interp_image(self._initial_interp_content)
+            img = render_interp_image(self._initial_interp_content, self._drawn_cards)
             tmp_path = _save_tmp_image(img)
             ok = _copy_image_to_clipboard(tmp_path)
         except Exception:
@@ -707,6 +746,8 @@ class DrawScreen(Screen):
                 sync_layout=self._sync_interp_layout,
                 fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
             )
+            self._sync_interp_hints()
+            self._update_footer_fullscreen()
             self._dialog.run(self._drawn_cards, self._question, lambda: self._cancelled)
 
     def action_handle_back(self) -> None:
@@ -735,10 +776,12 @@ class DrawScreen(Screen):
         if event.key == "shift+tab":
             event.stop()
             self._box.cycle(-1)
+            self._on_box_changed()
 
     def key_tab(self, event: Key) -> None:
         event.stop()
         self._box.cycle(1)
+        self._on_box_changed()
 
     def key_left(self) -> None:
         if self._box.active_box not in ("detail", "interp"):

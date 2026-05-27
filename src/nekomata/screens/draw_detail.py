@@ -43,11 +43,11 @@ class DetailPanel:
             self._w_preview.styles.offset = (4, 0)
         self._w_preview.add_class("visible")
         if self._screen.app.animation_enabled:
-            self._w_preview.styles.animate("opacity", 1.0, duration=0.24, easing=EASE)
+            self._w_preview.styles.animate("opacity", 1.0, duration=0.28, easing=EASE)
             self._w_preview.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 0)),
-                duration=0.32,
+                duration=0.34,
                 easing=EASE,
             )
         self._last_preview_id = None
@@ -61,14 +61,14 @@ class DetailPanel:
         if sync_interp:
             sync_interp()
         if self._screen.app.animation_enabled:
-            self._w_preview.styles.animate("opacity", 0.0, duration=0.18, easing=EASE)
+            self._w_preview.styles.animate("opacity", 0.0, duration=0.22, easing=EASE)
             self._w_preview.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(4, 0)),
-                duration=0.24,
+                duration=0.30,
                 easing=EASE,
             )
-            self._screen.set_timer(0.24, self._finish_hide)
+            self._screen.set_timer(0.30, self._finish_hide)
         else:
             self._finish_hide()
 
@@ -107,9 +107,9 @@ class DetailPanel:
         self._last_preview_id = preview_id
 
         if self._screen.app.animation_enabled and self._w_preview.children:
-            self._w_preview.styles.animate("opacity", 0.0, duration=0.12, easing=EASE)
-            self._screen.set_timer(0.12, lambda: self._render_slot(dc))
-            self._screen.set_timer(0.14, self._fade_in_preview)
+            self._w_preview.styles.animate("opacity", 0.0, duration=0.14, easing=EASE)
+            self._screen.set_timer(0.14, lambda: self._render_slot(dc))
+            self._screen.set_timer(0.16, self._fade_in_preview)
         else:
             self._render_slot(dc)
 
@@ -130,4 +130,4 @@ class DetailPanel:
 
     def _fade_in_preview(self) -> None:
         """Fade the preview panel back in after content swap."""
-        self._w_preview.styles.animate("opacity", 1.0, duration=0.18, easing=EASE)
+        self._w_preview.styles.animate("opacity", 1.0, duration=0.22, easing=EASE)

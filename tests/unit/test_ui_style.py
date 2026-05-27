@@ -117,8 +117,8 @@ def test_draw_detail_panel_docks_to_right_full_height():
     detail_css = css.split("#card-preview {")[1].split("}")[0]
     assert "dock: right;" in detail_css
     assert "height: 1fr;" in detail_css
-    assert "transition: opacity 240ms" in detail_css
-    assert "offset 320ms" in detail_css
+    assert "transition: opacity 280ms" in detail_css
+    assert "offset 340ms" in detail_css
 
 
 def test_draw_interpretation_panel_fills_bottom_flow_space():
@@ -128,8 +128,8 @@ def test_draw_interpretation_panel_fills_bottom_flow_space():
     content_css = css.split("#interp-dialog-content {")[1].split("}")[0]
     assert "dock: bottom;" in interp_css
     assert "width: 1fr;" in interp_css
-    assert "transition: opacity 240ms" in interp_css
-    assert "width 220ms" in interp_css
+    assert "transition: opacity 300ms" in interp_css
+    assert "width 300ms" in interp_css
     assert "height: 1fr;" not in content_css
 
 
@@ -177,6 +177,12 @@ def test_draw_stream_content_renders_markdown():
     assert 'Markdown("".join(self._content_chars)' in source
     assert "C_TEXT" in source
     assert "self._render_content(parts)" in source
+
+
+def test_draw_export_image_includes_drawn_cards():
+    source = inspect.getsource(DrawScreen._export_image)
+
+    assert "render_interp_image(self._initial_interp_content, self._drawn_cards)" in source
 
 
 def test_draw_loading_hint_rotates_cat_tarot_messages():

@@ -1,13 +1,11 @@
 """Interpretation dialog manager for the draw screen."""
 
-import json
-
 from rich.text import Text
 
 from textual.css.scalar import ScalarOffset
 from textual.geometry import Offset
 
-from nekomata.render.styles import C_MAUVE, C_OVERLAY0, C_RED, EASE
+from nekomata.render.styles import C_RED, EASE
 from nekomata.screens.stream_handler import StreamHandler
 
 # Layout constants
@@ -18,6 +16,8 @@ INTERP_SIDE_MARGIN = 1
 INTERP_DETAIL_GAP = 0
 INTERP_FULL_SIDE_MARGIN = 5
 INTERP_FULL_WIDTH_CORRECTION = 4
+INTERP_FULLSCREEN_VERTICAL_CHROME = 5
+INTERP_FULLSCREEN_SIDE_MARGIN = 1
 DETAIL_PANEL_WIDTH = 66
 
 
@@ -29,7 +29,11 @@ class InterpretationDialog:
         self._box = box_manager
         self._stream = stream
         self._streaming = False
-        self._spread_hidden = False
+        self._fullscreen = False
+        self._prev_detail_visible = False
+        self._prev_main_area_display = True
+        self._prev_status_display = True
+        self._height_timers: list = []
         # Cache widget references (set after mount)
         self._w_interp = None
         self._w_content = None
@@ -53,24 +57,80 @@ class InterpretationDialog:
     # -- Layout --
 
     @property
-    def spread_hidden(self) -> bool:
-        return self._spread_hidden
+    def fullscreen(self) -> bool:
+        return self._fullscreen
 
-    def toggle_spread(self, main_area) -> None:
-        """Toggle spread area visibility and adjust interp panel."""
-        self._spread_hidden = not self._spread_hidden
+    def toggle_fullscreen(self, main_area) -> None:
+        """Toggle fullscreen mode: hide spread, keep detail available."""
+        self._fullscreen = not self._fullscreen
         spread_area = self._screen.query_one("#spread-area")
-        if self._spread_hidden:
+        detail = self._screen._detail
+        if self._fullscreen:
+            self._prev_detail_visible = detail.visible
+            self._prev_main_area_display = main_area.display
+            self._prev_status_display = self._w_status.display
             spread_area.display = False
-            self._w_interp.add_class("spread-hidden")
-            if self._box.active_box == "spread":
-                self._box.active_box = "interp"
-                self._box.update_highlights()
-                self._box.focus_widget()
+            main_area.display = False
+            self._w_status.display = False
+            self._start_height_fullscreen()
         else:
-            spread_area.display = True
-            self._w_interp.remove_class("spread-hidden")
-        self.fit_height(main_area, self._screen._detail.visible)
+            self._animate_interp_height(
+                self._w_interp.region.height,
+                46,
+                on_complete=lambda: self._restore_from_fullscreen(spread_area, detail, main_area),
+            )
+
+    def _start_height_fullscreen(self) -> None:
+        self._w_interp.add_class("fullscreen")
+        self._cancel_height_anim()
+        self.sync_layout(self._screen._detail.visible, self._screen.size.width)
+        self._w_interp.styles.height = max(
+            INTERP_MIN_HEIGHT,
+            self._screen.size.height - INTERP_FULLSCREEN_VERTICAL_CHROME,
+        )
+
+    def _restore_from_fullscreen(self, spread_area, detail, main_area) -> None:
+        """Restore spread and detail after fullscreen exit animation."""
+        self._w_interp.remove_class("fullscreen")
+        main_area.display = self._prev_main_area_display
+        self._w_status.display = self._prev_status_display
+        spread_area.display = True
+        if self._prev_detail_visible and not detail.visible:
+            detail.show(
+                sync_interp=lambda: self.sync_layout(True, self._screen.size.width),
+                fit_height=lambda: self.fit_height(main_area, True),
+            )
+        elif not self._prev_detail_visible and detail.visible:
+            detail.hide(sync_interp=lambda: self.sync_layout(False, self._screen.size.width))
+        else:
+            self.sync_layout(detail.visible, self._screen.size.width)
+        self.fit_height(main_area, detail.visible)
+
+    def _cancel_height_anim(self) -> None:
+        for t in self._height_timers:
+            t.stop()
+        self._height_timers.clear()
+
+    def _animate_interp_height(self, from_pct: float, to_pct: float, on_complete=None) -> None:
+        """Animate interp dialog height between percentages using timer steps."""
+        self._cancel_height_anim()
+        if not self._screen.app.animation_enabled:
+            self._w_interp.styles.height = f"{to_pct}%"
+            if on_complete:
+                on_complete()
+            return
+        steps = 8
+        step_delay = 0.035
+        for i in range(steps):
+            t = (i + 1) / steps
+            eased = 1 - (1 - t) ** 3  # out_cubic
+            val = from_pct + (to_pct - from_pct) * eased
+            delay = max(0.001, step_delay * i)
+            timer = self._screen.set_timer(delay, lambda v=val: setattr(self._w_interp.styles, "height", f"{v}%"))
+            self._height_timers.append(timer)
+        if on_complete:
+            timer = self._screen.set_timer(max(0.001, step_delay * steps), on_complete)
+            self._height_timers.append(timer)
 
     def sync_layout(self, detail_visible: bool, screen_width: int) -> None:
         """Adjust interp dialog width to share space with the detail panel.
@@ -78,6 +138,22 @@ class InterpretationDialog:
         When detail is visible, the interp panel shrinks to avoid overlap.
         When detail is hidden, it expands to full available width.
         """
+        if self._fullscreen:
+            self._w_interp.styles.margin = (0, 1, 2, 1)
+            if detail_visible:
+                self._w_interp.add_class("detail-visible")
+                self._w_interp.styles.width = max(
+                    40,
+                    screen_width - DETAIL_PANEL_WIDTH - INTERP_FULLSCREEN_SIDE_MARGIN * 2,
+                )
+            else:
+                self._w_interp.remove_class("detail-visible")
+                self._w_interp.styles.width = max(
+                    40,
+                    screen_width - INTERP_FULLSCREEN_SIDE_MARGIN * 2,
+                )
+            return
+
         if detail_visible:
             self._w_interp.add_class("detail-visible")
             self._w_interp.styles.margin = (0, 1, 2, 1)
@@ -121,11 +197,11 @@ class InterpretationDialog:
             self._w_interp.styles.offset = (0, 2)
         self._w_interp.add_class("visible")
         if self._screen.app.animation_enabled:
-            self._w_interp.styles.animate("opacity", 1.0, duration=0.24, easing=EASE)
+            self._w_interp.styles.animate("opacity", 1.0, duration=0.30, easing=EASE)
             self._w_interp.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 0)),
-                duration=0.32,
+                duration=0.34,
                 easing=EASE,
             )
         self._stream.reset()
@@ -135,18 +211,25 @@ class InterpretationDialog:
         """Hide the dialog with exit animation, then update phase UI."""
         self._streaming = False
         self._stream.stop()
+        if self._fullscreen:
+            self._fullscreen = False
+            self._cancel_height_anim()
+            self._w_interp.remove_class("fullscreen")
+            self._w_interp.styles.height = INTERP_PANEL_HEIGHT
+            self._screen.query_one("#main-area").display = self._prev_main_area_display
+            self._w_status.display = self._prev_status_display
         self._box.active_box = "spread"
         self._box.update_highlights()
         if self._screen.app.animation_enabled:
-            self._w_interp.styles.animate("opacity", 0.0, duration=0.18, easing=EASE)
+            self._w_interp.styles.animate("opacity", 0.0, duration=0.22, easing=EASE)
             self._w_interp.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 2)),
-                duration=0.24,
+                duration=0.28,
                 easing=EASE,
             )
             self._screen.set_timer(
-                0.24, lambda: self._w_interp.remove_class("visible")
+                0.28, lambda: self._w_interp.remove_class("visible")
             )
         else:
             self._w_interp.remove_class("visible")
