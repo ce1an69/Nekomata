@@ -71,7 +71,6 @@ class ConfirmExitInterpretation(ModalScreen[bool]):
     BINDINGS = [
         Binding("enter", "confirm", "Confirm"),
         Binding("escape", "cancel", "Cancel"),
-        Binding("q", "cancel", "Cancel"),
     ]
 
     DEFAULT_CSS = f"""

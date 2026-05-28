@@ -56,14 +56,14 @@
     "error_url_required": "API URL is required",
     "error_model_required": "Model is required",
     "error_key_required": "API Key is required",
-    "hints": "Enter next / save · Tab switch · Q back"
+    "hints": "Enter next / save · Tab switch · Esc back"
   },
 
   "spread_select": {
     "prompt": "Choose a spread",
-    "back_label": "Q   Back",
+    "back_label": "Esc  Back",
     "back_desc": "Return to the question prompt.",
-    "hints": "↑/↓/←/→ move · Enter confirm · Q back"
+    "hints": "↑/↓/←/→ move · Enter confirm · Esc back"
   },
 
   "draw": {
@@ -75,14 +75,14 @@
     "hint_pick": "← → choose  Enter pick",
     "hint_flip": "← → choose  Enter flip",
     "hint_interpret": "I interpret",
-    "hint_back": "Q back",
+    "hint_back": "Esc back",
     "detail_show": "D detail",
     "detail_hide": "D hide",
     "interp_title": "Interpret",
-    "interp_close_hint": "Q close",
-    "interp_done_hint": "── Done ──  Q close",
-    "followup_done_hint": "── Done ──  F follow-up ({remaining})  Q close",
-    "followup_exhausted_hint": "── Done ──  Q close",
+    "interp_close_hint": "Esc close",
+    "interp_done_hint": "── Done ──  Esc close",
+    "followup_done_hint": "── Done ──  F follow-up ({remaining})  Esc close",
+    "followup_exhausted_hint": "── Done ──  Esc close",
     "fullscreen_enter": "H expand interpretation",
     "fullscreen_exit": "H collapse interpretation",
     "btn_fullscreen": "Fullscreen",
@@ -90,7 +90,7 @@
     "copy_text": "C copy text",
     "export_image": "E export image",
     "done_marker": "── Done ──",
-    "close_hint": "Q close",
+    "close_hint": "Esc close",
     "copy_success": "✦ Copied to clipboard",
     "copy_failed": "Copy failed",
     "export_success": "✦ Image exported to clipboard",
@@ -115,7 +115,7 @@
     "reversed_preview": "  (reversed preview)",
     "select_placeholder": "Select a card",
     "suit": "Suit",
-    "hints": "↑/↓ cards · ←/→ filter · R reversal · Q back"
+    "hints": "↑/↓ cards · ←/→ filter · R reversal · Esc back"
   },
 
   "card_detail": {

@@ -31,7 +31,7 @@ SLASH_COMMANDS = {k: tuple(v) for k, v in _STR["commands"].items()}
 
 
 class HomePromptInput(Input):
-    """Prompt input — Q does nothing on home screen."""
+    """Prompt input on the home screen."""
 
 
 class HomeScreen(Screen):
