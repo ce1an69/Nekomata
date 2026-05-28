@@ -1,7 +1,7 @@
 """Card browser screen — browse and filter all 78 tarot cards."""
 
 from textual.app import ComposeResult
-from textual.containers import Center, Horizontal, Vertical, VerticalScroll
+from textual.containers import Center, Horizontal, VerticalScroll
 from textual.events import Key
 from textual.screen import Screen
 from textual.widgets import Button, Static
@@ -9,23 +9,31 @@ from textual.widgets import Button, Static
 from nekomata.card.data import load_all_cards
 from nekomata.card.types import Arcana, Card, DrawnCard, Position, ROMAN, arcana_display
 from nekomata.render.animations import animate_entrance
-from nekomata.render.card_renderer import render_card_detail, render_card_full_detail_widgets
+from nekomata.render.card_renderer import (
+    render_card_detail,
+    render_card_full_detail_widgets,
+)
 from nekomata.render.styles import (
     C_BASE,
     C_CRUST,
     C_MANTLE,
     C_MAUVE,
     C_OVERLAY0,
-    C_SUBTEXT0,
     C_SURFACE0,
     C_SURFACE1,
-    C_TEXT,
 )
 from nekomata.i18n import lazy_section, ui_section
 
 _STR = lazy_section("card_browser")
 
-_SUIT_ARCANAS = [None, Arcana.MAJOR, Arcana.CUPS, Arcana.WANDS, Arcana.SWORDS, Arcana.PENTACLES]
+_SUIT_ARCANAS = [
+    None,
+    Arcana.MAJOR,
+    Arcana.CUPS,
+    Arcana.WANDS,
+    Arcana.SWORDS,
+    Arcana.PENTACLES,
+]
 _ARCANA_KEYS = ["all", "major", "cups", "wands", "swords", "pentacles"]
 
 # Reusable position for card browser preview
@@ -199,9 +207,16 @@ class CardBrowserScreen(Screen):
     def _update_card_count_display(self) -> None:
         """Update the card count line to reflect current filter and reversal state."""
         count = self.query_one("#card-count", Static)
-        filtered = [c for c in self._cards if self._active_arcana is None or c.arcana == self._active_arcana]
+        filtered = [
+            c
+            for c in self._cards
+            if self._active_arcana is None or c.arcana == self._active_arcana
+        ]
         rev_label = _STR["reversed_preview"] if self._reversed_preview else ""
-        count.update(_STR["card_count"].format(filtered=len(filtered), total=len(self._cards)) + rev_label)
+        count.update(
+            _STR["card_count"].format(filtered=len(filtered), total=len(self._cards))
+            + rev_label
+        )
 
     def key_down(self) -> None:
         if isinstance(self.focused, CardListItem):
@@ -327,7 +342,11 @@ class CardListItem(Static):
     def __init__(self, card: Card) -> None:
         self._card = card
         suit = arcana_display(card.arcana)
-        num = ROMAN[card.number] if card.arcana == Arcana.MAJOR and card.number < len(ROMAN) else str(card.number)
+        num = (
+            ROMAN[card.number]
+            if card.arcana == Arcana.MAJOR and card.number < len(ROMAN)
+            else str(card.number)
+        )
         super().__init__(f"{num:>3s}  {card.name} [{suit}]")
 
     def on_click(self) -> None:
@@ -345,7 +364,9 @@ class CardListItem(Static):
             item.remove_class("selected")
         self.add_class("selected")
         is_reversed = self.screen._reversed_preview
-        drawn = DrawnCard(card=self._card, position=_BROWSER_POS, is_reversed=is_reversed)
+        drawn = DrawnCard(
+            card=self._card, position=_BROWSER_POS, is_reversed=is_reversed
+        )
         detail_panel = self.screen.query_one("#card-detail")
         if self.app.animation_enabled:
             detail_panel.styles.opacity = 0.2
@@ -360,11 +381,15 @@ class CardListItem(Static):
                 detail_panel.mount(text_widget)
                 detail_panel.scroll_home(animate=False)
                 if self.app.animation_enabled:
-                    detail_panel.styles.animate("opacity", 1.0, duration=0.18, easing="out_quint")
+                    detail_panel.styles.animate(
+                        "opacity", 1.0, duration=0.18, easing="out_quint"
+                    )
                 return
 
         widget = Static(render_card_detail(drawn))
         detail_panel.mount(widget)
         if self.app.animation_enabled:
             animate_entrance(widget, duration=0.18)
-            detail_panel.styles.animate("opacity", 1.0, duration=0.18, easing="out_quint")
+            detail_panel.styles.animate(
+                "opacity", 1.0, duration=0.18, easing="out_quint"
+            )
