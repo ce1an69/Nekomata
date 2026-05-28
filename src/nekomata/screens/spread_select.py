@@ -200,8 +200,7 @@ class SpreadSelectScreen(Screen):
             if btn_id == f"spread-{key}":
                 spread = get_spread(key)
                 positions = "\n".join(
-                    f"{position.name}"
-                    for position in spread.positions
+                    f"{position.name}" for position in spread.positions
                 )
                 title.update(spread.name)
                 desc_text.update(spread.description)
@@ -209,7 +208,9 @@ class SpreadSelectScreen(Screen):
                 if self.app.animation_enabled:
                     self.set_timer(
                         0.06,
-                        lambda: preview.styles.animate("opacity", 1.0, duration=0.2, easing="out_quint"),
+                        lambda: preview.styles.animate(
+                            "opacity", 1.0, duration=0.2, easing="out_quint"
+                        ),
                     )
                 return
         title.update("Back")
@@ -224,6 +225,7 @@ class SpreadSelectScreen(Screen):
         """Escape key binding — return to home and refocus input."""
         self.app.pop_screen()
         from nekomata.screens.home import HomeScreen
+
         if isinstance(self.app.screen, HomeScreen):
             self.app.screen.resume()
 
@@ -232,12 +234,23 @@ class SpreadSelectScreen(Screen):
         if 0 <= index < len(SPREAD_REGISTRY):
             self.dismiss(SPREAD_REGISTRY[index][0])
 
-    def key_1(self) -> None: self._select_by_index(0)
-    def key_2(self) -> None: self._select_by_index(1)
-    def key_3(self) -> None: self._select_by_index(2)
-    def key_4(self) -> None: self._select_by_index(3)
-    def key_5(self) -> None: self._select_by_index(4)
-    def key_6(self) -> None: self._select_by_index(5)
+    def key_1(self) -> None:
+        self._select_by_index(0)
+
+    def key_2(self) -> None:
+        self._select_by_index(1)
+
+    def key_3(self) -> None:
+        self._select_by_index(2)
+
+    def key_4(self) -> None:
+        self._select_by_index(3)
+
+    def key_5(self) -> None:
+        self._select_by_index(4)
+
+    def key_6(self) -> None:
+        self._select_by_index(5)
 
     def key_down(self) -> None:
         """Move focus to the next spread option."""

@@ -3,9 +3,13 @@
 import argparse
 import queue
 import socket
-import sys
 import threading
 import time
+import urllib.request
+
+import webview
+
+from nekomata.web.server import create_app
 
 
 def find_free_port() -> int:
@@ -45,24 +49,22 @@ def _run_server(
     errors: "queue.SimpleQueue[BaseException]",
 ) -> None:
     """Run uvicorn and pass background-thread startup failures to the caller."""
-    try:
-        import uvicorn
+    import uvicorn
 
-        uvicorn.run(app, host=host, port=port, log_level=log_level, log_config=None)
-    except BaseException as exc:
-        errors.put(exc)
+    uvicorn.run(app, host=host, port=port, log_level=log_level, log_config=None)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="nekomata-desktop")
-    parser.add_argument("--debug", action="store_true", help="Enable debug mode with logs and devtools")
+    parser.add_argument(
+        "--debug", action="store_true", help="Enable debug mode with logs and devtools"
+    )
     args = parser.parse_args()
 
     debug = args.debug
     if debug:
         print("[debug] starting Nekomata desktop...")
 
-    from nekomata.web.server import create_app
     port = find_free_port()
     if debug:
         print(f"[debug] using port {port}")
@@ -84,14 +86,11 @@ def main() -> None:
 
     url = f"http://127.0.0.1:{port}"
     if debug:
-        import urllib.request
         try:
             resp = urllib.request.urlopen(url, timeout=2)
             print(f"[debug] GET {url} → {resp.status}")
         except Exception as e:
             print(f"[debug] GET {url} → ERROR: {e}")
-
-    import webview
 
     if debug:
         print(f"[debug] opening webview window → {url}")

@@ -32,7 +32,7 @@ from nekomata.render.styles import (
     C_SURFACE2,
     C_TEXT,
 )
-from nekomata._paths import assets_dir, data_dir, static_dir
+from nekomata._paths import assets_dir, static_dir
 from nekomata.spread import SPREAD_REGISTRY
 from nekomata.storage.config import AppConfig
 
@@ -112,20 +112,23 @@ def _get_cached_cards() -> tuple[list[dict], dict[str, Card]]:
 
 def _spreads_to_list() -> list[dict]:
     from nekomata.spread import get_spread as _get_spread
+
     result = []
     for key, cls in SPREAD_REGISTRY:
         spread = _get_spread(key)
-        result.append({
-            "key": key,
-            "description": spread.description,
-            "suitable_for": spread.suitable_for,
-            "name": spread.name,
-            "positions": [
-                {"name": p.name, "description": p.description}
-                for p in spread.positions
-            ],
-            "card_count": len(spread.positions),
-        })
+        result.append(
+            {
+                "key": key,
+                "description": spread.description,
+                "suitable_for": spread.suitable_for,
+                "name": spread.name,
+                "positions": [
+                    {"name": p.name, "description": p.description}
+                    for p in spread.positions
+                ],
+                "card_count": len(spread.positions),
+            }
+        )
     return result
 
 
@@ -136,11 +139,13 @@ def _build_theme_css() -> str:
 
 # --- Request models ---
 
+
 class ConfigPayload(BaseModel):
     api_url: str = ""
     api_key: str = ""
     model: str = ""
     lang: str = "en"
+
 
 class DrawnCardPayload(BaseModel):
     card_id: str
@@ -149,14 +154,17 @@ class DrawnCardPayload(BaseModel):
     position_description: str = ""
     is_reversed: bool
 
+
 class InterpretPayload(BaseModel):
     question: str
     cards: list[DrawnCardPayload]
     spread_key: str = ""
 
+
 class FollowupPayload(BaseModel):
     messages: list[dict]
     question: str
+
 
 class ExportImagePayload(BaseModel):
     text: str
@@ -165,6 +173,7 @@ class ExportImagePayload(BaseModel):
 
 
 # --- App factory ---
+
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Nekomata Web", docs_url=None, redoc_url=None)
@@ -199,7 +208,13 @@ def create_app() -> FastAPI:
             model=payload.model,
             lang=payload.lang,
         )
-        return {"ok": True, "api_url": cfg.api_url, "model": cfg.model, "lang": cfg.lang, "has_api_key": bool(cfg.api_key)}
+        return {
+            "ok": True,
+            "api_url": cfg.api_url,
+            "model": cfg.model,
+            "lang": cfg.lang,
+            "has_api_key": bool(cfg.api_key),
+        }
 
     @app.get("/api/cards")
     async def get_cards():
@@ -234,23 +249,29 @@ def create_app() -> FastAPI:
             card = cards_by_id.get(dc.card_id)
             if card is None:
                 continue
-            drawn.append(DrawnCard(
-                card=card,
-                position=Position(
-                    name=dc.position_name,
-                    name_zh=dc.position_name_zh,
-                    description=dc.position_description,
-                ),
-                is_reversed=dc.is_reversed,
-            ))
+            drawn.append(
+                DrawnCard(
+                    card=card,
+                    position=Position(
+                        name=dc.position_name,
+                        name_zh=dc.position_name_zh,
+                        description=dc.position_description,
+                    ),
+                    is_reversed=dc.is_reversed,
+                )
+            )
 
         if not drawn:
-            return StreamingResponse(_sse_error("No valid cards provided"), media_type="text/event-stream")
+            return StreamingResponse(
+                _sse_error("No valid cards provided"), media_type="text/event-stream"
+            )
 
         try:
             interp = get_interpreter(config)
         except InterpretationError as exc:
-            return StreamingResponse(_sse_error(str(exc)), media_type="text/event-stream")
+            return StreamingResponse(
+                _sse_error(str(exc)), media_type="text/event-stream"
+            )
 
         async def _stream():
             loop = asyncio.get_running_loop()
@@ -282,7 +303,9 @@ def create_app() -> FastAPI:
         try:
             interp = get_interpreter(config)
         except InterpretationError as exc:
-            return StreamingResponse(_sse_error(str(exc)), media_type="text/event-stream")
+            return StreamingResponse(
+                _sse_error(str(exc)), media_type="text/event-stream"
+            )
 
         followup_msg = build_followup_prompt(req.question)
         messages = list(req.messages) + [{"role": "user", "content": followup_msg}]
@@ -322,15 +345,17 @@ def create_app() -> FastAPI:
             card = cards_by_id.get(dc.card_id)
             if card is None:
                 continue
-            drawn.append(DrawnCard(
-                card=card,
-                position=Position(
-                    name=dc.position_name,
-                    name_zh=dc.position_name_zh,
-                    description=dc.position_description,
-                ),
-                is_reversed=dc.is_reversed,
-            ))
+            drawn.append(
+                DrawnCard(
+                    card=card,
+                    position=Position(
+                        name=dc.position_name,
+                        name_zh=dc.position_name_zh,
+                        description=dc.position_description,
+                    ),
+                    is_reversed=dc.is_reversed,
+                )
+            )
 
         img = render_interp_image(req.text, drawn or None)
         buf = BytesIO()
@@ -338,7 +363,9 @@ def create_app() -> FastAPI:
         return Response(
             content=buf.getvalue(),
             media_type="image/png",
-            headers={"Content-Disposition": "attachment; filename=nekomata-reading.png"},
+            headers={
+                "Content-Disposition": "attachment; filename=nekomata-reading.png"
+            },
         )
 
     # Mount static files last (catch-all)

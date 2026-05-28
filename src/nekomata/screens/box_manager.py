@@ -1,7 +1,6 @@
 """Box-based focus navigation manager for the draw screen."""
 
 from textual.css.query import NoMatches
-from textual.widgets import Static
 
 from nekomata.screens.draw_widgets import DeckCard, SpreadSlot
 
@@ -76,7 +75,7 @@ class BoxManager:
         elif box == "interp":
             self._screen.query_one("#interp-dialog").focus()
 
-    def focus_neighbor(self, direction: str, phase, n_positions: int) -> None:
+    def focus_neighbor(self, direction: str, phase) -> None:
         from nekomata.screens.draw import Phase
 
         if phase == Phase.PICK:

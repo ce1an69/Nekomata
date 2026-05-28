@@ -23,7 +23,7 @@ from nekomata.storage.config import AppConfig
 
 
 class NekomataApp(App):
-    """Nekomata (猫又) — Pixel-art cat tarot TUI application."""
+    """Nekomata — Pixel-art cat tarot TUI application."""
 
     TITLE = "Nekomata"
     CSS_PATH = None
@@ -114,15 +114,18 @@ class NekomataApp(App):
         self.push_screen(HomeScreen())
         if not AppConfig.config_exists():
             from nekomata.screens.setup import SetupScreen
+
             self.push_screen(SetupScreen(), callback=self._on_setup_done)
 
     def _on_setup_done(self, _result: None) -> None:
         """Transition from setup screen to home screen."""
         if not AppConfig.config_exists():
             from nekomata.screens.setup import SetupScreen
+
             self.push_screen(SetupScreen(), callback=self._on_setup_done)
             return
         from nekomata.screens.home import HomeScreen
+
         if isinstance(self.screen, HomeScreen):
             self.screen.resume()
 
@@ -138,17 +141,28 @@ def main() -> None:
     parser.add_argument("--web", action="store_true", help="Launch web UI")
     parser.add_argument("--port", type=int, default=8080, help="Web server port")
     parser.add_argument("--cli", "-c", action="store_true", help="Launch CLI mode")
-    parser.add_argument("-q", "--question", type=str, default="", help="Your question for the reading")
-    parser.add_argument("-s", "--seed", type=int, default=None, help="Random seed for card draw")
+    parser.add_argument(
+        "-q", "--question", type=str, default="", help="Your question for the reading"
+    )
+    parser.add_argument(
+        "-s", "--seed", type=int, default=None, help="Random seed for card draw"
+    )
     parser.add_argument("-S", "--spread", type=str, default="", help="Spread type key")
-    parser.add_argument("-y", "--yes", action="store_true", help="Skip confirmation and start interpretation immediately")
+    parser.add_argument(
+        "-y",
+        "--yes",
+        action="store_true",
+        help="Skip confirmation and start interpretation immediately",
+    )
     args = parser.parse_args()
 
     if args.cli:
         from nekomata.cli import run_cli
+
         run_cli(args)
     elif args.web:
         from nekomata.web.server import start_web_server
+
         start_web_server(port=args.port)
     else:
         app = NekomataApp()

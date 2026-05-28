@@ -21,7 +21,7 @@ from nekomata.render.styles import (
     C_TEXT,
 )
 from nekomata.i18n import lazy_section
-from nekomata.strings import ORNAMENT
+from nekomata.i18n import ORNAMENT
 from nekomata.storage.config import AppConfig
 
 _STR = lazy_section("setup")
@@ -30,7 +30,12 @@ _LANG_OPTIONS = [("English", "en"), ("中文", "zh")]
 
 if SUPPORTED_LANGS != ("en", "zh"):
     _LANG_OPTIONS = [
-        (code.upper() if code not in ("en", "zh") else ("English" if code == "en" else "中文"), code)
+        (
+            code.upper()
+            if code not in ("en", "zh")
+            else ("English" if code == "en" else "中文"),
+            code,
+        )
         for code in SUPPORTED_LANGS
     ]
 
@@ -172,7 +177,9 @@ class SetupScreen(Screen):
             yield Static(ORNAMENT, id="setup-ornament-top")
             yield Static(_STR["field_api_url"], classes="field-label")
             yield Input(
-                value=cfg.api_url if cfg and cfg.api_url else "https://api.openai.com/v1",
+                value=cfg.api_url
+                if cfg and cfg.api_url
+                else "https://api.openai.com/v1",
                 placeholder="https://api.openai.com/v1",
                 id="api-url-input",
                 classes="setup-input",

@@ -1,9 +1,7 @@
 from nekomata.card.deck import Deck
 from nekomata.card.types import Card, Arcana
-from nekomata.spread.single import SingleCardSpread
-from nekomata.spread.three_card import PastPresentFuture, SituationActionResult, BodyMindSpirit
-from nekomata.spread.five_card import FiveCardCross
 from nekomata.spread import get_spread, SPREAD_REGISTRY
+from nekomata.spread.base import Spread
 
 
 def make_deck(n: int = 10) -> Deck:
@@ -93,16 +91,17 @@ class TestFiveCardCross:
             "Present", "Challenge", "Foundation", "Past", "Guidance"
         ]
 
+    def test_display_order(self):
+        assert get_spread("five_card_cross").display_order == (3, 0, 2, 1, 4)
+
 
 class TestSpreadRegistry:
     def test_registry_has_five_entries(self):
         assert len(SPREAD_REGISTRY) == 5
 
-    def test_get_spread_returns_correct_type(self):
-        assert isinstance(get_spread("single"), SingleCardSpread)
-        assert isinstance(get_spread("past_present_future"), PastPresentFuture)
-        with __import__("pytest").raises(KeyError):
-            get_spread("nonexistent")
+    def test_get_spread_returns_spread_instance(self):
+        assert isinstance(get_spread("single"), Spread)
+        assert isinstance(get_spread("past_present_future"), Spread)
 
     def test_get_spread_raises_for_unknown_key(self):
         import pytest
@@ -110,8 +109,8 @@ class TestSpreadRegistry:
             get_spread("nonexistent")
 
     def test_registry_keys_match_get_spread(self):
-        for key, cls in SPREAD_REGISTRY:
-            assert isinstance(get_spread(key), cls)
+        for key, _ in SPREAD_REGISTRY:
+            assert isinstance(get_spread(key), Spread)
 
 
 def test_draw_raises_when_deck_too_small():

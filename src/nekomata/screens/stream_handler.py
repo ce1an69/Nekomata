@@ -4,22 +4,24 @@ import asyncio
 from collections import deque
 from typing import Callable
 
-from rich.console import Group
 from rich.markdown import Markdown
 from rich.text import Text
 
 from nekomata.ai.interpreter import InterpretationError, StreamChunk, get_interpreter
 from nekomata.ai.prompts import build_followup_prompt
 from nekomata.render.styles import C_OVERLAY0, C_TEXT
-from nekomata.strings import all_strings
+from nekomata.i18n import ui_strings
 
-_UI_STRINGS = all_strings()
-_LOADING_FRAMES = tuple(_UI_STRINGS["loading_frames"])
-_LOADING_INTERVAL = _UI_STRINGS["loading_interval_ms"] / 1000.0
-_LOADING_MESSAGE_INTERVAL = _UI_STRINGS["loading_message_interval_s"]
+_S = ui_strings()
+_LOADING_FRAMES = tuple(_S["loading_frames"])
+_LOADING_MESSAGES = tuple(_S["loading_messages"])
+_LOADING_INTERVAL = _S["loading_interval_ms"] / 1000.0
+_LOADING_MESSAGE_INTERVAL = _S["loading_message_interval_s"]
 
-STREAM_TYPE_INTERVAL = _UI_STRINGS["stream_tick_ms"] / 1000.0
-STREAM_CHARS_PER_TICK = _UI_STRINGS["stream_chars_per_tick"]
+STREAM_TYPE_INTERVAL = _S["stream_tick_ms"] / 1000.0
+STREAM_CHARS_PER_TICK = _S["stream_chars_per_tick"]
+_ERRORS = _S["errors"]
+_DRAW = _S["draw"]
 
 
 class StreamHandler:
@@ -84,13 +86,14 @@ class StreamHandler:
             self._loading_timer = None
 
     def _tick_loading(self) -> None:
-        msgs = all_strings()["loading_messages"]
         frame = _LOADING_FRAMES[self._loading_frame % len(_LOADING_FRAMES)]
         msg_idx = int(
             self._loading_frame * _LOADING_INTERVAL / _LOADING_MESSAGE_INTERVAL
-        ) % len(msgs)
+        ) % len(_LOADING_MESSAGES)
         self._loading_frame += 1
-        self._render_hints(Text(f"{frame} {msgs[msg_idx]}", style=C_OVERLAY0))
+        self._render_hints(
+            Text(f"{frame} {_LOADING_MESSAGES[msg_idx]}", style=C_OVERLAY0)
+        )
 
     def stop(self, stop_loading: bool = True) -> None:
         if stop_loading:
@@ -105,9 +108,7 @@ class StreamHandler:
             return
         self._queue.append(chunk)
         if self._timer is None:
-            self._timer = self._screen.set_interval(
-                STREAM_TYPE_INTERVAL, self._tick
-            )
+            self._timer = self._screen.set_interval(STREAM_TYPE_INTERVAL, self._tick)
 
     def _tick(self) -> None:
         """Typewriter tick: drain a few characters from the queue per interval.
@@ -158,9 +159,7 @@ class StreamHandler:
     def on_done(self) -> None:
         self._source_done = True
         if self._queue and self._timer is None:
-            self._timer = self._screen.set_interval(
-                STREAM_TYPE_INTERVAL, self._tick
-            )
+            self._timer = self._screen.set_interval(STREAM_TYPE_INTERVAL, self._tick)
             return
         if not self._queue:
             self._finish()
@@ -168,12 +167,13 @@ class StreamHandler:
     def _finish(self) -> None:
         self.stop()
         self.streaming = False
-        self._render_hints(Text(all_strings()["draw"]["interp_done_hint"], style=C_OVERLAY0))
+        self._render_hints(Text(_DRAW["interp_done_hint"], style=C_OVERLAY0))
         if self._on_done:
             self._on_done()
 
     async def run(self, drawn_cards, question, cancelled_check) -> None:
         from nekomata.ai.interpreter import build_messages, _DEFAULT_STYLE
+
         self.messages = build_messages(_DEFAULT_STYLE, question, drawn_cards)
         config = self._screen.app.config
         await self._run_stream(
@@ -181,7 +181,9 @@ class StreamHandler:
             cancelled_check,
         )
 
-    async def run_followup(self, messages_history: list[dict], question: str, cancelled_check) -> None:
+    async def run_followup(
+        self, messages_history: list[dict], question: str, cancelled_check
+    ) -> None:
         """Stream a follow-up interpretation using conversation history."""
         followup_msg = build_followup_prompt(question)
         messages = list(messages_history) + [{"role": "user", "content": followup_msg}]
@@ -210,17 +212,16 @@ class StreamHandler:
         except InterpretationError as exc:
             if not self._screen.is_mounted or cancelled_check():
                 return
-            self._show_error(all_strings()["errors"]["interp_failed"].format(error=exc))
+            self._show_error(_ERRORS["interp_failed"].format(error=exc))
             return
         except Exception as exc:
             if not self._screen.is_mounted or cancelled_check():
                 return
             msg = str(exc)
-            err = all_strings()["errors"]
             if "api_key" in msg.lower() or "unauthorized" in msg.lower():
-                self._show_error(err["api_key_missing"])
+                self._show_error(_ERRORS["api_key_missing"])
             else:
-                self._show_error(err["interp_failed"].format(error=exc))
+                self._show_error(_ERRORS["interp_failed"].format(error=exc))
             return
         if not self._screen.is_mounted or cancelled_check():
             return

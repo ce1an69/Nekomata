@@ -23,7 +23,7 @@ from nekomata.render.styles import (
     EASE,
 )
 from nekomata.i18n import lazy_section
-from nekomata.strings import ORNAMENT
+from nekomata.i18n import ORNAMENT
 
 _STR = lazy_section("home")
 
@@ -218,24 +218,31 @@ class HomeScreen(Screen):
             if cmd == "card_browser":
                 self.query_one("#prompt-input", Input).value = ""
                 from nekomata.screens.card_browser import CardBrowserScreen
+
                 self.app.push_screen(CardBrowserScreen())
                 return
             if cmd == "config":
                 self.query_one("#prompt-input", Input).value = ""
                 from nekomata.screens.setup import SetupScreen
-                self.app.push_screen(SetupScreen(self.app.config), callback=self._on_config_done)
+
+                self.app.push_screen(
+                    SetupScreen(self.app.config), callback=self._on_config_done
+                )
                 return
             if cmd == "quit":
                 self.app.exit()
                 return
         elif value.startswith("/"):
-            self._show_suggestions(f"[command-highlight]{_STR['unknown_command']}[/]  {value}")
+            self._show_suggestions(
+                f"[command-highlight]{_STR['unknown_command']}[/]  {value}"
+            )
             return
 
         # Not a command — treat as a divination question
         self.query_one("#prompt-input", Input).value = ""
         self.app.question = value
         from nekomata.screens.spread_select import SpreadSelectScreen
+
         self.app.push_screen(SpreadSelectScreen(), callback=self._on_spread_selected)
 
     def _refresh_command_suggestions(self, value: str) -> None:
@@ -302,7 +309,9 @@ class HomeScreen(Screen):
             duration=0.12,
             easing=EASE,
         )
-        self._suggestions_hide_timer = self.set_timer(0.13, self._finish_hide_suggestions)
+        self._suggestions_hide_timer = self.set_timer(
+            0.13, self._finish_hide_suggestions
+        )
 
     def _finish_hide_suggestions(self) -> None:
         suggestions = self.query_one("#command-suggestions", Static)
@@ -317,11 +326,14 @@ class HomeScreen(Screen):
         if not value.startswith("/"):
             return None
         lower = value.lower()
-        matches = [cmd for cmd in SLASH_COMMANDS if cmd.startswith(lower) and cmd != lower]
+        matches = [
+            cmd for cmd in SLASH_COMMANDS if cmd.startswith(lower) and cmd != lower
+        ]
         return matches[0] if matches else None
 
     def _on_spread_selected(self, spread_key: str) -> None:
         """Callback when the user picks a spread — push the draw screen."""
         from nekomata.screens.draw import DrawScreen
+
         self.app.spread_key = spread_key
         self.app.push_screen(DrawScreen(spread_key, self.app.question))
