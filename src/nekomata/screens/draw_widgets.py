@@ -9,6 +9,7 @@ from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
+from textual.css.query import NoMatches
 from textual.css.scalar import ScalarOffset
 from textual.geometry import Offset
 from textual.message import Message
@@ -35,7 +36,6 @@ from nekomata.render.styles import (
     EASE_SPRING,
     EASE_OUT,
 )
-from nekomata.render.themes import get_theme
 from nekomata.i18n import lazy_section
 
 _STR = lazy_section("draw")
@@ -321,17 +321,15 @@ class SpreadSlot(Widget):
         if reveal is not None:
             if isinstance(reveal, Widget):
                 reveal.display = False
-                self._mount_reveal(reveal)
+                self.mount(reveal)
             else:
-                self._mount_reveal(Static(reveal, classes="slot-reveal", display=False))
+                reveal_widget = Static(reveal, classes="slot-reveal")
+                reveal_widget.display = False
+                self.mount(reveal_widget)
         # Show face-down label
         label = self.query_one(".slot-content", Static)
         label.display = True
         label.update(Text(self.position_name_zh, style=C_SUBTEXT0, justify="center"))
-
-    def _mount_reveal(self, widget: Widget) -> None:
-        """Mount the pre-built reveal widget (called from place_card)."""
-        self.mount(widget)
 
     def _render_revealed(self) -> None:
         """Swap to revealed content: hide face-down, show pre-mounted reveal."""
@@ -345,13 +343,20 @@ class SpreadSlot(Widget):
         # Hide face-down content
         try:
             self.query_one(".slot-content").display = False
-        except Exception:
+        except NoMatches:
             pass
         # Show pre-mounted reveal widget
         for child in self.children:
             if not child.has_class("slot-content"):
                 child.display = True
                 return
+
+    def _show_revealed_state(self) -> None:
+        """Switch the slot from face-down to revealed content."""
+        self.is_revealed = True
+        self.remove_class("face-down")
+        self.add_class("revealed")
+        self._render_revealed()
 
     async def flip(self) -> None:
         """Animate a card flip: fade-out → swap content → spring fade-in with glow.
@@ -361,6 +366,12 @@ class SpreadSlot(Widget):
         2. Swap content (reveal the card face underneath)
         3. Spring in from below with bounce + glow pulse
         """
+        if not self.app.animation_enabled:
+            self._show_revealed_state()
+            self.styles.opacity = 1
+            self.styles.offset = (0, 0)
+            return
+
         # Phase 1: fade out + slide up the face-down card
         self.styles.animate("opacity", 0.0, duration=SLOT_FLIP_FADE_OUT, easing=EASE)
         self.styles.animate(
@@ -372,10 +383,7 @@ class SpreadSlot(Widget):
         await asyncio.sleep(SLOT_FLIP_FADE_OUT)
 
         # Phase 2: swap to revealed content (positioned below for entrance)
-        self.is_revealed = True
-        self.remove_class("face-down")
-        self.add_class("revealed")
-        self._render_revealed()
+        self._show_revealed_state()
         self.styles.opacity = 0
         self.styles.offset = (0, 2)
 

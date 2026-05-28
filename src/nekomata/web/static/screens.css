@@ -56,10 +56,10 @@
 }
 
 .spread-option:hover, .spread-option.active {
-    border-color: var(--gold);
-    background: var(--gold-5);
+    border-color: var(--accent);
+    background: var(--accent-5);
     color: var(--text);
-    box-shadow: 0 0 12px var(--gold-dim);
+    box-shadow: 0 0 12px var(--accent-dim);
 }
 
 .spread-option .sname { flex: 1; }
@@ -75,7 +75,7 @@
     backdrop-filter: blur(8px);
 }
 
-.spread-preview h3 { color: var(--gold); margin-bottom: 8px; }
+.spread-preview h3 { color: var(--accent); margin-bottom: 8px; }
 .spread-preview .pos-list { list-style: none; margin-top: 10px; }
 .spread-preview .pos-list li { padding: 5px 0; color: var(--subtext0); }
 
@@ -123,8 +123,8 @@
     display: block;
     width: fit-content;
     max-width: 50vw;
-    background: var(--gold-8);
-    border: 1px solid var(--gold-25);
+    background: var(--accent-8);
+    border: 1px solid var(--accent-25);
     border-radius: 10px;
     padding: 6px 18px;
     margin: 6px auto 0;
@@ -250,8 +250,8 @@
     transition: border-color 0.18s, color 0.18s;
 }
 
-.filter-btn:hover { border-color: var(--gold); color: var(--text); }
-.filter-btn.active { border-color: var(--gold); color: var(--gold); font-weight: bold; }
+.filter-btn:hover { border-color: var(--accent); color: var(--text); }
+.filter-btn.active { border-color: var(--accent); color: var(--accent); font-weight: bold; }
 
 .browser-area {
     display: flex;
@@ -285,7 +285,7 @@
 .card-list-item:hover, .card-list-item.selected { background: var(--surface0); }
 .card-list-item .item-name { color: var(--text); font-size: 0.9em; }
 .card-list-item .item-suit { color: var(--subtext0); font-size: 0.75em; }
-.card-list-item.selected .item-name { color: var(--gold); }
+.card-list-item.selected .item-name { color: var(--accent); }
 
 .browser-detail {
     flex: 1;

@@ -8,8 +8,8 @@
 @keyframes fadeOut { to { opacity: 0; } }
 
 @keyframes ornamentGlow {
-    0%, 100% { text-shadow: 0 0 8px var(--gold-glow); }
-    50% { text-shadow: 0 0 16px var(--gold-glow), 0 0 30px var(--gold-dim); }
+    0%, 100% { text-shadow: 0 0 8px var(--accent-glow); }
+    50% { text-shadow: 0 0 16px var(--accent-glow), 0 0 30px var(--accent-dim); }
 }
 
 @keyframes toastIn {
@@ -49,8 +49,8 @@
 }
 
 @keyframes symbolPulse {
-    0%, 100% { opacity: 0.5; text-shadow: 0 0 10px var(--gold-glow); }
-    50% { opacity: 0.9; text-shadow: 0 0 20px var(--gold-glow), 0 0 40px var(--gold-dim); }
+    0%, 100% { opacity: 0.5; text-shadow: 0 0 10px var(--accent-glow); }
+    50% { opacity: 0.9; text-shadow: 0 0 20px var(--accent-glow), 0 0 40px var(--accent-dim); }
 }
 
 @keyframes riseAndFade {
@@ -103,12 +103,12 @@
 }
 
 .cc-card.cc-active {
-    filter: drop-shadow(0 0 8px var(--gold-dim));
+    filter: drop-shadow(0 0 8px var(--accent-dim));
 }
 
 .cc-card.cc-active .cc-back {
-    border-color: var(--gold);
-    box-shadow: 0 0 12px var(--gold-dim);
+    border-color: var(--accent);
+    box-shadow: 0 0 12px var(--accent-dim);
 }
 
 .cc-card.cc-active .cc-sym {
@@ -125,18 +125,18 @@
 .cc-fly {
     position: fixed;
     background: linear-gradient(135deg, var(--surface0), var(--mantle));
-    border: 2px solid var(--gold);
+    border: 2px solid var(--accent);
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9999;
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    box-shadow: 0 0 20px var(--gold-glow);
+    box-shadow: 0 0 20px var(--accent-glow);
     pointer-events: none;
 }
 
-.cc-fly .cc-sym { font-size: 1.8em; color: var(--gold); }
+.cc-fly .cc-sym { font-size: 1.8em; color: var(--accent); }
 
 .cc-inner {
     width: 100%;
@@ -158,8 +158,8 @@
 
 .cc-sym {
     font-size: 2em;
-    color: var(--gold);
-    text-shadow: 0 0 10px var(--gold-glow);
+    color: var(--accent);
+    text-shadow: 0 0 10px var(--accent-glow);
     opacity: 0.7;
 }
 
@@ -178,11 +178,11 @@
     position: fixed;
     width: 40px;
     height: 40px;
-    border: 3px solid var(--gold);
+    border: 3px solid var(--accent);
     border-radius: 50%;
     pointer-events: none;
     z-index: 9999;
     transform: translate(-50%, -50%) scale(0.5);
     animation: pulseRing 0.6s ease-out forwards;
-    box-shadow: 0 0 20px var(--gold-glow);
+    box-shadow: 0 0 20px var(--accent-glow);
 }

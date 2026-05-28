@@ -1,11 +1,14 @@
+from time import perf_counter
+
 import pytest
+from textual.css.query import NoMatches
 
 from nekomata.app import NekomataApp
+from nekomata.card.types import Arcana, Card, DrawnCard, Position
 from nekomata.screens.draw_widgets import (
     DECK_HIDE_DELAY,
     PICK_COMPLETE_DELAY,
     DeckCard,
-    DECK_ROW_COUNT,
     NUM_DECK_CARDS,
     SPREAD_SLOT_HEIGHT,
     SPREAD_SLOT_WIDTH,
@@ -13,12 +16,31 @@ from nekomata.screens.draw_widgets import (
     SLOT_FLIP_FADE_OUT,
     SLOT_FLIP_GLOW_HOLD,
     SLOT_FLIP_SWAP_PAUSE,
-    SLOT_PLACE_DURATION,
-    SLOT_PLACE_OFFSET,
     SPREAD_RECENTER_DURATION,
     SPREAD_RECENTER_OFFSET,
     SpreadSlot,
 )
+
+
+def _make_drawn_card() -> DrawnCard:
+    card = Card(
+        id="test",
+        name="Test",
+        name_zh="测试",
+        arcana=Arcana.MAJOR,
+        number=0,
+        element="air",
+        astrology="Uranus",
+        keywords_upright=("a",),
+        keywords_reversed=("b",),
+        meaning_upright="up",
+        meaning_reversed="down",
+    )
+    return DrawnCard(
+        card=card,
+        position=Position(name="Present", name_zh="现在", description="当前"),
+        is_reversed=False,
+    )
 
 
 @pytest.mark.asyncio
@@ -142,7 +164,6 @@ def test_spread_recenters_with_motion_after_deck_exit():
     assert SPREAD_RECENTER_DURATION == pytest.approx(0.28)
 
 
-
 def test_spread_slot_flip_uses_smooth_two_phase_motion():
     """Flipping should be compact and animated through the face swap."""
     constants = SpreadSlot.flip.__code__.co_consts
@@ -154,6 +175,48 @@ def test_spread_slot_flip_uses_smooth_two_phase_motion():
     assert SLOT_FLIP_SWAP_PAUSE == pytest.approx(0.02)
     assert SLOT_FLIP_FADE_IN == pytest.approx(0.28)
     assert SLOT_FLIP_GLOW_HOLD == pytest.approx(0.16)
+
+
+@pytest.mark.asyncio
+async def test_spread_slot_flip_skips_animation_when_disabled():
+    """Reduced-animation mode should reveal immediately without sleep delays."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        slot = SpreadSlot(0, "现在")
+        await app.screen.mount(slot)
+        await pilot.pause()
+
+        slot.place_card(_make_drawn_card())
+        start = perf_counter()
+        await slot.flip()
+        elapsed = perf_counter() - start
+
+        assert slot.is_revealed
+        assert slot.has_class("revealed")
+        assert not slot.has_class("face-down")
+        assert not slot.has_class("glow")
+        assert elapsed < SLOT_FLIP_FADE_OUT
+
+
+def test_spread_slot_reveal_only_ignores_missing_slot_content(monkeypatch):
+    """Reveal should not hide unexpected query failures."""
+    slot = SpreadSlot(0, "现在")
+    slot.drawn_card = _make_drawn_card()
+
+    def raise_no_matches(*_args, **_kwargs):
+        raise NoMatches("missing")
+
+    monkeypatch.setattr(slot, "query_one", raise_no_matches)
+    slot._render_revealed()
+    assert slot.is_revealed is False
+
+    def raise_runtime_error(*_args, **_kwargs):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(slot, "query_one", raise_runtime_error)
+    with pytest.raises(RuntimeError, match="boom"):
+        slot._render_revealed()
 
 
 def test_done_phase_does_not_wait_for_completion_shimmer():
