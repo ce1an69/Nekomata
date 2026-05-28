@@ -333,8 +333,14 @@ class DrawScreen(Screen):
         )
 
     def _animate_deck_exit(self) -> None:
-        self._w_deck_section.styles.opacity = 0
-        self._w_deck_section.styles.offset = (0, -2)
+        if self.app.animation_enabled:
+            self._w_deck_section.styles.animate("opacity", 0.0, duration=0.22, easing=EASE)
+            self._w_deck_section.styles.animate(
+                "offset",
+                ScalarOffset.from_offset(Offset(0, -2)),
+                duration=0.28,
+                easing=EASE,
+            )
         for i, card in enumerate(c for c in self.query(DeckCard) if not c.has_class("picked")):
             self.set_timer(0.01 + i * 0.008, lambda c=card: c.add_class("exiting"))
         self.set_timer(DECK_HIDE_DELAY, self._hide_deck)
@@ -357,7 +363,12 @@ class DrawScreen(Screen):
     @staticmethod
     def _reveal_deck_card(card: DeckCard) -> None:
         card.styles.animate("opacity", 1.0, duration=DECK_ENTRANCE_FADE, easing=EASE)
-        card.styles.offset = (0, 0)
+        card.styles.animate(
+            "offset",
+            ScalarOffset.from_offset(Offset(0, 0)),
+            duration=DECK_ENTRANCE_FADE,
+            easing=EASE,
+        )
 
     def _enable_deck_selection(self) -> None:
         """Enable card selection after dealing animation completes."""

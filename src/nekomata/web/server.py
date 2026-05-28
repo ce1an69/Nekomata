@@ -11,7 +11,8 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from nekomata.ai.interpreter import InterpretationError, get_interpreter
+from nekomata.ai.interpreter import InterpretationError, build_messages, get_interpreter
+from nekomata.ai.prompts import build_followup_prompt
 from nekomata.card.data import load_all_cards
 from nekomata.card.types import ARCANA_ZH, Card, DrawnCard, Position
 from nekomata.i18n import set_lang, ui_strings
@@ -153,6 +154,15 @@ class InterpretPayload(BaseModel):
     cards: list[DrawnCardPayload]
     spread_key: str = ""
 
+class FollowupPayload(BaseModel):
+    messages: list[dict]
+    question: str
+
+class ExportImagePayload(BaseModel):
+    text: str
+    cards: list[DrawnCardPayload] = []
+    spread_name: str = ""
+
 
 # --- App factory ---
 
@@ -245,6 +255,8 @@ def create_app() -> FastAPI:
         async def _stream():
             loop = asyncio.get_running_loop()
             try:
+                msgs = build_messages("mystical", req.question, drawn, req.spread_key)
+                yield f"data: {json.dumps({'messages': msgs})}\n\n"
                 gen = interp.interpret_stream(drawn, req.question, req.spread_key)
                 while True:
                     chunk = await loop.run_in_executor(None, next, gen, None)
@@ -262,6 +274,72 @@ def create_app() -> FastAPI:
                 yield f"data: {data}\n\n"
 
         return StreamingResponse(_stream(), media_type="text/event-stream")
+
+    @app.post("/api/interpret/followup")
+    async def interpret_followup(req: FollowupPayload):
+        """Stream a follow-up interpretation using conversation history."""
+        config = AppConfig.load()
+        try:
+            interp = get_interpreter(config)
+        except InterpretationError as exc:
+            return StreamingResponse(_sse_error(str(exc)), media_type="text/event-stream")
+
+        followup_msg = build_followup_prompt(req.question)
+        messages = list(req.messages) + [{"role": "user", "content": followup_msg}]
+
+        async def _stream():
+            loop = asyncio.get_running_loop()
+            try:
+                gen = interp.stream_raw(messages, thinking=False)
+                while True:
+                    chunk = await loop.run_in_executor(None, next, gen, None)
+                    if chunk is None:
+                        break
+                    data = json.dumps({"text": chunk.text, "kind": chunk.kind})
+                    yield f"data: {data}\n\n"
+                yield "data: [DONE]\n\n"
+            except InterpretationError as e:
+                data = json.dumps({"error": str(e)})
+                yield f"data: {data}\n\n"
+            except Exception as e:
+                log.exception("Unexpected follow-up interpretation failure")
+                data = json.dumps({"error": f"Interpretation failed: {e}"})
+                yield f"data: {data}\n\n"
+
+        return StreamingResponse(_stream(), media_type="text/event-stream")
+
+    @app.post("/api/export-image")
+    async def export_image(req: ExportImagePayload):
+        """Render interpretation as a Catppuccin-themed PNG image."""
+        from io import BytesIO
+
+        from fastapi.responses import Response
+        from nekomata.render.image_export import render_interp_image
+
+        _, cards_by_id = _get_cached_cards()
+        drawn: list[DrawnCard] = []
+        for dc in req.cards:
+            card = cards_by_id.get(dc.card_id)
+            if card is None:
+                continue
+            drawn.append(DrawnCard(
+                card=card,
+                position=Position(
+                    name=dc.position_name,
+                    name_zh=dc.position_name_zh,
+                    description=dc.position_description,
+                ),
+                is_reversed=dc.is_reversed,
+            ))
+
+        img = render_interp_image(req.text, drawn or None)
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        return Response(
+            content=buf.getvalue(),
+            media_type="image/png",
+            headers={"Content-Disposition": "attachment; filename=nekomata-reading.png"},
+        )
 
     # Mount static files last (catch-all)
     app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")

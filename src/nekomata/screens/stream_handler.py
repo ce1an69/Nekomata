@@ -173,53 +173,33 @@ class StreamHandler:
             self._on_done()
 
     async def run(self, drawn_cards, question, cancelled_check) -> None:
-        try:
-            config = self._screen.app.config
-            interp = get_interpreter(config)
-            from nekomata.ai.interpreter import build_messages, _DEFAULT_STYLE
-            self.messages = build_messages(_DEFAULT_STYLE, question, drawn_cards)
-            loop = asyncio.get_running_loop()
-
-            def _consume():
-                for chunk in interp.interpret_stream(drawn_cards, question):
-                    if cancelled_check():
-                        return
-                    if isinstance(chunk, str):
-                        chunk = StreamChunk(chunk, "content")
-                    self._screen.app.call_from_thread(self.append_chunk, chunk)
-
-            await loop.run_in_executor(None, _consume)
-        except InterpretationError as exc:
-            if not self._screen.is_mounted or cancelled_check():
-                return
-            self._show_error(all_strings()["errors"]["interp_failed"].format(error=exc))
-            return
-        except Exception as exc:
-            if not self._screen.is_mounted or cancelled_check():
-                return
-            msg = str(exc)
-            err = all_strings()["errors"]
-            if "api_key" in msg.lower() or "unauthorized" in msg.lower():
-                self._show_error(err["api_key_missing"])
-            else:
-                self._show_error(err["interp_failed"].format(error=exc))
-            return
-        if not self._screen.is_mounted or cancelled_check():
-            return
-        self.on_done()
+        from nekomata.ai.interpreter import build_messages, _DEFAULT_STYLE
+        self.messages = build_messages(_DEFAULT_STYLE, question, drawn_cards)
+        config = self._screen.app.config
+        await self._run_stream(
+            lambda: get_interpreter(config).interpret_stream(drawn_cards, question),
+            cancelled_check,
+        )
 
     async def run_followup(self, messages_history: list[dict], question: str, cancelled_check) -> None:
         """Stream a follow-up interpretation using conversation history."""
         followup_msg = build_followup_prompt(question)
         messages = list(messages_history) + [{"role": "user", "content": followup_msg}]
         self.messages = list(messages)
+        config = self._screen.app.config
+        await self._run_stream(
+            lambda: get_interpreter(config).stream_raw(messages, thinking=False),
+            cancelled_check,
+        )
+
+    async def _run_stream(self, stream_fn_factory, cancelled_check) -> None:
+        """Shared streaming runner with unified error handling."""
         try:
-            config = self._screen.app.config
-            interp = get_interpreter(config)
+            stream_fn = stream_fn_factory()
             loop = asyncio.get_running_loop()
 
             def _consume():
-                for chunk in interp.stream_raw(messages, thinking=False):
+                for chunk in stream_fn():
                     if cancelled_check():
                         return
                     if isinstance(chunk, str):

@@ -10,6 +10,7 @@ export class InterpretationController {
         this._loadFrame = 0;
         this._loadTimer = null;
         this.initialText = '';
+        this.messages = [];
         this._onComplete = null;
         this._onError = null;
     }
@@ -72,6 +73,10 @@ export class InterpretationController {
 
                     try {
                         const chunk = JSON.parse(trimmed.slice(6));
+                        if (chunk.messages) {
+                            this.messages = chunk.messages;
+                            continue;
+                        }
                         if (chunk.error) {
                             this._appendError(chunk.error);
                             this._showLoading(false);
@@ -97,6 +102,9 @@ export class InterpretationController {
 
             this._showLoading(false);
             if (renderTimer) { clearTimeout(renderTimer); flushRender(); }
+            if (this.initialText && this.messages.length) {
+                this.messages.push({"role": "assistant", "content": this.initialText});
+            }
             const doneEl = document.createElement('div');
             doneEl.className = 'interp-done';
             doneEl.textContent = '─── ✦ ───';
@@ -116,6 +124,80 @@ export class InterpretationController {
     abort() {
         if (this._abortController) this._abortController.abort();
         this._showLoading(false);
+    }
+
+    async startFollowup(messages, question) {
+        this._showLoading(true, window.__nekoState?.strings || {});
+        this._abortController = new AbortController();
+
+        try {
+            const resp = await fetch('/api/interpret/followup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages, question }),
+                signal: this._abortController.signal,
+            });
+            if (!resp.ok) throw new Error(`Follow-up request failed (${resp.status})`);
+            if (!resp.body) throw new Error('No content');
+
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let currentEl = document.createElement('div');
+            currentEl.className = 'content';
+            this._container.appendChild(currentEl);
+            let renderTimer = null;
+
+            const flushRender = () => {
+                renderTimer = null;
+                if (!currentEl || !currentEl._raw) return;
+                currentEl.innerHTML = renderMarkdown(currentEl._raw);
+            };
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed || trimmed === 'data: [DONE]') continue;
+                    if (!trimmed.startsWith('data: ')) continue;
+
+                    try {
+                        const chunk = JSON.parse(trimmed.slice(6));
+                        if (chunk.error) {
+                            this._appendError(chunk.error);
+                            this._showLoading(false);
+                            if (this._onError) this._onError(chunk.error);
+                            return;
+                        }
+                        if (chunk.kind === 'thinking') continue;
+                        currentEl._raw = (currentEl._raw || '') + chunk.text;
+                        this.initialText += chunk.text;
+                        if (!renderTimer) renderTimer = setTimeout(flushRender, 60);
+                    } catch (err) { console.debug('SSE parse skip:', err); }
+                }
+            }
+
+            this._showLoading(false);
+            if (renderTimer) { clearTimeout(renderTimer); flushRender(); }
+            const doneEl = document.createElement('div');
+            doneEl.className = 'interp-done';
+            doneEl.textContent = '─── ✦ ───';
+            this._container.appendChild(doneEl);
+            if (this._onComplete) this._onComplete(this.initialText);
+
+        } catch (e) {
+            if (e.name !== 'AbortError') {
+                this._appendError(e.message);
+                if (this._onError) this._onError(e.message);
+            }
+            this._showLoading(false);
+        }
     }
 
     _showLoading(show, strings) {

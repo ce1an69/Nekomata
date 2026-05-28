@@ -117,3 +117,36 @@ export function needsInit(key) {
     _inited.add(key);
     return true;
 }
+
+// -- Card data helpers (locale-aware) --
+
+export function isEn() {
+    return window.__nekoState?.config?.lang === 'en';
+}
+
+export function cardName(c) {
+    return isEn() ? c.name : (c.name_zh || c.name);
+}
+
+export function arcanaName(c) {
+    return isEn() ? (c.arcana.charAt(0).toUpperCase() + c.arcana.slice(1)) : (c.arcana_zh || c.arcana);
+}
+
+export function cardKeywords(c, reversed) {
+    if (isEn() && c.keywords_upright_en?.length) {
+        return reversed ? c.keywords_reversed_en : c.keywords_upright_en;
+    }
+    return reversed ? c.keywords_reversed : c.keywords_upright;
+}
+
+export function cardMeaning(c, reversed) {
+    if (isEn() && c.meaning_upright_en) {
+        return reversed ? c.meaning_reversed_en : c.meaning_upright_en;
+    }
+    return reversed ? c.meaning_reversed : c.meaning_upright;
+}
+
+export function statusLabel(reversed) {
+    const cd = window.__nekoState?.strings?.card_detail || {};
+    return reversed ? (cd.reversed || 'Reversed') : (cd.upright || 'Upright');
+}

@@ -13,7 +13,6 @@ from rich.panel import Panel
 from rich.text import Text
 
 from nekomata.card.types import Card, DrawnCard
-from nekomata.i18n import get_lang
 from nekomata.render.themes import get_theme
 from nekomata.strings import section
 
@@ -177,42 +176,24 @@ def create_card_origin_widget(drawn: DrawnCard):
     return TUIImage(img, classes="card-origin")
 
 
-def _kw(card: Card, reversed: bool) -> tuple[str, ...]:
-    en = card.keywords_reversed_en if reversed else card.keywords_upright_en
-    if get_lang() == "en" and en:
-        return en
-    return card.keywords_reversed if reversed else card.keywords_upright
-
-
-def _mean(card: Card, reversed: bool) -> str:
-    en = card.meaning_reversed_en if reversed else card.meaning_upright_en
-    if get_lang() == "en" and en:
-        return en
-    return card.meaning_reversed if reversed else card.meaning_upright
-
-
-def _display_name(card: Card) -> str:
-    return card.name if get_lang() == "en" else card.name_zh
-
-
 def _build_detail_text(drawn: DrawnCard) -> Text:
     """Build the rich Text content for a card's full detail view."""
     labels = section("card_detail")
     card = drawn.card
     text = Text()
-    text.append(f"{_display_name(card)}  [{drawn.status_label}]\n", style="bold")
+    text.append(f"{card.display_name}  [{drawn.status_label}]\n", style="bold")
     text.append(f"{labels['element']}: {card.element}  ·  {labels['astrology']}: {card.astrology}\n\n")
 
     text.append(f"{labels['upright']}: ", style="bold")
-    text.append(", ".join(_kw(card, False)))
+    text.append(", ".join(card.keywords_for(False)))
     text.append("\n")
-    text.append(_mean(card, False))
+    text.append(card.meaning_for(False))
     text.append("\n\n")
 
     text.append(f"{labels['reversed']}: ", style="bold")
-    text.append(", ".join(_kw(card, True)))
+    text.append(", ".join(card.keywords_for(True)))
     text.append("\n")
-    text.append(_mean(card, True))
+    text.append(card.meaning_for(True))
     return text
 
 
@@ -263,7 +244,7 @@ def render_card_detail(drawn: DrawnCard, width: int = 60) -> Panel:
 
     return Panel(
         _build_detail_text(drawn),
-        title=_display_name(drawn.card),
+        title=drawn.card.display_name,
         border_style=border_style,
         width=width,
         padding=(1, 2),
