@@ -55,3 +55,4 @@ skills-lock.json
 docs/superpowers/
 
 dist/
+node_modules/
