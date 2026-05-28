@@ -53,3 +53,5 @@ htmlcov/
 .superpowers/
 skills-lock.json
 docs/superpowers/
+
+dist/
