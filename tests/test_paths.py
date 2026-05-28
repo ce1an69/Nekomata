@@ -1,10 +1,7 @@
 """Tests for centralized path resolution."""
 
 import sys
-from pathlib import Path
 from unittest.mock import patch
-
-import pytest
 
 
 class TestDevMode:

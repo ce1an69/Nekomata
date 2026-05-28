@@ -1,8 +1,8 @@
 """Unit tests for screens/widgets.py helpers."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from nekomata.screens.widgets import focus_sibling, go_home
+from nekomata.screens.widgets import focus_sibling
 
 
 def test_focus_sibling_moves_to_next():
