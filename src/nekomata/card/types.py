@@ -54,6 +54,30 @@ class Card:
     meaning_upright_en: str = ""
     meaning_reversed_en: str = ""
 
+    @property
+    def display_name(self) -> str:
+        """Locale-aware card name."""
+        from nekomata.i18n import get_lang
+        return self.name if get_lang() == "en" else self.name_zh
+
+    def keywords_for(self, reversed: bool) -> tuple[str, ...]:
+        """Keywords for a given orientation, locale-aware."""
+        from nekomata.i18n import get_lang
+        if get_lang() == "en":
+            en = self.keywords_reversed_en if reversed else self.keywords_upright_en
+            if en:
+                return en
+        return self.keywords_reversed if reversed else self.keywords_upright
+
+    def meaning_for(self, reversed: bool) -> str:
+        """Meaning for a given orientation, locale-aware."""
+        from nekomata.i18n import get_lang
+        if get_lang() == "en":
+            en = self.meaning_reversed_en if reversed else self.meaning_upright_en
+            if en:
+                return en
+        return self.meaning_reversed if reversed else self.meaning_upright
+
 
 @dataclass(frozen=True)
 class Position:
@@ -81,19 +105,9 @@ class DrawnCard:
     @property
     def keywords(self) -> tuple[str, ...]:
         """Keywords based on upright/reversed state, locale-aware."""
-        from nekomata.i18n import get_lang
-        if get_lang() == "en":
-            en = self.card.keywords_reversed_en if self.is_reversed else self.card.keywords_upright_en
-            if en:
-                return en
-        return self.card.keywords_reversed if self.is_reversed else self.card.keywords_upright
+        return self.card.keywords_for(self.is_reversed)
 
     @property
     def meaning(self) -> str:
         """Meaning based on upright/reversed state, locale-aware."""
-        from nekomata.i18n import get_lang
-        if get_lang() == "en":
-            en = self.card.meaning_reversed_en if self.is_reversed else self.card.meaning_upright_en
-            if en:
-                return en
-        return self.card.meaning_reversed if self.is_reversed else self.card.meaning_upright
+        return self.card.meaning_for(self.is_reversed)

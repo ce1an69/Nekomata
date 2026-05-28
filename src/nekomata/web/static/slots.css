@@ -259,3 +259,27 @@
     color: var(--mauve);
     background: var(--surface1);
 }
+
+/* Follow-up bar */
+.followup-bar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--surface0);
+    background: var(--crust);
+}
+.followup-bar textarea {
+    flex: 1;
+    background: var(--surface0);
+    border: 1px solid var(--surface1);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    resize: none;
+    outline: none;
+}
+.followup-bar textarea:focus {
+    border-color: var(--mauve);
+}

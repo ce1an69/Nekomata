@@ -47,13 +47,21 @@ class AIInterpreter(Protocol):
 
 def _cards_info(drawn_cards: list[DrawnCard]) -> str:
     """Format drawn cards into a structured string for AI prompt."""
+    from nekomata.i18n import get_lang
+    lang = get_lang()
     lines = []
     for dc in drawn_cards:
-        desc = f"（{dc.position.description}）" if dc.position.description else ""
-        lines.append(
-            f"【{dc.position.name}】{desc}{dc.card.name}（{dc.status_label}）"
-            f" — keywords: {', '.join(dc.keywords)}, meaning: {dc.meaning}"
-        )
+        desc = f" ({dc.position.description})" if dc.position.description else ""
+        if lang == "en":
+            lines.append(
+                f"[{dc.position.name}]{desc} {dc.card.name} ({dc.status_label})"
+                f" — keywords: {', '.join(dc.keywords)}, meaning: {dc.meaning}"
+            )
+        else:
+            lines.append(
+                f"【{dc.position.name}】{desc}{dc.card.name}（{dc.status_label}）"
+                f" — keywords: {', '.join(dc.keywords)}, meaning: {dc.meaning}"
+            )
     return "\n".join(lines)
 
 

@@ -18,6 +18,8 @@ def animate_entrance(
 ) -> None:
     """Fade-in + slide-in from a vertical offset. Respects animation_enabled."""
     if not widget.app.animation_enabled:
+        widget.styles.opacity = 1
+        widget.styles.offset = Offset(0, 0)
         return
     widget.styles.opacity = 0
     widget.styles.offset = Offset(0, dy)

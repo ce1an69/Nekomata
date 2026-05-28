@@ -112,24 +112,18 @@ class InterpretationDialog:
         self._height_timers.clear()
 
     def _animate_interp_height(self, from_pct: float, to_pct: float, on_complete=None) -> None:
-        """Animate interp dialog height between percentages using timer steps."""
+        """Animate interp dialog height using Textual's native animation."""
         self._cancel_height_anim()
         if not self._screen.app.animation_enabled:
             self._w_interp.styles.height = f"{to_pct}%"
             if on_complete:
                 on_complete()
             return
-        steps = 8
-        step_delay = 0.035
-        for i in range(steps):
-            t = (i + 1) / steps
-            eased = 1 - (1 - t) ** 3  # out_cubic
-            val = from_pct + (to_pct - from_pct) * eased
-            delay = max(0.001, step_delay * i)
-            timer = self._screen.set_timer(delay, lambda v=val: setattr(self._w_interp.styles, "height", f"{v}%"))
-            self._height_timers.append(timer)
+        self._w_interp.styles.height = f"{from_pct}%"
+        duration = 0.28
+        self._w_interp.styles.animate("height", f"{to_pct}%", duration=duration, easing="out_cubic")
         if on_complete:
-            timer = self._screen.set_timer(max(0.001, step_delay * steps), on_complete)
+            timer = self._screen.set_timer(duration + 0.01, on_complete)
             self._height_timers.append(timer)
 
     def sync_layout(self, detail_visible: bool, screen_width: int) -> None:

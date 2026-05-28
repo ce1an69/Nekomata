@@ -4,7 +4,7 @@ import { Deck } from './cards.js';
 import { InterpretationController } from './interpret.js';
 import { CardCarousel } from './carousel.js';
 import { state } from './state.js';
-import { showScreen, cardImgUrl, makeBtn, resumeHome, t, showToast } from './utils.js';
+import { showScreen, cardImgUrl, makeBtn, resumeHome, t, showToast, isEn, cardName, cardKeywords, cardMeaning, statusLabel as cardStatusLabel, needsInit } from './utils.js';
 
 // -- Keyboard handler for draw screen --
 
@@ -48,35 +48,6 @@ export function initDrawKeyboard() {
             }
         }
     });
-}
-
-// -- Helpers --
-
-function _isEn() {
-    return state.config.lang === 'en';
-}
-
-function _cardName(c) {
-    return _isEn() ? c.name : (c.name_zh || c.name);
-}
-
-function _keywords(c, reversed) {
-    if (_isEn() && c.keywords_upright_en && c.keywords_upright_en.length) {
-        return reversed ? c.keywords_reversed_en : c.keywords_upright_en;
-    }
-    return reversed ? c.keywords_reversed : c.keywords_upright;
-}
-
-function _meaning(c, reversed) {
-    if (_isEn() && c.meaning_upright_en) {
-        return reversed ? c.meaning_reversed_en : c.meaning_upright_en;
-    }
-    return reversed ? c.meaning_reversed : c.meaning_upright;
-}
-
-function _statusLabel(reversed) {
-    const cd = state.strings.card_detail || {};
-    return reversed ? (cd.reversed || 'Reversed') : (cd.upright || 'Upright');
 }
 
 // -- Draw screen lifecycle --
@@ -361,9 +332,9 @@ function updateDetailContent() {
     const c = dc.card;
     const panel = document.getElementById('detail-content');
     const imgHtml = c.has_image ? cardImgUrl(c) : '';
-    const keywords = _keywords(c, dc.isReversed);
-    const meaning = _meaning(c, dc.isReversed);
-    const statusLabel = _statusLabel(dc.isReversed);
+    const keywords = cardKeywords(c, dc.isReversed);
+    const meaning = cardMeaning(c, dc.isReversed);
+    const statusLabel = cardStatusLabel(dc.isReversed);
     const posLabel = t('draw.label_position', 'Position');
     const statusLbl = t('draw.label_status', 'Status');
     const kwLabel = t('draw.label_keywords', 'Keywords');
@@ -371,7 +342,7 @@ function updateDetailContent() {
     const elemAstroLabel = `${t('card_detail.element', 'Element')} · ${t('card_detail.astrology', 'Astrology')}`;
 
     panel.innerHTML = imgHtml +
-        `<div class="detail-field"><div class="label">${_cardName(c)} ${c.name}</div></div>` +
+        `<div class="detail-field"><div class="label">${cardName(c)} ${c.name}</div></div>` +
         `<div class="detail-field"><div class="label">${posLabel}</div><div class="value">${dc.position.name} — ${dc.position.description}</div></div>` +
         `<div class="detail-field"><div class="label">${statusLbl}</div><div class="value">${statusLabel}</div></div>` +
         `<div class="detail-field"><div class="label">${kwLabel}</div><div class="value sub">${keywords.join(', ')}</div></div>` +
@@ -451,6 +422,7 @@ function showInterpActions() {
 
     const btnCopy = document.getElementById('btn-copy-text');
     const btnExport = document.getElementById('btn-export-image');
+    const btnFollowup = document.getElementById('btn-followup');
 
     btnCopy.textContent = t('draw.btn_copy_text', 'Copy Text');
     btnCopy.onclick = async () => {
@@ -468,81 +440,70 @@ function showInterpActions() {
 
     btnExport.textContent = t('draw.btn_export_image', 'Export Image');
     btnExport.onclick = () => exportInterpImage();
+
+    btnFollowup.textContent = t('draw.btn_followup', 'Follow-up');
+    btnFollowup.onclick = () => showFollowupBar();
+
+    if (needsInit('draw-followup')) {
+        document.getElementById('followup-send').addEventListener('click', () => submitFollowup());
+        document.getElementById('followup-cancel').addEventListener('click', () => hideFollowupBar());
+        document.getElementById('followup-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitFollowup(); }
+            if (e.key === 'Escape') hideFollowupBar();
+        });
+    }
+}
+
+function showFollowupBar() {
+    document.getElementById('followup-bar').classList.remove('hidden');
+    document.getElementById('followup-input').value = '';
+    document.getElementById('followup-input').focus();
+}
+
+function hideFollowupBar() {
+    document.getElementById('followup-bar').classList.add('hidden');
+}
+
+async function submitFollowup() {
+    const input = document.getElementById('followup-input');
+    const question = input.value.trim();
+    if (!question) return;
+    hideFollowupBar();
+    document.getElementById('interp-actions').classList.add('hidden');
+
+    const messages = state.interpCtrl.messages || [];
+    await state.interpCtrl.startFollowup(messages, question);
 }
 
 async function exportInterpImage() {
-    const content = document.querySelector('#interp-text .content');
-    if (!content) return;
-
+    if (!state.interpCtrl.initialText.trim()) {
+        showToast(t('draw.export_failed', 'Nothing to export'));
+        return;
+    }
     try {
-        const rect = content.getBoundingClientRect();
-        const scale = 2;
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.ceil(rect.width) * scale;
-        canvas.height = Math.ceil(rect.height) * scale;
-        const ctx = canvas.getContext('2d');
-        ctx.scale(scale, scale);
-
-        // Draw background
-        const bg = getComputedStyle(document.documentElement).getPropertyValue('--crust').trim() || '#11111b';
-        ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, rect.width, rect.height);
-
-        // Use foreignObject SVG approach
-        const cssRules = [];
-        for (const sheet of document.styleSheets) {
-            try {
-                for (const rule of sheet.cssRules) {
-                    if (rule.cssText && (rule.cssText.includes('.interp-text') || rule.cssText.includes('.content'))) {
-                        cssRules.push(rule.cssText);
-                    }
-                }
-            } catch { /* cross-origin */ }
-        }
-
-        const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.ceil(rect.width)}" height="${Math.ceil(rect.height)}">
-            <foreignObject width="100%" height="100%">
-                <div xmlns="http://www.w3.org/1999/xhtml" style="padding:20px;background:${bg};color:#cdd6f4;font-family:system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.7;">
-                    ${content.innerHTML}
-                </div>
-            </foreignObject>
-        </svg>`;
-
-        const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+        const resp = await fetch('/api/export-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: state.interpCtrl.initialText,
+                cards: state.spread.drawnCards.map(dc => ({
+                    card_id: dc.card.id,
+                    position_name: dc.position.name,
+                    position_name_zh: dc.position.name_zh || '',
+                    position_description: dc.position.description || '',
+                    is_reversed: dc.isReversed,
+                })),
+            }),
+        });
+        if (!resp.ok) throw new Error('Export failed');
+        const blob = await resp.blob();
         const url = URL.createObjectURL(blob);
-
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = async () => {
-            ctx.drawImage(img, 0, 0);
-            URL.revokeObjectURL(url);
-
-            canvas.toBlob(async (pngBlob) => {
-                if (!pngBlob) {
-                    showToast(t('draw.export_failed', 'Export failed'));
-                    return;
-                }
-                try {
-                    await navigator.clipboard.write([
-                        new ClipboardItem({ 'image/png': pngBlob })
-                    ]);
-                    showToast(t('draw.export_success', '✦ Image exported to clipboard'));
-                } catch {
-                    // Fallback: download as file
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(pngBlob);
-                    a.download = 'nekomata-reading.png';
-                    a.click();
-                    URL.revokeObjectURL(a.href);
-                    showToast(t('draw.export_success', '✦ Image exported'));
-                }
-            }, 'image/png');
-        };
-        img.onerror = () => {
-            URL.revokeObjectURL(url);
-            showToast(t('draw.export_failed', 'Export failed'));
-        };
-        img.src = url;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'nekomata-reading.png';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(t('draw.export_success', '✦ Image exported'));
     } catch {
         showToast(t('draw.export_failed', 'Export failed'));
     }

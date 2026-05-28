@@ -42,4 +42,7 @@ def build_user_prompt(question: str, cards_info: str) -> str:
 
 def build_followup_prompt(question: str) -> str:
     """Build the user message for a follow-up question."""
+    from nekomata.i18n import get_lang
+    if get_lang() == "en":
+        return f"Follow-up question: {question}\nPlease provide additional interpretation for this follow-up."
     return f"追问：{question}\n请针对这个追问进行补充解读。"

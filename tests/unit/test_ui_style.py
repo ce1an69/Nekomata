@@ -155,7 +155,7 @@ def test_draw_hiding_detail_recenters_spread_area():
 
 def test_draw_stream_uses_app_thread_callback():
     from nekomata.screens.stream_handler import StreamHandler
-    source = inspect.getsource(StreamHandler.run)
+    source = inspect.getsource(StreamHandler._run_stream)
 
     assert "call_from_thread" in source
 
