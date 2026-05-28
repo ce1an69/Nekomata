@@ -223,7 +223,7 @@ class HomeScreen(Screen):
             if cmd == "config":
                 self.query_one("#prompt-input", Input).value = ""
                 from nekomata.screens.setup import SetupScreen
-                self.app.push_screen(SetupScreen(), callback=self._on_config_done)
+                self.app.push_screen(SetupScreen(self.app.config), callback=self._on_config_done)
                 return
             if cmd == "quit":
                 self.app.exit()
