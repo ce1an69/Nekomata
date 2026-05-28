@@ -1,6 +1,12 @@
 # Nekomata
 
+**[English](README_EN.md)** | 中文
+
+> Nekomata 取自日语"猫又"——传说中的二尾妖猫，擅长变化与预知。
+
 终端里的像素风猫咪塔罗占卜应用。78 张牌全部融入猫咪元素，搭配 AI 个性化解牌。
+
+支持三种运行模式：**TUI**（终端界面）、**Web UI**（浏览器）、**Desktop**（原生窗口）。
 
 ## 功能特性
 
@@ -8,35 +14,38 @@
 
 - **完整 78 张牌**：22 张大阿尔卡纳 + 56 张小阿尔卡纳（圣杯、权杖、宝剑、星币）
 - **像素风牌面**：64×96 像素，RGBA 格式，NEAREST 插值缩放
-- **自适应渲染**：根据终端尺寸自动选择渲染模式（全尺寸 / 中等 / 紧凑 / 预览 / 纯文字）
+- **自适应渲染**：根据终端尺寸自动选择渲染模式（full / medium / compact / preview / text）
 - **正逆位系统**：可配置逆位概率（默认 50%）
 
 ### 牌阵系统
 
 - **单牌阵**：快速占卜，适合日常问题
-- **三牌阵**：过去-现在-未来，适合时间线分析
-- **五牌阵**：多维度解读，适合复杂问题
-- **自定义牌阵**：通过 `data/spread_strings.json` 扩展
+- **过去-现在-未来**：时间线分析
+- **现状-行动-结果**：行动指引
+- **身-心-灵**：内在探索
+- **五牌十字**：多维度深度解读
 
 ### AI 解牌
 
 - **OpenAI 兼容接口**：支持任意 OpenAI-compatible API
 - **流式输出**：实时显示解牌过程
-- **多模型支持**：可配置不同 AI 模型
-- **结构化提示词**：针对不同牌阵优化的 prompt 模板
+- **追问功能**：对解读结果进一步追问
+- **结构化提示词**：每种牌阵独立的 prompt 模板
+- **无 SDK 依赖**：基于 urllib 轻量实现
 
-### 用户界面
+### 多模式界面
 
-- **TUI 模式**：基于 Textual 的终端用户界面
+- **TUI 模式**：基于 Textual 的终端界面，Catppuccin Mocha 配色
+- **CLI 模式**：纯命令行交互，支持单行占卜
 - **Web UI 模式**：基于 FastAPI 的浏览器界面
-- **首次运行引导**：自动检测并引导配置 AI 后端
-- **牌库浏览**：查看所有 78 张牌的详细信息
+- **Desktop 模式**：PyWebView 原生窗口
+- **国际化**：支持中文 / 英文切换
 
 ## 安装
 
 ### 前置条件
 
-- Python 3.14+
+- Python 3.13+
 - [uv](https://docs.astral.sh/uv/)（推荐）或 pip
 
 ### 安装步骤
@@ -47,8 +56,7 @@ git clone https://github.com/ce1an69/Nekomata.git
 cd Nekomata
 
 # 使用 uv 安装（推荐）
-uv python pin 3.14    # 首次：固定 Python 版本
-uv sync               # 安装运行时依赖
+uv sync
 
 # 或使用 pip 安装
 pip install -e .
@@ -60,11 +68,14 @@ pip install -e .
 # Web UI 依赖
 uv sync --extra web
 
+# Desktop 依赖（含 Web UI）
+uv sync --extra desktop
+
 # 开发依赖（测试等）
 uv sync --extra dev
 
 # 安装所有依赖
-uv sync --extra web --extra dev
+uv sync --extra desktop --extra dev
 ```
 
 ## 使用
@@ -77,21 +88,45 @@ nekomata
 uv run nekomata
 ```
 
+### CLI 模式
+
+```bash
+# 交互式
+nekomata --cli
+nekomata -c
+
+# 单行占卜
+nekomata -c -q "今天运势如何？" -S past_present_future -y
+
+# 指定随机种子（可复现）
+nekomata -c -q "我的问题" -s 42
+```
+
 ### Web UI 模式
 
 ```bash
 nekomata --web              # 默认端口 8080
 nekomata --web --port 3000  # 指定端口
-# 或
-uv run nekomata --web
+```
+
+### Desktop 模式
+
+```bash
+nekomata-desktop            # 打开原生窗口
+nekomata-desktop --debug    # 调试模式
 ```
 
 ### 命令行参数
 
-| 参数          | 说明                        |
-| ------------- | --------------------------- |
-| `--web`       | 启动 Web UI 模式            |
-| `--port PORT` | Web 服务器端口（默认 8080） |
+| 参数                | 说明                        |
+| ------------------- | --------------------------- |
+| `--web`             | 启动 Web UI 模式            |
+| `--port PORT`       | Web 服务器端口（默认 8080） |
+| `--cli` / `-c`      | 启动 CLI 模式               |
+| `-q` / `--question` | 占卜问题（CLI 模式）        |
+| `-s` / `--seed`     | 随机种子（可复现抽牌）      |
+| `-S` / `--spread`   | 牌阵类型 key                |
+| `-y` / `--yes`      | 跳过确认，直接开始解读      |
 
 ### 键盘快捷键（TUI 模式）
 
@@ -115,6 +150,7 @@ uv run nekomata --web
 - API 地址（默认：`https://api.openai.com/v1`）
 - API 密钥
 - 模型名称
+- 语言（中文 / English）
 
 ### 配置文件
 
@@ -124,7 +160,8 @@ uv run nekomata --web
 {
   "api_url": "https://api.openai.com/v1",
   "api_key": "sk-...",
-  "model": "gpt-4"
+  "model": "gpt-4",
+  "lang": "zh"
 }
 ```
 
@@ -138,96 +175,58 @@ uv run nekomata --web
 
 ## 技术栈
 
-| 组件     | 技术                 | 说明              |
-| -------- | -------------------- | ----------------- |
-| 语言     | Python 3.14+         | 主要开发语言      |
-| TUI 框架 | Textual              | 终端用户界面框架  |
-| 牌面渲染 | rich-pixels          | 终端像素渲染      |
-| 图像处理 | Pillow               | PNG 图像处理      |
-| AI 解牌  | OpenAI-compatible    | 远程 API 接口     |
-| Web UI   | FastAPI + vanilla JS | 浏览器界面        |
-| 牌义数据 | YAML                 | 78 张牌正逆位释义 |
-| 用户配置 | JSON                 | 用户设置存储      |
+| 组件     | 技术                 | 说明                         |
+| -------- | -------------------- | ---------------------------- |
+| 语言     | Python 3.13+         | 主要开发语言                 |
+| TUI 框架 | Textual              | 终端用户界面框架             |
+| 牌面渲染 | textual-image        | 终端图像渲染                 |
+| 图像处理 | Pillow               | PNG 图像处理与导出           |
+| AI 解牌  | OpenAI-compatible    | urllib 轻量实现，无 SDK 依赖 |
+| Web UI   | FastAPI + vanilla JS | 浏览器界面                   |
+| Desktop  | PyWebView            | 原生窗口                     |
+| 国际化   | 自研 i18n            | 支持 en/zh                   |
+| 牌义数据 | YAML                 | 78 张牌正逆位释义            |
+| 用户配置 | JSON                 | 用户设置存储                 |
 
 ## 项目结构
 
 ```
 Nekomata/
 ├── src/nekomata/           # 主代码包
-│   ├── app.py              # 应用入口
-│   ├── card/               # 牌组逻辑
-│   │   ├── types.py        # 数据类型定义
-│   │   ├── deck.py         # 牌组管理
-│   │   └── data.py         # 牌义数据加载
-│   ├── spread/             # 牌阵系统
-│   │   ├── base.py         # 牌阵基类
-│   │   ├── single.py       # 单牌阵
-│   │   ├── three_card.py   # 三牌阵
-│   │   └── five_card.py    # 五牌阵
-│   ├── render/             # 渲染系统
-│   │   ├── card_renderer.py # 牌面渲染
-│   │   ├── terminal.py     # 终端检测
-│   │   ├── themes.py       # 主题系统
-│   │   └── styles.py       # 样式定义
-│   ├── ai/                 # AI 解牌
-│   │   ├── interpreter.py  # 解牌器实现
-│   │   └── prompts.py      # 提示词模板
-│   ├── screens/            # Textual 屏幕
-│   │   ├── home.py         # 首页
-│   │   ├── spread_select.py # 牌阵选择
-│   │   ├── draw.py         # 抽牌界面
-│   │   ├── draw_detail.py  # 牌面详情
-│   │   ├── card_browser.py # 牌库浏览
-│   │   └── setup.py        # 首次配置
-│   ├── storage/            # 存储系统
-│   │   └── config.py       # 配置管理
-│   └── web/                # Web UI
-│       ├── server.py       # FastAPI 服务器
-│       └── static/         # 前端静态文件
+│   ├── app.py              # TUI 入口 + argparse
+│   ├── cli.py              # 纯 CLI 模式
+│   ├── desktop.py          # PyWebView 桌面入口
+│   ├── _paths.py           # 路径解析
+│   ├── i18n.py             # 国际化
+│   ├── clipboard.py        # 剪贴板操作
+│   ├── card/               # 牌组逻辑（types / deck / data）
+│   ├── spread/             # 牌阵系统（5 种牌阵 + 注册表）
+│   ├── render/             # 渲染系统（renderer / export / themes / animations）
+│   ├── ai/                 # AI 解牌（interpreter / prompts）
+│   ├── screens/            # Textual 屏幕（15 个模块）
+│   ├── storage/            # 配置管理
+│   └── web/                # Web UI（FastAPI + vanilla JS）
 ├── assets/
-│   └── cards/              # 像素风猫咪塔罗牌 PNG
+│   ├── cards/              # 78 张牌 × 3 变体 PNG
+│   ├── cats/real/          # 6 只猫咪占卜师照片
+│   └── icon/               # 应用图标
 ├── data/
-│   ├── card_meanings.yaml  # 78 张牌正逆位释义
-│   ├── spread_strings.json # 牌阵文案
-│   └── ui_strings.json     # 共享 UI 文案
-├── tests/                  # 测试代码
-│   ├── unit/               # 单元测试
-│   └── integration/        # 集成测试
-├── scripts/                # 工具脚本
-│   ├── generate_card_data.py      # 生成牌义数据
-│   └── generate_runtime_card_images.py # 生成运行时牌面
+│   ├── card_meanings.yaml  # 78 张牌释义
+│   ├── locales/            # i18n（en/zh）
+│   └── prompts/            # AI prompt 模板
+├── scripts/                # 构建和工具脚本
+├── tests/                  # 测试（unit / integration）
 ├── pyproject.toml          # 项目配置
-├── CATS.md                 # 神秘猫咪角色设定
-├── LICENSE                 # MIT 许可证
-└── LICENSE-ASSETS.md       # 美术资源许可证
+└── nekomata.spec           # PyInstaller 构建
 ```
 
 ## 开发
 
-### 环境设置
-
 ```bash
-# 克隆仓库
-git clone https://github.com/ce1an69/Nekomata.git
-cd Nekomata
-
-# 安装依赖
-uv sync --extra web --extra dev
+# 安装所有依赖
+uv sync --extra desktop --extra dev
 
 # 运行测试
-uv run pytest
-
-# 运行特定测试
-uv run pytest tests/unit/
-uv run pytest tests/integration/
-```
-
-### 测试
-
-项目使用 pytest 进行测试：
-
-```bash
-# 运行所有测试
 uv run pytest
 
 # 运行单元测试
@@ -239,26 +238,6 @@ uv run pytest tests/integration/
 # 生成覆盖率报告
 uv run pytest --cov=nekomata
 ```
-
-### 代码规范
-
-- 使用 Python 3.14+ 语法
-- 遵循 PEP 8 代码风格
-- 使用类型注解
-- 编写文档字符串
-
-### 添加新牌阵
-
-1. 在 `src/nekomata/spread/` 创建新文件
-2. 继承 `Spread` 基类
-3. 在 `data/spread_strings.json` 添加文案
-4. 在 `src/nekomata/spread/__init__.py` 注册
-
-### 添加新牌义
-
-1. 编辑 `data/card_meanings.yaml`
-2. 运行 `python scripts/generate_card_data.py` 更新数据
-3. 运行测试验证
 
 ## 神秘猫咪占卜师
 
@@ -278,31 +257,10 @@ Nekomata 的塔罗占卜由六只神秘猫咪主持：
 - **代码**：[MIT License](LICENSE)
 - **美术资源**（`assets/cards/` 下所有 PNG）：[CC BY-NC-SA 4.0](LICENSE-ASSETS.md)
 
-## 贡献
-
-欢迎贡献！请遵循以下步骤：
-
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
-
-### 贡献指南
-
-- 遵循现有代码风格
-- 添加适当的测试
-- 更新文档
-- 确保所有测试通过
-
 ## 致谢
 
 - [Textual](https://textual.textualize.io/) - 终端用户界面框架
-- [rich-pixels](https://github.com/Textualize/rich-pixels) - 终端像素渲染
+- [textual-image](https://github.com/sarusso/textual-image) - 终端图像渲染
 - [FastAPI](https://fastapi.tiangolo.com/) - Web 框架
 - [Catppuccin](https://github.com/catppuccin/catppuccin) - 配色方案
-
-## 联系方式
-
-- GitHub: [ce1an69/Nekomata](https://github.com/ce1an69/Nekomata)
-- Issues: [GitHub Issues](https://github.com/ce1an69/Nekomata/issues)
+- [PyWebView](https://pywebview.flowrl.com/) - 原生窗口
