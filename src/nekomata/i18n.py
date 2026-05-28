@@ -10,6 +10,7 @@ log = logging.getLogger(__name__)
 LOCALES_DIR = data_dir() / "locales"
 SUPPORTED_LANGS = ("en", "zh")
 DEFAULT_LANG = "en"
+ORNAMENT = "─── ✦ ───"
 
 _current_lang: str = DEFAULT_LANG
 _cache: dict[str, dict] = {}
@@ -17,7 +18,9 @@ _cache: dict[str, dict] = {}
 
 def set_lang(lang: str) -> None:
     if lang not in SUPPORTED_LANGS:
-        log.warning("Unsupported language '%s', falling back to '%s'", lang, DEFAULT_LANG)
+        log.warning(
+            "Unsupported language '%s', falling back to '%s'", lang, DEFAULT_LANG
+        )
         lang = DEFAULT_LANG
     global _current_lang
     _current_lang = lang
@@ -30,9 +33,17 @@ def get_lang() -> str:
 def _load_locale(name: str) -> dict:
     key = f"{name}:{_current_lang}"
     if key not in _cache:
-        path = LOCALES_DIR / f"{_current_lang}.json" if name == "ui" else LOCALES_DIR / f"{name}_{_current_lang}.json"
+        path = (
+            LOCALES_DIR / f"{_current_lang}.json"
+            if name == "ui"
+            else LOCALES_DIR / f"{name}_{_current_lang}.json"
+        )
         if not path.exists():
-            fallback = LOCALES_DIR / f"{name}_{DEFAULT_LANG}.json" if name != "ui" else LOCALES_DIR / f"{DEFAULT_LANG}.json"
+            fallback = (
+                LOCALES_DIR / f"{name}_{DEFAULT_LANG}.json"
+                if name != "ui"
+                else LOCALES_DIR / f"{DEFAULT_LANG}.json"
+            )
             if fallback.exists():
                 path = fallback
             else:
@@ -60,6 +71,7 @@ def arcana_label(key: str) -> str:
 
 class _LazySection:
     """Dict proxy that resolves locale strings on each access, not at import time."""
+
     __slots__ = ("_name",)
 
     def __init__(self, name: str) -> None:
@@ -74,6 +86,7 @@ class _LazySection:
 
 class _LazyStrings:
     """Dict proxy for the full ui strings, resolved on each access."""
+
     __slots__ = ()
 
     def __getitem__(self, key: str):

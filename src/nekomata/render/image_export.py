@@ -14,9 +14,7 @@ from PIL import Image, ImageDraw, ImageFont
 from nekomata.i18n import get_lang
 from nekomata.render.card_renderer import get_origin_path, get_preview_path
 from nekomata.render.styles import (
-    C_CRUST,
     C_LAVENDER,
-    C_MANTLE,
     C_MAUVE,
     C_PINK,
     C_SUBTEXT0,

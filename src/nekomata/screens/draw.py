@@ -24,24 +24,47 @@ from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
 from nekomata.clipboard import copy_text as _copy_text_to_clipboard
 from nekomata.clipboard import copy_image as _copy_image_to_clipboard
-from nekomata.render.card_renderer import clear_cache, preload_all_async, preload_card_image_async
-from nekomata.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_SUBTEXT0, C_TEXT, EASE, EASE_SPRING
-from nekomata.render.image_export import render_interp_image, save_image as _save_tmp_image
+from nekomata.render.card_renderer import (
+    clear_cache,
+    preload_all_async,
+    preload_card_image_async,
+)
+from nekomata.render.styles import (
+    C_LAVENDER,
+    C_MAUVE,
+    C_OVERLAY0,
+    C_SUBTEXT0,
+    C_TEXT,
+    EASE,
+    EASE_SPRING,
+)
+from nekomata.render.image_export import (
+    render_interp_image,
+    save_image as _save_tmp_image,
+)
 from nekomata.screens.box_manager import BoxManager
 from nekomata.screens.draw_css import DRAW_SCREEN_CSS
 from nekomata.screens.draw_dialog import InterpretationDialog
 from nekomata.screens.draw_detail import DetailPanel
 from nekomata.screens.draw_widgets import (
-    DECK_ENTRANCE_FADE, DECK_ENTRANCE_STAGGER,
-    DECK_HIDE_DELAY, DECK_ROW_COUNT, NUM_DECK_CARDS, PICK_COMPLETE_DELAY,
-    SPREAD_SLOT_ENTRANCE_FADE, SPREAD_SLOT_ENTRANCE_STAGGER,
-    SLOT_PLACE_DURATION, SLOT_PLACE_OFFSET, SPREAD_RECENTER_DURATION, SPREAD_RECENTER_OFFSET,
-    ConfirmExitInterpretation, DeckCard, SpreadSlot,
+    DECK_ENTRANCE_FADE,
+    DECK_ENTRANCE_STAGGER,
+    DECK_HIDE_DELAY,
+    DECK_ROW_COUNT,
+    NUM_DECK_CARDS,
+    PICK_COMPLETE_DELAY,
+    SPREAD_SLOT_ENTRANCE_FADE,
+    SPREAD_SLOT_ENTRANCE_STAGGER,
+    SPREAD_RECENTER_DURATION,
+    SPREAD_RECENTER_OFFSET,
+    ConfirmExitInterpretation,
+    DeckCard,
+    SpreadSlot,
 )
 from nekomata.screens.stream_handler import StreamHandler
 from nekomata.screens.widgets import go_home
 from nekomata.i18n import lazy_section
-from nekomata.strings import ORNAMENT
+from nekomata.i18n import ORNAMENT
 from nekomata.spread import get_spread
 
 _STR = lazy_section("draw")
@@ -50,9 +73,10 @@ log = logging.getLogger(__name__)
 
 class Phase(Enum):
     """Draw screen state machine: PICK → FLIP → DONE."""
-    PICK = auto()   # User selecting cards from the deck
-    FLIP = auto()   # All cards placed, user flipping to reveal
-    DONE = auto()   # All cards revealed, detail + interpretation available
+
+    PICK = auto()  # User selecting cards from the deck
+    FLIP = auto()  # All cards placed, user flipping to reveal
+    DONE = auto()  # All cards revealed, detail + interpretation available
 
 
 class DrawScreen(Screen):
@@ -83,7 +107,9 @@ class DrawScreen(Screen):
         self._last_preview_id: str | None = None
         self._deck_exit_started = False
         self._display_order = self._spread.display_order
-        self._ordered_positions = [self._spread.positions[i] for i in self._display_order]
+        self._ordered_positions = [
+            self._spread.positions[i] for i in self._display_order
+        ]
 
         # Follow-up state
         self._followup_remaining: int = self._n_positions
@@ -138,7 +164,9 @@ class DrawScreen(Screen):
             message,
             self._update_phase_ui,
             sync_layout=self._sync_interp_layout,
-            fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
+            fit_height=lambda: self._dialog.fit_height(
+                self._w_main_area, self._detail.visible
+            ),
         )
 
     def _on_stream_done(self) -> None:
@@ -150,7 +178,9 @@ class DrawScreen(Screen):
                 f"\n\n---\n\n> {self._followup_question}\n\n---\n\n{new_content}"
             )
             self._followup_active = False
-            self._w_interp_content.update(Markdown(self._prev_interp_content, style=C_TEXT))
+            self._w_interp_content.update(
+                Markdown(self._prev_interp_content, style=C_TEXT)
+            )
             self._messages_history.append({"role": "assistant", "content": new_content})
         else:
             self._prev_interp_content = new_content
@@ -191,9 +221,9 @@ class DrawScreen(Screen):
         elif self._phase == Phase.DONE and self._first_interp_done:
             self._update_followup_hints()
         elif self._phase == Phase.DONE:
-            self._w_interp_hints.update(Text(
-                f"I {_STR['hint_interpret']}", style=C_OVERLAY0
-            ))
+            self._w_interp_hints.update(
+                Text(f"I {_STR['hint_interpret']}", style=C_OVERLAY0)
+            )
 
     # -- BoxManager callback --
 
@@ -260,7 +290,9 @@ class DrawScreen(Screen):
             yield Static(_STR["interp_title"], id="interp-dialog-title")
             yield Static("", id="interp-dialog-content")
             with Vertical(id="followup-section"):
-                yield Input(placeholder=_STR["followup_placeholder"], id="followup-input")
+                yield Input(
+                    placeholder=_STR["followup_placeholder"], id="followup-input"
+                )
             yield Static(_STR["interp_close_hint"], id="interp-dialog-hints")
 
     # -- Mount / Unmount --
@@ -333,14 +365,18 @@ class DrawScreen(Screen):
 
     def _animate_deck_exit(self) -> None:
         if self.app.animation_enabled:
-            self._w_deck_section.styles.animate("opacity", 0.0, duration=0.22, easing=EASE)
+            self._w_deck_section.styles.animate(
+                "opacity", 0.0, duration=0.22, easing=EASE
+            )
             self._w_deck_section.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, -2)),
                 duration=0.28,
                 easing=EASE,
             )
-        for i, card in enumerate(c for c in self.query(DeckCard) if not c.has_class("picked")):
+        for i, card in enumerate(
+            c for c in self.query(DeckCard) if not c.has_class("picked")
+        ):
             self.set_timer(0.01 + i * 0.008, lambda c=card: c.add_class("exiting"))
         self.set_timer(DECK_HIDE_DELAY, self._hide_deck)
 
@@ -383,8 +419,16 @@ class DrawScreen(Screen):
     def _update_footer_fullscreen(self) -> None:
         """Update DONE phase footer with fullscreen toggle hint."""
         d_hint = _STR["detail_hide"] if self._detail.visible else _STR["detail_show"]
-        f_hint = _STR["followup_remaining"].format(remaining=self._followup_remaining) if self._first_interp_done and self._followup_remaining > 0 else ""
-        h_hint = _STR['fullscreen_exit' if self._dialog.fullscreen else 'fullscreen_enter'] if self._dialog.is_visible else ""
+        f_hint = (
+            _STR["followup_remaining"].format(remaining=self._followup_remaining)
+            if self._first_interp_done and self._followup_remaining > 0
+            else ""
+        )
+        h_hint = (
+            _STR["fullscreen_exit" if self._dialog.fullscreen else "fullscreen_enter"]
+            if self._dialog.is_visible
+            else ""
+        )
         i_hint = "" if self._dialog.is_visible else _STR["hint_interpret"]
         parts = [d_hint, h_hint, f_hint, i_hint, _STR["hint_back"]]
         self._w_footer.update(Text("  ".join(p for p in parts if p), style=C_OVERLAY0))
@@ -401,13 +445,20 @@ class DrawScreen(Screen):
             if self._pick_index < self._n_positions:
                 pos_name = self._spread.positions[self._pick_index].name
                 remaining = self._n_positions - self._pick_index
-                spread_text = _STR["pick_next"].format(remaining=remaining, name=pos_name)
+                spread_text = _STR["pick_next"].format(
+                    remaining=remaining, name=pos_name
+                )
             else:
                 spread_text = _STR["pick_done"]
             self._w_spread_label.update(Text(spread_text, style=lbl))
-            self._w_deck_label.update(Text(
-                _STR["pick_label"].format(picked=self._pick_index, total=self._n_positions), style=lbl
-            ))
+            self._w_deck_label.update(
+                Text(
+                    _STR["pick_label"].format(
+                        picked=self._pick_index, total=self._n_positions
+                    ),
+                    style=lbl,
+                )
+            )
             self._w_footer.update(Text(_STR["hint_pick"], style=C_OVERLAY0))
             self._w_deck_section.display = True
         elif self._phase == Phase.FLIP:
@@ -415,7 +466,9 @@ class DrawScreen(Screen):
                 self._deck_exit_started = True
                 self._animate_deck_exit()
             unrevealed = sum(1 for s in self.query(SpreadSlot) if not s.is_revealed)
-            self._w_spread_label.update(Text(_STR["flip_label"].format(unrevealed=unrevealed), style=lbl))
+            self._w_spread_label.update(
+                Text(_STR["flip_label"].format(unrevealed=unrevealed), style=lbl)
+            )
             self._w_footer.update(Text(_STR["hint_flip"], style=C_OVERLAY0))
         elif self._phase == Phase.DONE:
             self._w_deck_section.display = False
@@ -441,7 +494,9 @@ class DrawScreen(Screen):
         self._drawn_cards.append(dc)
 
         card_widget.add_class("picked")
-        self.run_worker(preload_card_image_async(dc.card, dc.is_reversed), exclusive=False)
+        self.run_worker(
+            preload_card_image_async(dc.card, dc.is_reversed), exclusive=False
+        )
 
         self._pick_index += 1
         self._update_phase_ui()
@@ -457,7 +512,9 @@ class DrawScreen(Screen):
 
     async def _transition_to_flip(self) -> None:
         """Reveal spread after the final pick."""
-        log.debug("Transitioning to flip phase with %s drawn card(s)", len(self._drawn_cards))
+        log.debug(
+            "Transitioning to flip phase with %s drawn card(s)", len(self._drawn_cards)
+        )
         if PICK_COMPLETE_DELAY:
             await asyncio.sleep(PICK_COMPLETE_DELAY)
         await self._reveal_spread()
@@ -491,7 +548,11 @@ class DrawScreen(Screen):
                     0.05 + i * SPREAD_SLOT_ENTRANCE_STAGGER,
                     lambda s=slot: self._animate_slot_entrance(s),
                 )
-            total = 0.05 + len(slots) * SPREAD_SLOT_ENTRANCE_STAGGER + SPREAD_SLOT_ENTRANCE_FADE
+            total = (
+                0.05
+                + len(slots) * SPREAD_SLOT_ENTRANCE_STAGGER
+                + SPREAD_SLOT_ENTRANCE_FADE
+            )
             self.set_timer(total, self._focus_first_slot)
 
     def _focus_first_slot(self) -> None:
@@ -502,7 +563,9 @@ class DrawScreen(Screen):
 
     @staticmethod
     def _animate_slot_entrance(slot: SpreadSlot) -> None:
-        slot.styles.animate("opacity", 1.0, duration=SPREAD_SLOT_ENTRANCE_FADE, easing=EASE)
+        slot.styles.animate(
+            "opacity", 1.0, duration=SPREAD_SLOT_ENTRANCE_FADE, easing=EASE
+        )
         slot.styles.animate(
             "offset",
             ScalarOffset.from_offset(Offset(0, 0)),
@@ -529,7 +592,9 @@ class DrawScreen(Screen):
             self._detail.show(
                 slots[0] if slots else None,
                 sync_interp=self._sync_interp_layout,
-                fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
+                fit_height=lambda: self._dialog.fit_height(
+                    self._w_main_area, self._detail.visible
+                ),
             )
             self._update_phase_ui()
             for s in slots:
@@ -572,12 +637,18 @@ class DrawScreen(Screen):
                 self._box.active_box = "interp" if self._dialog.fullscreen else "spread"
                 self._box.update_highlights()
                 self._box.focus_widget()
-            center_spread = None if self._dialog.fullscreen else self._center_spread_area
-            self._detail.hide(sync_interp=self._sync_interp_layout, center_spread=center_spread)
+            center_spread = (
+                None if self._dialog.fullscreen else self._center_spread_area
+            )
+            self._detail.hide(
+                sync_interp=self._sync_interp_layout, center_spread=center_spread
+            )
         else:
             self._detail.show(
                 sync_interp=self._sync_interp_layout,
-                fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
+                fit_height=lambda: self._dialog.fit_height(
+                    self._w_main_area, self._detail.visible
+                ),
             )
             slots = list(self.query(SpreadSlot))
             if slots:
@@ -619,7 +690,9 @@ class DrawScreen(Screen):
             self._w_followup_section.styles.offset = (0, 1)
         self._w_followup_section.add_class("visible")
         if self.app.animation_enabled:
-            self._w_followup_section.styles.animate("opacity", 1.0, duration=0.24, easing=EASE)
+            self._w_followup_section.styles.animate(
+                "opacity", 1.0, duration=0.24, easing=EASE
+            )
             self._w_followup_section.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 0)),
@@ -632,7 +705,9 @@ class DrawScreen(Screen):
         """Hide the follow-up input box with exit animation."""
         self._followup_visible = False
         if self.app.animation_enabled:
-            self._w_followup_section.styles.animate("opacity", 0.0, duration=0.18, easing=EASE)
+            self._w_followup_section.styles.animate(
+                "opacity", 0.0, duration=0.18, easing=EASE
+            )
             self._w_followup_section.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 1)),
@@ -668,7 +743,9 @@ class DrawScreen(Screen):
         self._stream.reset(append=True)
         self._dialog.fit_height(self._w_main_area, self._detail.visible)
         self.run_worker(
-            self._stream.run_followup(self._messages_history, question, lambda: self._cancelled),
+            self._stream.run_followup(
+                self._messages_history, question, lambda: self._cancelled
+            ),
             exclusive=True,
         )
 
@@ -676,8 +753,12 @@ class DrawScreen(Screen):
         """Update interp hints bar with follow-up and export availability."""
         parts = [_STR["done_marker"]]
         if self._followup_remaining > 0:
-            parts.append(_STR["followup_remaining"].format(remaining=self._followup_remaining))
-        parts.append(_STR['fullscreen_exit' if self._dialog.fullscreen else 'fullscreen_enter'])
+            parts.append(
+                _STR["followup_remaining"].format(remaining=self._followup_remaining)
+            )
+        parts.append(
+            _STR["fullscreen_exit" if self._dialog.fullscreen else "fullscreen_enter"]
+        )
         parts.append(_STR["copy_text"])
         parts.append(_STR["export_image"])
         self._w_interp_hints.update(Text("  ".join(parts), style=C_OVERLAY0))
@@ -695,7 +776,11 @@ class DrawScreen(Screen):
 
     def key_c(self, event: Key) -> None:
         """Copy initial interpretation text to clipboard."""
-        if self._phase != Phase.DONE or not self._first_interp_done or self._dialog.is_streaming:
+        if (
+            self._phase != Phase.DONE
+            or not self._first_interp_done
+            or self._dialog.is_streaming
+        ):
             return
         if not self._dialog.is_visible:
             return
@@ -708,7 +793,11 @@ class DrawScreen(Screen):
 
     def key_e(self, event: Key) -> None:
         """Export initial interpretation as image to clipboard."""
-        if self._phase != Phase.DONE or not self._first_interp_done or self._dialog.is_streaming:
+        if (
+            self._phase != Phase.DONE
+            or not self._first_interp_done
+            or self._dialog.is_streaming
+        ):
             return
         if not self._dialog.is_visible:
             return
@@ -743,7 +832,9 @@ class DrawScreen(Screen):
         """Reset main area offset to origin (with animation if enabled)."""
         target = ScalarOffset.from_offset(Offset(0, 0))
         if self.app.animation_enabled:
-            self._w_main_area.styles.animate("offset", target, duration=0.22, easing=EASE)
+            self._w_main_area.styles.animate(
+                "offset", target, duration=0.22, easing=EASE
+            )
         else:
             self._w_main_area.styles.offset = (0, 0)
 
@@ -754,7 +845,9 @@ class DrawScreen(Screen):
             self._cancelled = False
             self._dialog.show(
                 sync_layout=self._sync_interp_layout,
-                fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
+                fit_height=lambda: self._dialog.fit_height(
+                    self._w_main_area, self._detail.visible
+                ),
             )
             self._sync_interp_hints()
             self._update_footer_fullscreen()
@@ -765,11 +858,13 @@ class DrawScreen(Screen):
             self._hide_followup()
             return
         if self._dialog.is_visible:
+
             def on_confirm(confirmed: bool) -> None:
                 if confirmed:
                     self._cancelled = True
                     self._dialog.stop()
                     go_home(self)
+
             self.app.push_screen(ConfirmExitInterpretation(), callback=on_confirm)
         else:
             go_home(self)

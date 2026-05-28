@@ -72,6 +72,7 @@
       "name": "Five Card Cross",
       "description": "十字星芒的启示——五张牌交织出困境的全貌：现状、阻碍、根基、来路、指引。",
       "suitable_for": "面对复杂局面需要多角度分析、想知道问题的根源在哪里、想要全面的指引而非单一答案",
+      "display_order": [3, 0, 2, 1, 4],
       "positions": [
         {
           "name": "Present",

@@ -4,7 +4,6 @@ import logging
 import platform
 import shutil
 import subprocess
-import tempfile
 
 log = logging.getLogger(__name__)
 
@@ -15,25 +14,31 @@ def copy_text(text: str) -> bool:
     try:
         if system == "Darwin":
             proc = subprocess.run(
-                ["pbcopy"], input=text.encode("utf-8"), capture_output=True,
+                ["pbcopy"],
+                input=text.encode("utf-8"),
+                capture_output=True,
             )
             return proc.returncode == 0
         if system == "Linux":
             if shutil.which("xclip"):
                 proc = subprocess.run(
                     ["xclip", "-selection", "clipboard"],
-                    input=text.encode("utf-8"), capture_output=True,
+                    input=text.encode("utf-8"),
+                    capture_output=True,
                 )
                 return proc.returncode == 0
             if shutil.which("xsel"):
                 proc = subprocess.run(
                     ["xsel", "--clipboard", "--input"],
-                    input=text.encode("utf-8"), capture_output=True,
+                    input=text.encode("utf-8"),
+                    capture_output=True,
                 )
                 return proc.returncode == 0
         if system == "Windows":
             proc = subprocess.run(
-                ["clip"], input=text.encode("utf-8"), capture_output=True,
+                ["clip"],
+                input=text.encode("utf-8"),
+                capture_output=True,
             )
             return proc.returncode == 0
     except Exception:
@@ -66,7 +71,9 @@ def _copy_image_macos(png_path: str) -> bool:
         "thePasteboard's writeObjects:{theImage}\n"
     )
     proc = subprocess.run(
-        ["osascript", "-e", script], capture_output=True, timeout=5,
+        ["osascript", "-e", script],
+        capture_output=True,
+        timeout=5,
     )
     return proc.returncode == 0
 

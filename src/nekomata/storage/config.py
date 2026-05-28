@@ -36,7 +36,9 @@ class AppConfig:
         return Path.home() / _SETTINGS_DIR / _SETTINGS_FILE
 
     @classmethod
-    def save(cls, api_url: str, api_key: str, model: str, lang: str = "en") -> AppConfig:
+    def save(
+        cls, api_url: str, api_key: str, model: str, lang: str = "en"
+    ) -> AppConfig:
         """Write settings and return the new config."""
         path = cls._resolve_save_path()
         path.parent.mkdir(parents=True, exist_ok=True)

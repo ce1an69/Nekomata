@@ -72,6 +72,7 @@
       "name": "Five Card Cross",
       "description": "Revelation of the star-cross — five cards weave the full picture of a dilemma: present, obstacle, foundation, past, and guidance.",
       "suitable_for": "Complex situations needing multi-angle analysis, wanting to find the root of a problem, seeking comprehensive guidance rather than a single answer",
+      "display_order": [3, 0, 2, 1, 4],
       "positions": [
         {
           "name": "Present",

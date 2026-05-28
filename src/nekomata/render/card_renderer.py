@@ -14,7 +14,7 @@ from rich.text import Text
 
 from nekomata.card.types import Card, DrawnCard
 from nekomata.render.themes import get_theme
-from nekomata.strings import section
+from nekomata.i18n import ui_section as section
 
 _ORIGIN_MAX_SIZE = (1024, 1536)
 _DETAIL_MAX_SIZE = (256, 384)
