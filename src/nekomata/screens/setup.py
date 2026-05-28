@@ -51,11 +51,15 @@ class SetupButton(Static):
 
 
 class SetupScreen(Screen):
-    """First-launch setup screen for API URL, API Key, and language."""
+    """Setup screen for API URL, API Key, and language. Pre-fills existing config when re-entered via /config."""
 
     BINDINGS = [
         Binding("q", "go_back", "Back"),
     ]
+
+    def __init__(self, existing_config: AppConfig | None = None) -> None:
+        super().__init__()
+        self._existing = existing_config
 
     DEFAULT_CSS = f"""
     SetupScreen {{
@@ -161,26 +165,28 @@ class SetupScreen(Screen):
     """
 
     def compose(self) -> ComposeResult:
+        cfg = self._existing
         with Vertical(id="setup-stack"):
             yield Static(_STR["title"], id="setup-title")
             yield Static(_STR["subtitle"], id="setup-subtitle")
             yield Static(ORNAMENT, id="setup-ornament-top")
             yield Static(_STR["field_api_url"], classes="field-label")
             yield Input(
-                value="https://api.openai.com/v1",
+                value=cfg.api_url if cfg and cfg.api_url else "https://api.openai.com/v1",
                 placeholder="https://api.openai.com/v1",
                 id="api-url-input",
                 classes="setup-input",
             )
             yield Static(_STR["field_api_key"], classes="field-label")
             yield Input(
+                value=cfg.api_key or "",
                 placeholder="sk-...",
                 id="api-key-input",
-                password=True,
                 classes="setup-input",
             )
             yield Static(_STR["field_model"], classes="field-label")
             yield Input(
+                value=cfg.model if cfg and cfg.model else "",
                 placeholder="e.g. glm-4-flash",
                 id="model-input",
                 classes="setup-input",
@@ -188,7 +194,7 @@ class SetupScreen(Screen):
             yield Static(_STR["field_lang"], classes="field-label")
             yield Select(
                 options=_LANG_OPTIONS,
-                value="en",
+                value=cfg.lang if cfg else "en",
                 id="lang-select",
             )
             yield Static(ORNAMENT, id="setup-ornament-bottom")
