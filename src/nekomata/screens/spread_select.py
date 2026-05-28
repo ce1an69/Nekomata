@@ -80,7 +80,6 @@ class SpreadSelectScreen(Screen):
     """Choose a card spread layout before drawing cards."""
 
     BINDINGS = [
-        ("q", "go_back", "Back"),
         ("escape", "go_back", "Back"),
     ]
 

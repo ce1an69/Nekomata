@@ -59,7 +59,6 @@ class DrawScreen(Screen):
     """Card drawing screen: pick from deck → flip to reveal → detail + interpret."""
 
     BINDINGS = [
-        Binding("q", "handle_back", "Back"),
         Binding("escape", "handle_back", "Back"),
         Binding("i", "interpret", "Interpret", show=False),
         Binding("d", "toggle_detail", "Detail", show=False),

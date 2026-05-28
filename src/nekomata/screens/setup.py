@@ -54,7 +54,7 @@ class SetupScreen(Screen):
     """Setup screen for API URL, API Key, and language. Pre-fills existing config when re-entered via /config."""
 
     BINDINGS = [
-        Binding("q", "go_back", "Back"),
+        Binding("escape", "go_back", "Back"),
     ]
 
     def __init__(self, existing_config: AppConfig | None = None) -> None:

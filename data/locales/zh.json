@@ -56,14 +56,14 @@
     "error_url_required": "请填写 API URL",
     "error_model_required": "请填写模型名称",
     "error_key_required": "请填写 API Key",
-    "hints": "Enter 下一步/保存 · Tab 切换 · Q 返回"
+    "hints": "Enter 下一步/保存 · Tab 切换 · Esc 返回"
   },
 
   "spread_select": {
     "prompt": "选择牌阵",
-    "back_label": "Q   返回",
+    "back_label": "Esc  返回",
     "back_desc": "返回问题输入。",
-    "hints": "↑/↓/←/→ 移动 · Enter 确认 · Q 返回"
+    "hints": "↑/↓/←/→ 移动 · Enter 确认 · Esc 返回"
   },
 
   "draw": {
@@ -75,14 +75,14 @@
     "hint_pick": "← → 选牌  Enter 抽牌",
     "hint_flip": "← → 选择  Enter 翻牌",
     "hint_interpret": "I 解读",
-    "hint_back": "Q 返回",
+    "hint_back": "Esc 返回",
     "detail_show": "D 详情",
     "detail_hide": "D 隐藏详情",
     "interp_title": "解读",
-    "interp_close_hint": "Q 关闭",
-    "interp_done_hint": "── 完成 ──  Q 关闭",
-    "followup_done_hint": "── 完成 ──  F 追问 ({remaining})  Q 关闭",
-    "followup_exhausted_hint": "── 完成 ──  Q 关闭",
+    "interp_close_hint": "Esc 关闭",
+    "interp_done_hint": "── 完成 ──  Esc 关闭",
+    "followup_done_hint": "── 完成 ──  F 追问 ({remaining})  Esc 关闭",
+    "followup_exhausted_hint": "── 完成 ──  Esc 关闭",
     "fullscreen_enter": "H 展开解读框",
     "fullscreen_exit": "H 收起解读框",
     "btn_fullscreen": "全屏解读",
@@ -90,7 +90,7 @@
     "copy_text": "C 复制文本",
     "export_image": "E 导出图片",
     "done_marker": "── 完成 ──",
-    "close_hint": "Q 关闭",
+    "close_hint": "Esc 关闭",
     "copy_success": "✦ 已复制到剪贴板",
     "copy_failed": "复制失败",
     "export_success": "✦ 图片已导出到剪贴板",
@@ -115,7 +115,7 @@
     "reversed_preview": "  (逆位预览)",
     "select_placeholder": "选择一张牌",
     "suit": "牌组",
-    "hints": "↑/↓ 选牌 · ←/→ 筛选 · R 逆位 · Q 返回"
+    "hints": "↑/↓ 选牌 · ←/→ 筛选 · R 逆位 · Esc 返回"
   },
 
   "card_detail": {
