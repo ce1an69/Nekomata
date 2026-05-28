@@ -2,6 +2,7 @@
 
 import logging
 from enum import Enum, auto
+from typing import TYPE_CHECKING, cast
 
 from rich.text import Text
 from textual.app import ComposeResult
@@ -15,8 +16,11 @@ from textual.widgets import Input, Static
 
 from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
-from nekomata.i18n import ORNAMENT
-from nekomata.i18n import lazy_section
+
+if TYPE_CHECKING:
+    from nekomata.app import NekomataApp
+
+from nekomata.i18n import ORNAMENT, lazy_section
 from nekomata.render.card_renderer import clear_cache
 from nekomata.render.styles import C_MAUVE, C_SUBTEXT0, EASE
 from nekomata.screens.box_manager import BoxManager
@@ -188,7 +192,9 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         if self._planned_cards:
             return
         for position in self._spread.positions:
-            card, is_reversed = self._deck.draw(self.app.reversal_prob)
+            card, is_reversed = self._deck.draw(
+                cast("NekomataApp", self.app).reversal_prob
+            )
             self._planned_cards.append(
                 DrawnCard(card=card, position=position, is_reversed=is_reversed)
             )
@@ -205,9 +211,12 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
 
     def _center_spread_area(self) -> None:
         target = ScalarOffset.from_offset(Offset(0, 0))
-        if self.app.animation_enabled:
+        if cast("NekomataApp", self.app).animation_enabled:
             self._w_main_area.styles.animate(
-                "offset", target, duration=0.22, easing=EASE
+                "offset",
+                target,  # type: ignore[arg-type]
+                duration=0.22,
+                easing=EASE,
             )
         else:
             self._w_main_area.styles.offset = (0, 0)
