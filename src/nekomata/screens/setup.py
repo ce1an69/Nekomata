@@ -22,6 +22,7 @@ from nekomata.render.styles import (
 )
 from nekomata.i18n import lazy_section
 from nekomata.i18n import ORNAMENT
+from nekomata.screens.solid_static import SolidStatic
 from nekomata.storage.config import AppConfig
 
 _STR = lazy_section("setup")
@@ -40,7 +41,7 @@ if SUPPORTED_LANGS != ("en", "zh"):
     ]
 
 
-class SetupButton(Static):
+class SetupButton(SolidStatic):
     """Focusable setup action without Textual Button's inner label fill."""
 
     can_focus = True
@@ -130,7 +131,38 @@ class SetupScreen(Screen):
     }}
     SetupScreen #lang-select {{
         width: 100%;
+        height: 3;
         margin-bottom: 1;
+        background: {C_BASE};
+        color: {C_TEXT};
+    }}
+    SetupScreen #lang-select > SelectCurrent {{
+        height: 3;
+        border: round {C_SURFACE1};
+        background: {C_BASE};
+        color: {C_TEXT};
+        padding: 0 1;
+    }}
+    SetupScreen #lang-select:focus > SelectCurrent {{
+        border: round {C_MAUVE};
+        background: {C_MANTLE};
+    }}
+    SetupScreen #lang-select > SelectOverlay {{
+        border: round {C_MAUVE};
+        background: {C_BASE};
+        color: {C_TEXT};
+        padding: 0 1;
+        max-height: 4;
+    }}
+    SetupScreen #lang-select > SelectOverlay > .option-list--option {{
+        background: {C_BASE};
+        color: {C_TEXT};
+        padding: 0 1;
+    }}
+    SetupScreen #lang-select > SelectOverlay > .option-list--option-highlighted {{
+        background: {C_MAUVE};
+        color: {C_BASE};
+        text-style: bold;
     }}
     SetupButton {{
         width: 12;
@@ -153,6 +185,7 @@ class SetupScreen(Screen):
         text-style: bold;
     }}
     SetupScreen #setup-error {{
+        display: none;
         background: {C_MANTLE};
         color: {C_RED};
         text-align: center;
@@ -172,9 +205,13 @@ class SetupScreen(Screen):
     def compose(self) -> ComposeResult:
         cfg = self._existing or AppConfig()
         with Vertical(id="setup-stack"):
-            yield Static(_STR["title"], id="setup-title")
-            yield Static(_STR["subtitle"], id="setup-subtitle")
-            yield Static(ORNAMENT, id="setup-ornament-top")
+            yield SolidStatic(
+                _STR["title"],
+                align="center",
+                id="setup-title",
+            )
+            yield SolidStatic(_STR["subtitle"], align="center", id="setup-subtitle")
+            yield SolidStatic(ORNAMENT, align="center", id="setup-ornament-top")
             yield Static(_STR["field_api_url"], classes="field-label")
             yield Input(
                 value=cfg.api_url
@@ -201,13 +238,14 @@ class SetupScreen(Screen):
             yield Static(_STR["field_lang"], classes="field-label")
             yield Select(
                 options=_LANG_OPTIONS,
+                allow_blank=False,
                 value=cfg.lang if cfg else "en",
                 id="lang-select",
             )
-            yield Static(ORNAMENT, id="setup-ornament-bottom")
-            yield SetupButton(_STR["save_label"], id="save-btn")
-            yield Static("", id="setup-error")
-            yield Static(_STR["hints"], id="setup-hints")
+            yield SolidStatic(ORNAMENT, align="center", id="setup-ornament-bottom")
+            yield SetupButton(_STR["save_label"], align="center", id="save-btn")
+            yield SolidStatic("", align="center", id="setup-error")
+            yield SolidStatic(_STR["hints"], align="center", id="setup-hints")
 
     def action_go_back(self) -> None:
         self.dismiss(None)
@@ -234,10 +272,10 @@ class SetupScreen(Screen):
         model = self.query_one("#model-input", Input).value.strip()
         lang = self.query_one("#lang-select", Select).value
         if not url:
-            self.query_one("#setup-error", Static).update(_STR["error_url_required"])
+            self._show_error(_STR["error_url_required"])
             return
         if not model:
-            self.query_one("#setup-error", Static).update(_STR["error_model_required"])
+            self._show_error(_STR["error_model_required"])
             return
         if lang == Select.BLANK:
             lang = "en"
@@ -245,3 +283,8 @@ class SetupScreen(Screen):
         self.app.config = config  # type: ignore[misc]
         set_lang(lang)
         self.dismiss(None)
+
+    def _show_error(self, message: str) -> None:
+        error = self.query_one("#setup-error", SolidStatic)
+        error.display = True
+        error.update(message)

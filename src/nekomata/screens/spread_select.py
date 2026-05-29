@@ -18,6 +18,7 @@ from nekomata.render.styles import (
     C_TEXT,
 )
 from nekomata.i18n import lazy_section
+from nekomata.screens.solid_static import SolidStatic
 from nekomata.spread import SPREAD_REGISTRY, get_spread
 
 _STR = lazy_section("spread_select")
@@ -158,7 +159,7 @@ class SpreadSelectScreen(Screen):
         question = self.app.question
         with Vertical(id="spread-shell"):
             if question:
-                yield Static(question, id="question")
+                yield SolidStatic(question, align="center", id="question")
             yield Static(_STR["prompt"], id="prompt")
             with Horizontal(id="spread-body"):
                 with Vertical(id="spread-buttons"):

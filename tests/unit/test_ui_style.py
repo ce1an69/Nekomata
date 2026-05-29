@@ -29,6 +29,7 @@ from nekomata.screens.draw_widgets import (
 )
 from nekomata.screens.home import HomeScreen
 from nekomata.screens.setup import SetupButton, SetupScreen
+from nekomata.screens.solid_static import SolidStatic
 from nekomata.screens.spread_select import SpreadSelectScreen
 
 
@@ -84,6 +85,34 @@ def test_ui_css_uses_soft_round_borders():
 
 def test_setup_hints_do_not_advertise_q_quit():
     assert "Q quit" not in SetupScreen.compose.__code__.co_consts
+
+
+def test_solid_static_paints_full_line_with_current_css_style():
+    render_source = inspect.getsource(SolidStatic.render)
+    pad_source = inspect.getsource(SolidStatic._padded_content)
+
+    assert "self.rich_style" in render_source
+    assert "self.content_size.width" in pad_source
+
+
+def test_setup_and_spread_static_headers_use_solid_static_lines():
+    setup_source = inspect.getsource(SetupScreen.compose)
+    spread_source = inspect.getsource(SpreadSelectScreen.compose)
+
+    assert "SolidStatic" in setup_source
+    assert "id=\"setup-title\"" in setup_source
+    assert "SetupButton(_STR[\"save_label\"]" in setup_source
+    assert "SolidStatic(question" in spread_source
+
+
+def test_setup_language_select_has_no_blank_prompt_and_uses_local_style():
+    css = SetupScreen.DEFAULT_CSS
+    source = inspect.getsource(SetupScreen.compose)
+
+    assert "allow_blank=False" in source
+    assert "SetupScreen #lang-select > SelectCurrent" in css
+    assert "SetupScreen #lang-select > SelectOverlay" in css
+    assert ".option-list--option-highlighted" in css
 
 
 def test_card_rendering_catppuccin_theme_uses_purple_accents():
