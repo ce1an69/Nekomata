@@ -129,7 +129,7 @@ if sys.platform == "darwin":
         version="0.1.0",
         info_plist={
             "CFBundleName": "Nekomata",
-            "CFBundleDisplayName": "Nekomata 猫又",
+            "CFBundleDisplayName": "Nekomata",
             "CFBundleShortVersionString": "0.1.0",
             "NSHighResolutionCapable": True,
             "LSMinimumSystemVersion": "11.0",
