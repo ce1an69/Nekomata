@@ -31,6 +31,13 @@ for arcana_dir in sorted(assets_cards.iterdir()):
         if f.suffix == ".png" and "_origin" not in f.name and "contact_sheet" not in f.name:
             datas.append((str(f), f"assets/cards/{arcana_dir.name}"))
 
+# Font files (WOFF2 + TTF)
+assets_fonts = PROJECT_ROOT / "assets" / "fonts"
+if assets_fonts.is_dir():
+    for f in sorted(assets_fonts.iterdir()):
+        if f.suffix in (".ttf", ".woff2"):
+            datas.append((str(f), "assets/fonts"))
+
 a = Analysis(
     [str(PROJECT_ROOT / "src" / "nekomata" / "desktop.py")],
     pathex=[str(PROJECT_ROOT / "src")],

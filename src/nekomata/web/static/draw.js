@@ -431,7 +431,10 @@ function showInterpActions() {
             return;
         }
         try {
-            await navigator.clipboard.writeText(state.interpCtrl.initialText);
+            const text = composeCopyText(
+                state.question, state.spread.drawnCards, state.interpCtrl.initialText,
+            );
+            await navigator.clipboard.writeText(text);
             showToast(t('draw.copy_success', '✦ Copied to clipboard'));
         } catch {
             showToast(t('draw.copy_failed', 'Copy failed'));
@@ -493,18 +496,44 @@ async function exportInterpImage() {
                     position_description: dc.position.description || '',
                     is_reversed: dc.isReversed,
                 })),
+                question: state.question || '',
             }),
         });
         if (!resp.ok) throw new Error('Export failed');
         const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'nekomata-reading.png';
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast(t('draw.export_success', '✦ Image exported'));
+        try {
+            await navigator.clipboard.write([
+                new ClipboardItem({ 'image/png': blob }),
+            ]);
+            showToast(t('draw.export_success', '✦ Image exported to clipboard'));
+        } catch {
+            // Clipboard API unavailable — fall back to download
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'nekomata-reading.png';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast(t('draw.export_download_success', '✦ Image downloaded'));
+        }
     } catch {
         showToast(t('draw.export_failed', 'Export failed'));
     }
+}
+
+function composeCopyText(question, drawnCards, interp) {
+    const parts = [];
+    if (question) {
+        parts.push(`# ${question}`);
+        parts.push('');
+    }
+    for (const dc of drawnCards) {
+        const name = cardName(dc.card);
+        const status = cardStatusLabel(dc.isReversed);
+        const kw = cardKeywords(dc.card, dc.isReversed).join(', ');
+        parts.push(`- ${name}(${status}): ${kw}`);
+    }
+    parts.push('');
+    parts.push(interp);
+    return parts.join('\n');
 }

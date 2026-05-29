@@ -16,6 +16,9 @@ from textual.events import Key
 from textual.geometry import Offset
 from textual.widgets import Input
 
+from nekomata.card.display import card_keywords as _card_keywords
+from nekomata.card.display import card_name as _card_name
+from nekomata.card.display import status_label as _status_label
 from nekomata.clipboard import copy_image as _copy_image_to_clipboard
 from nekomata.clipboard import copy_text as _copy_text_to_clipboard
 from nekomata.i18n import lazy_section
@@ -25,6 +28,24 @@ from nekomata.screens.draw_widgets import ConfirmExitInterpretation, SpreadSlot
 from nekomata.screens.widgets import go_home
 
 _STR = lazy_section("draw")
+
+
+def _compose_copy_text(
+    question: str, drawn_cards: list, interp: str, lang: str
+) -> str:
+    """Build the full text to copy: question heading + card list + interpretation."""
+    parts: list[str] = []
+    if question:
+        parts.append(f"# {question}")
+        parts.append("")
+    for dc in drawn_cards:
+        name = _card_name(dc.card, lang)
+        status = _status_label(dc.is_reversed, lang)
+        kw = ", ".join(_card_keywords(dc.card, dc.is_reversed, lang))
+        parts.append(f"- {name}({status}): {kw}")
+    parts.append("")
+    parts.append(interp)
+    return "\n".join(parts)
 
 
 class InterpretMixin:
@@ -427,7 +448,10 @@ class InterpretMixin:
             return
         event.stop()
         if self._initial_interp_content:
-            ok = _copy_text_to_clipboard(self._initial_interp_content)
+            text = _compose_copy_text(
+                self._question, self._drawn_cards, self._initial_interp_content, self.app.config.lang
+            )
+            ok = _copy_text_to_clipboard(text)
             msg = _STR["copy_success"] if ok else _STR["copy_failed"]
             self._w_interp_hints.update(Text(msg, style=C_MAUVE if ok else C_OVERLAY0))
             self.set_timer(2.0, self._update_followup_hints)

@@ -181,7 +181,6 @@ class FollowupPayload(BaseModel):
 class ExportImagePayload(BaseModel):
     text: str = Field(min_length=1, max_length=10000)
     cards: list[DrawnCardPayload] = []
-    spread_name: str = ""
     question: str = ""
 
 
