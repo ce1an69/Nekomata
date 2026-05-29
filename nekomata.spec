@@ -72,7 +72,6 @@ a = Analysis(
     excludes=[
         "textual",
         "textual_image",
-        "rich",
         "tkinter",
         "matplotlib",
         "numpy",
