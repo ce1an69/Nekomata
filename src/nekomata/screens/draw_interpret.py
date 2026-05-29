@@ -56,7 +56,7 @@ class InterpretMixin:
         except NoMatches:
             pass
 
-    def _on_stream_error(self, message: str) -> None:
+    def _on_stream_error(self, message: str, config_error: bool = False) -> None:
         self._dialog.show_error(
             message,
             self._update_phase_ui,
@@ -65,6 +65,12 @@ class InterpretMixin:
                 self._w_main_area, self._detail.visible
             ),
         )
+        if config_error:
+            from nekomata.screens.setup import SetupScreen
+
+            app = self.app
+            go_home(self)
+            app.push_screen(SetupScreen(app.config))
 
     def _on_stream_done(self) -> None:
         new_content = "".join(self._stream._content_chars)

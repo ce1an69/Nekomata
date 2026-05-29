@@ -14,12 +14,17 @@ export function t(path, fallback = '') {
     return val != null ? val : fallback;
 }
 
-/** Apply i18n to all elements with data-i18n attribute. */
+/** Apply i18n to all elements with data-i18n / data-i18n-placeholder attributes. */
 export function applyI18n() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const path = el.getAttribute('data-i18n');
         const val = t(path);
         if (val) el.textContent = val;
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const path = el.getAttribute('data-i18n-placeholder');
+        const val = t(path);
+        if (val) el.placeholder = val;
     });
 }
 
@@ -75,7 +80,7 @@ export function showModal(title, bodyHtml) {
     actions.className = 'modal-actions';
     const btn = document.createElement('button');
     btn.className = 'btn btn-primary modal-close';
-    btn.textContent = 'OK';
+    btn.textContent = t('common.ok', 'OK');
     actions.appendChild(btn);
     box.appendChild(actions);
     overlay.appendChild(box);

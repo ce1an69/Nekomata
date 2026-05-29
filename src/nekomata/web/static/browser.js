@@ -90,7 +90,9 @@ function renderCardList(filter) {
         ? state.cards
         : state.cards.filter(c => c.arcana === filter);
 
-    countEl.textContent = `${filtered.length}/78 cards`;
+    countEl.textContent = t('card_browser.card_count', '{filtered}/78 cards')
+        .replace('{filtered}', filtered.length)
+        .replace('{total}', state.cards.length);
 
     list.innerHTML = filtered.map((c) => {
         const numStr = c.arcana === 'major' ? toRoman(c.number) : String(c.number);
@@ -127,9 +129,9 @@ function showBrowserDetail(cardId) {
     const revBadge = reversed ? `<span class="browser-reversed-badge">${sl}</span>` : '';
     const suitLabel = t('card_browser.suit', 'Suit');
     const elemAstroLabel = `${t('card_detail.element', 'Element')} · ${t('card_detail.astrology', 'Astrology')}`;
-    const kwLabel = `${t('card_browser.select_placeholder', 'Keywords')} (${sl})`;
-    const upMeaningLabel = `${t('card_detail.upright', 'Upright')} ${t('card_browser.select_placeholder', 'Meaning')}`;
-    const revMeaningLabel = `${t('card_detail.reversed', 'Reversed')} ${t('card_browser.select_placeholder', 'Meaning')}`;
+    const kwLabel = `${t('card_browser.keywords', 'Keywords')} (${sl})`;
+    const upMeaningLabel = `${t('card_detail.upright', 'Upright')} ${t('card_browser.meaning', 'Meaning')}`;
+    const revMeaningLabel = `${t('card_detail.reversed', 'Reversed')} ${t('card_browser.meaning', 'Meaning')}`;
 
     detail.innerHTML = imgHtml +
         `<div class="detail-field"><div class="label">${cardName(card)} ${card.name}${revBadge}</div></div>` +

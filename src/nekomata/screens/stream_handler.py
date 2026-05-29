@@ -20,7 +20,7 @@ class StreamHandler:
       render_content(parts: list | None) — update interp content; None = reset
       render_hints(text: Text) — update interp hints bar
       scroll_to_bottom() — scroll interp panel to bottom
-      show_error(message: str) — hide dialog and show error
+      show_error(message: str, config_error: bool = False) — hide dialog and show error
     """
 
     def __init__(
@@ -204,17 +204,18 @@ class StreamHandler:
         except InterpretationError as exc:
             if not self._screen.is_mounted or cancelled_check():
                 return
-            self._show_error(_s()["errors"]["interp_failed"].format(error=exc))
+            self._show_error(_s()["errors"]["interp_failed"].format(error=exc), config_error=exc.config_error)
             return
         except Exception as exc:
             if not self._screen.is_mounted or cancelled_check():
                 return
-            msg = str(exc)
+            msg = str(exc).lower()
             errors = _s()["errors"]
-            if "api_key" in msg.lower() or "unauthorized" in msg.lower():
-                self._show_error(errors["api_key_missing"])
+            is_config = any(s in msg for s in ("api_key", "unauthorized", "nodename", "name or service", "connection refused", "unknown url type"))
+            if "api_key" in msg or "unauthorized" in msg:
+                self._show_error(errors["api_key_missing"], config_error=True)
             else:
-                self._show_error(errors["interp_failed"].format(error=exc))
+                self._show_error(errors["interp_failed"].format(error=exc), config_error=is_config)
             return
         if not self._screen.is_mounted or cancelled_check():
             return
