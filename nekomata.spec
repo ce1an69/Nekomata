@@ -77,7 +77,6 @@ a = Analysis(
         "textual",
         "textual_image",
         "rich",
-        "PIL",
         "tkinter",
         "matplotlib",
         "numpy",
