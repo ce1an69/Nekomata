@@ -1,4 +1,5 @@
 from nekomata.card.types import Arcana, Card, DrawnCard, Position
+from nekomata.card.display import card_name, card_keywords, card_meaning, status_label
 
 
 def test_arcana_values():
@@ -59,29 +60,19 @@ def test_drawn_card():
     assert dc.position.name == "Past"
 
 
-def test_drawn_card_status_label():
-    card = Card(
-        id="test", name="Test", name_zh="测试", arcana=Arcana.CUPS,
-        number=1, element="water", astrology="Cancer",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
-    )
-    pos = Position(name="Past", name_zh="过去", description="过去的影响")
-    assert DrawnCard(card=card, position=pos, is_reversed=False).status_label == "upright"
-    assert DrawnCard(card=card, position=pos, is_reversed=True).status_label == "reversed"
+def test_status_label():
+    assert status_label(False, "en") == "upright"
+    assert status_label(True, "en") == "reversed"
 
 
-def test_drawn_card_keywords_and_meaning():
+def test_card_keywords_and_meaning():
     card = Card(
         id="test", name="Test", name_zh="测试", arcana=Arcana.CUPS,
         number=1, element="water", astrology="Cancer",
         keywords_upright=("正位关键词",), keywords_reversed=("逆位关键词",),
         meaning_upright="正位含义", meaning_reversed="逆位含义",
     )
-    pos = Position(name="Past", name_zh="过去", description="过去的影响")
-    upright = DrawnCard(card=card, position=pos, is_reversed=False)
-    assert upright.keywords == ("正位关键词",)
-    assert upright.meaning == "正位含义"
-    reversed_dc = DrawnCard(card=card, position=pos, is_reversed=True)
-    assert reversed_dc.keywords == ("逆位关键词",)
-    assert reversed_dc.meaning == "逆位含义"
+    assert card_keywords(card, False, "en") == ("正位关键词",)
+    assert card_meaning(card, False, "en") == "正位含义"
+    assert card_keywords(card, True, "en") == ("逆位关键词",)
+    assert card_meaning(card, True, "en") == "逆位含义"

@@ -3,7 +3,7 @@ from pathlib import Path
 from rich.panel import Panel
 
 from nekomata.card.types import Arcana, Card, DrawnCard, Position
-from nekomata.i18n import get_lang, set_lang
+from nekomata.i18n import set_lang
 from nekomata.render.card_renderer import (
     render_card_text,
     render_card_detail,
@@ -83,10 +83,9 @@ def test_render_card_detail_reversed():
 
 
 def test_render_card_detail_uses_zh_locale_without_spread_name():
-    previous = get_lang()
     set_lang("zh")
     try:
-        panel = render_card_detail(make_drawn())
+        panel = render_card_detail(make_drawn(), lang="zh")
         s = str(panel.renderable)
         assert "愚者" in s
         assert "The Fool" not in s
@@ -95,7 +94,7 @@ def test_render_card_detail_uses_zh_locale_without_spread_name():
         assert "今日指引" not in s
         assert str(panel.title) == "愚者"
     finally:
-        set_lang(previous)
+        set_lang("en")
 
 
 def test_get_preview_path():

@@ -4,35 +4,20 @@ from nekomata._paths import data_dir
 
 _PROMPTS_DIR = data_dir() / "prompts"
 
-_system_prompt: str | None = None
-_spread_prompts: dict[str, str] = {}
-_user_template: str | None = None
-
 
 def load_system_prompt() -> str:
-    """Load and cache the system prompt from data/prompts/system.md."""
-    global _system_prompt
-    if _system_prompt is None:
-        _system_prompt = (_PROMPTS_DIR / "system.md").read_text(encoding="utf-8")
-    return _system_prompt
+    """Load the system prompt from data/prompts/system.md."""
+    return (_PROMPTS_DIR / "system.md").read_text(encoding="utf-8")
 
 
 def load_spread_prompt(spread_key: str) -> str:
-    """Load and cache a spread-specific prompt from data/prompts/<key>.md."""
-    if spread_key not in _spread_prompts:
-        path = _PROMPTS_DIR / f"{spread_key}.md"
-        if path.exists():
-            _spread_prompts[spread_key] = path.read_text(encoding="utf-8")
-        else:
-            _spread_prompts[spread_key] = ""
-    return _spread_prompts[spread_key]
+    """Load a spread-specific prompt from data/prompts/<key>.md."""
+    path = _PROMPTS_DIR / f"{spread_key}.md"
+    return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
 def _load_user_template() -> str:
-    global _user_template
-    if _user_template is None:
-        _user_template = (_PROMPTS_DIR / "user_template.md").read_text(encoding="utf-8")
-    return _user_template
+    return (_PROMPTS_DIR / "user_template.md").read_text(encoding="utf-8")
 
 
 def build_user_prompt(question: str, cards_info: str) -> str:
@@ -40,9 +25,8 @@ def build_user_prompt(question: str, cards_info: str) -> str:
     return _load_user_template().format(question=question, cards_info=cards_info)
 
 
-def build_followup_prompt(question: str) -> str:
+def build_followup_prompt(question: str, lang: str = "en") -> str:
     """Build the user message for a follow-up question."""
-    from nekomata.i18n import get_lang
-    if get_lang() == "en":
+    if lang == "en":
         return f"Follow-up question: {question}\nPlease provide additional interpretation for this follow-up."
     return f"追问：{question}\n请针对这个追问进行补充解读。"

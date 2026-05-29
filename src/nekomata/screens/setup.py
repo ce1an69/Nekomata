@@ -170,7 +170,7 @@ class SetupScreen(Screen):
     """
 
     def compose(self) -> ComposeResult:
-        cfg = self._existing
+        cfg = self._existing or AppConfig()
         with Vertical(id="setup-stack"):
             yield Static(_STR["title"], id="setup-title")
             yield Static(_STR["subtitle"], id="setup-subtitle")

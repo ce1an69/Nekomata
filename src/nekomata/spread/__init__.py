@@ -21,12 +21,12 @@ _SPREAD_MAP: dict[str, tuple[int, ...] | None] = {
 }
 
 
-def get_spread(key: str) -> Spread:
+def get_spread(key: str, lang: str | None = None) -> Spread:
     """Create a Spread instance by registry key, loading copy from locale."""
     if key not in _SPREAD_MAP:
         raise KeyError(f"Unknown spread: {key}")
     spread = Spread()
-    data = spread_strings()["spreads"][key]
+    data = spread_strings(lang)["spreads"][key]
     spread.name = data["name"]
     spread.description = data["description"]
     spread.suitable_for = data.get("suitable_for", "")

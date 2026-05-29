@@ -445,6 +445,44 @@ async def test_interpretation_hints_do_not_duplicate_shortcut_keys():
 
 
 @pytest.mark.asyncio
+async def test_fullscreen_toggle_during_stream_does_not_show_action_hints():
+    """Toggling fullscreen mid-stream should not show completed interpretation actions."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "streaming fullscreen hints"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+
+        from nekomata.screens.draw import DrawScreen
+
+        assert isinstance(app.screen, DrawScreen)
+        app.screen._dialog.show(
+            sync_layout=app.screen._sync_interp_layout,
+            fit_height=lambda: app.screen._dialog.fit_height(
+                app.screen._w_main_area,
+                app.screen._detail.visible,
+            ),
+        )
+        app.screen._first_interp_done = False
+        app.screen._w_interp_hints.update("loading")
+
+        await pilot.press("h")
+        await pilot.pause()
+
+        hints = str(app.screen.query_one("#interp-dialog-hints").render())
+        assert "copy text" not in hints
+        assert "export image" not in hints
+
+
+@pytest.mark.asyncio
 async def test_loading_hint_keeps_rotating_between_stream_chunks():
     """Loading hint should keep animating while the model stream is temporarily quiet."""
     app = NekomataApp()

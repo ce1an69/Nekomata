@@ -165,7 +165,7 @@ DrawScreen {{
     margin: 0 1 1 1;
     opacity: 0;
     offset: 0 2;
-    transition: opacity 300ms {EASE_OUT}, offset 340ms {EASE_SPRING}, width 300ms {EASE_OUT}, border 180ms {EASE_OUT};
+    transition: width 300ms {EASE_OUT}, border 180ms {EASE_OUT};
 }}
 #interp-dialog.box-active {{
     border: round {C_MAUVE};

@@ -128,7 +128,9 @@ def test_draw_interpretation_panel_fills_bottom_flow_space():
     content_css = css.split("#interp-dialog-content {")[1].split("}")[0]
     assert "dock: bottom;" in interp_css
     assert "width: 1fr;" in interp_css
-    assert "transition: opacity 300ms" in interp_css
+    assert "transition: width 300ms" in interp_css
+    assert "transition: opacity" not in interp_css
+    assert "offset 340ms" not in interp_css
     assert "width 300ms" in interp_css
     assert "height: 1fr;" not in content_css
 
@@ -142,6 +144,61 @@ def test_draw_interpretation_panel_width_tracks_detail_space():
     assert "DETAIL_PANEL_WIDTH" in source
     assert "INTERP_FULL_SIDE_MARGIN * 2" in source
     assert "INTERP_FULL_WIDTH_CORRECTION" in source
+
+
+def test_draw_interpretation_height_animation_starts_from_cell_height():
+    from nekomata.screens.draw_dialog import InterpretationDialog
+
+    class FakeStyles:
+        def __init__(self):
+            self.height = None
+            self.animation = None
+
+        def animate(self, attr, value, duration, easing):
+            self.animation = (attr, value, duration, easing)
+
+    class FakeWidget:
+        def __init__(self):
+            self.styles = FakeStyles()
+
+    class FakeApp:
+        animation_enabled = True
+
+    class FakeScreen:
+        app = FakeApp()
+
+        def set_timer(self, *_args, **_kwargs):
+            return None
+
+    dialog = InterpretationDialog.__new__(InterpretationDialog)
+    dialog._height_timers = []
+    dialog._screen = FakeScreen()
+    dialog._w_interp = FakeWidget()
+
+    dialog._animate_interp_height(28, 14)
+
+    assert dialog._w_interp.styles.height == 28
+    assert dialog._w_interp.styles.animation[0:2] == ("height", 14)
+
+
+def test_draw_fullscreen_height_animation_uses_cell_heights():
+    from nekomata.screens.draw_dialog import InterpretationDialog
+
+    source = inspect.getsource(InterpretationDialog.toggle_fullscreen)
+
+    assert "self._panel_height_cells()" in source
+    assert 'INTERP_PANEL_HEIGHT,' not in source
+
+
+def test_draw_hiding_fullscreen_interpretation_restores_layout_after_animation():
+    from nekomata.screens.draw_dialog import InterpretationDialog
+
+    source = inspect.getsource(InterpretationDialog.hide)
+
+    assert "was_fullscreen = self._fullscreen" in source
+    assert "def _finish_hide()" in source
+    assert "if was_fullscreen:" in source
+    assert source.index("if was_fullscreen:") > source.index("def _finish_hide()")
 
 
 def test_draw_hiding_detail_recenters_spread_area():
@@ -182,17 +239,18 @@ def test_draw_stream_content_renders_markdown():
 def test_draw_export_image_includes_drawn_cards():
     source = inspect.getsource(DrawScreen._export_image)
 
-    assert "render_interp_image(self._initial_interp_content, self._drawn_cards)" in source
+    assert "render_interp_image(" in source
+    assert "self._initial_interp_content" in source
+    assert "self._drawn_cards" in source
+    assert "question=self._question" in source
 
 
 def test_draw_loading_hint_rotates_cat_tarot_messages():
     from nekomata.screens import stream_handler
     from nekomata.i18n import ui_strings
-    source = inspect.getsource(stream_handler.StreamHandler._tick_loading)
 
-    assert "模型正在解读" not in source
-    assert "_LOADING_MESSAGE_INTERVAL" in source
-    assert stream_handler._LOADING_MESSAGE_INTERVAL == 2.0
+    s = stream_handler._s()
+    assert s["loading_message_interval_s"] == 2.0
     messages = ui_strings()["loading_messages"]
     assert len(messages) >= 3
     assert any("cat" in message.lower() for message in messages)

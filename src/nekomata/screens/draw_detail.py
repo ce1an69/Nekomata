@@ -116,9 +116,10 @@ class DetailPanel:
     def _render_slot(self, dc) -> None:
         """Render card detail content into the preview panel."""
         self._w_preview.remove_children()
+        lang = self._screen.app.config.lang
 
         if self._screen.app.render_mode != "text":
-            result = render_card_full_detail_widgets(dc)
+            result = render_card_full_detail_widgets(dc, lang)
             if result is not None:
                 from textual.containers import Horizontal
                 img_widget, text_panel = result
@@ -126,7 +127,7 @@ class DetailPanel:
                 self._w_preview.mount(Static(text_panel))
                 return
 
-        self._w_preview.mount(Static(render_card_detail(dc)))
+        self._w_preview.mount(Static(render_card_detail(dc, lang=lang)))
 
     def _fade_in_preview(self) -> None:
         """Fade the preview panel back in after content swap."""

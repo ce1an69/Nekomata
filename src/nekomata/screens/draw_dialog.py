@@ -9,7 +9,8 @@ from nekomata.render.styles import C_RED, EASE
 from nekomata.screens.stream_handler import StreamHandler
 
 # Layout constants
-INTERP_PANEL_HEIGHT = "46%"
+INTERP_PANEL_HEIGHT = "46%"  # CSS-only; runtime code uses _panel_height_cells()
+INTERP_PANEL_HEIGHT_RATIO = 0.46
 INTERP_MIN_HEIGHT = 14
 INTERP_MAX_HEIGHT = 30
 INTERP_SIDE_MARGIN = 1
@@ -76,7 +77,7 @@ class InterpretationDialog:
         else:
             self._animate_interp_height(
                 self._w_interp.region.height,
-                46,
+                self._panel_height_cells(),
                 on_complete=lambda: self._restore_from_fullscreen(spread_area, detail, main_area),
             )
 
@@ -92,6 +93,7 @@ class InterpretationDialog:
     def _restore_from_fullscreen(self, spread_area, detail, main_area) -> None:
         """Restore spread and detail after fullscreen exit animation."""
         self._w_interp.remove_class("fullscreen")
+        self._w_interp.styles.height = self._panel_height_cells()
         main_area.display = self._prev_main_area_display
         self._w_status.display = self._prev_status_display
         spread_area.display = True
@@ -111,17 +113,30 @@ class InterpretationDialog:
             t.stop()
         self._height_timers.clear()
 
-    def _animate_interp_height(self, from_pct: float, to_pct: float, on_complete=None) -> None:
+    def _panel_height_cells(self) -> int:
+        return max(
+            INTERP_MIN_HEIGHT,
+            min(
+                INTERP_MAX_HEIGHT,
+                round(self._screen.size.height * INTERP_PANEL_HEIGHT_RATIO),
+            ),
+        )
+
+    def _animate_interp_height(
+        self, from_height: int, to_height: int, on_complete=None
+    ) -> None:
         """Animate interp dialog height using Textual's native animation."""
         self._cancel_height_anim()
         if not self._screen.app.animation_enabled:
-            self._w_interp.styles.height = f"{to_pct}%"
+            self._w_interp.styles.height = to_height
             if on_complete:
                 on_complete()
             return
-        self._w_interp.styles.height = f"{from_pct}%"
+        self._w_interp.styles.height = from_height
         duration = 0.28
-        self._w_interp.styles.animate("height", f"{to_pct}%", duration=duration, easing="out_cubic")
+        self._w_interp.styles.animate(
+            "height", to_height, duration=duration, easing="out_cubic"
+        )
         if on_complete:
             timer = self._screen.set_timer(duration + 0.01, on_complete)
             self._height_timers.append(timer)
@@ -205,15 +220,28 @@ class InterpretationDialog:
         """Hide the dialog with exit animation, then update phase UI."""
         self._streaming = False
         self._stream.stop()
+        was_fullscreen = self._fullscreen
         if self._fullscreen:
             self._fullscreen = False
             self._cancel_height_anim()
-            self._w_interp.remove_class("fullscreen")
-            self._w_interp.styles.height = INTERP_PANEL_HEIGHT
-            self._screen.query_one("#main-area").display = self._prev_main_area_display
-            self._w_status.display = self._prev_status_display
         self._box.active_box = "spread"
         self._box.update_highlights()
+
+        def _finish_hide() -> None:
+            self._w_interp.remove_class("visible")
+            if was_fullscreen:
+                self._w_interp.remove_class("fullscreen")
+                self._w_interp.styles.height = self._panel_height_cells()
+                self._screen.query_one(
+                    "#main-area"
+                ).display = self._prev_main_area_display
+                self._w_status.display = self._prev_status_display
+            if sync_layout:
+                sync_layout()
+            if fit_height:
+                fit_height()
+            update_phase_ui()
+
         if self._screen.app.animation_enabled:
             self._w_interp.styles.animate("opacity", 0.0, duration=0.22, easing=EASE)
             self._w_interp.styles.animate(
@@ -222,16 +250,9 @@ class InterpretationDialog:
                 duration=0.28,
                 easing=EASE,
             )
-            self._screen.set_timer(
-                0.28, lambda: self._w_interp.remove_class("visible")
-            )
+            self._screen.set_timer(0.28, _finish_hide)
         else:
-            self._w_interp.remove_class("visible")
-        if sync_layout:
-            sync_layout()
-        if fit_height:
-            fit_height()
-        update_phase_ui()
+            _finish_hide()
 
     def run(self, drawn_cards, question, cancelled_flag) -> None:
         """Start streaming interpretation in a background worker."""
