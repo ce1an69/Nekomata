@@ -37,6 +37,7 @@
     "title": "Nekomata",
     "placeholder": "> 输入你的问题...",
     "hints": "Enter 确认 · / 命令 · Ctrl+Q 退出",
+    "web_hints": "Enter 确认 · / 命令",
     "unknown_command": "未知命令",
     "commands": {
       "/browse": ["card_browser", "浏览全部 78 张牌"],

@@ -37,6 +37,7 @@
     "title": "Nekomata",
     "placeholder": "> ask your question...",
     "hints": "Enter confirm · / commands · Ctrl+Q quit",
+    "web_hints": "Enter confirm · / commands",
     "unknown_command": "Unknown command",
     "commands": {
       "/browse": ["card_browser", "Browse all 78 cards"],
