@@ -17,6 +17,7 @@ from textual.screen import ModalScreen
 from textual.widget import Widget
 from textual.widgets import Static
 
+from nekomata.card.display import status_label as _status_label
 from nekomata.card.types import DrawnCard
 from nekomata.render.animations import animate_entrance
 from nekomata.render.card_renderer import create_card_face_widget
@@ -300,10 +301,11 @@ class SpreadSlot(Widget):
 
         border_style = C_LAVENDER if dc.is_reversed else C_MAUVE
         status_style = C_PINK if dc.is_reversed else C_MAUVE
+        lang = self.app.config.lang
         return Panel(
             Group(
                 Text(dc.card.name_zh, style=f"bold {C_TEXT}", justify="center"),
-                Text(dc.status_label, style=status_style, justify="center"),
+                Text(_status_label(dc.is_reversed, lang), style=status_style, justify="center"),
             ),
             border_style=border_style,
             padding=(0, 0),

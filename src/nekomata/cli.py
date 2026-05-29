@@ -9,10 +9,11 @@ from rich.console import Console
 from rich.table import Table
 
 from nekomata.ai.interpreter import InterpretationError, get_interpreter
+from nekomata.card.display import card_keywords, status_label as _status_label
 from nekomata.card.deck import Deck
 from nekomata.card.types import DrawnCard
 from nekomata.i18n import set_lang, ui_strings
-from nekomata.spread import SPREAD_REGISTRY, Spread, get_spread
+from nekomata.spread import SPREAD_REGISTRY, get_spread
 from nekomata.storage.config import AppConfig
 
 console = Console()
@@ -57,7 +58,7 @@ def _prompt_choice(question: str, options: list[str], default_idx: int = 0) -> s
 
 def _draw_cards(
     spread_key: str, seed: int, reversal_prob: float = 0.5
-) -> tuple[list[DrawnCard], "Spread"]:
+) -> tuple[list[DrawnCard], object]:
     """Shuffle and draw cards for the given spread."""
     random.seed(seed)
     spread = get_spread(spread_key)
@@ -70,7 +71,7 @@ def _draw_cards(
     return drawn, spread
 
 
-def _print_cards(drawn: list[DrawnCard]) -> None:
+def _print_cards(drawn: list[DrawnCard], lang: str) -> None:
     """Display drawn cards in a table."""
     console.print()
 
@@ -84,15 +85,18 @@ def _print_cards(drawn: list[DrawnCard]) -> None:
         table.add_row(
             dc.position.name,
             dc.card.name,
-            dc.status_label,
-            ", ".join(dc.keywords),
+            _status_label(dc.is_reversed, lang),
+            ", ".join(card_keywords(dc.card, dc.is_reversed, lang)),
         )
     console.print(table)
     console.print()
 
 
 def _stream_interpretation(
-    config: AppConfig, drawn: list[DrawnCard], question: str
+    config: AppConfig,
+    drawn: list[DrawnCard],
+    question: str,
+    spread_key: str = "",
 ) -> None:
     """Stream AI interpretation to the console with a loading spinner."""
     try:
@@ -134,7 +138,7 @@ def _stream_interpretation(
     first_content = True
 
     try:
-        for chunk in interp.interpret_stream(drawn, question):
+        for chunk in interp.interpret_stream(drawn, question, spread_key=spread_key, lang=config.lang):
             if chunk.kind == "content":
                 if first_content:
                     _stop_spinner()
@@ -205,14 +209,14 @@ def run_cli(args: argparse.Namespace) -> None:
         return
 
     drawn, _ = _draw_cards(spread_key, seed)
-    _print_cards(drawn)
+    _print_cards(drawn, config.lang)
 
     if args.yes:
-        _stream_interpretation(config, drawn, question)
+        _stream_interpretation(config, drawn, question, spread_key)
         return
 
     confirm = _prompt("Start AI interpretation? (Y/n)", "y")
     if confirm.lower() in ("y", "yes", ""):
-        _stream_interpretation(config, drawn, question)
+        _stream_interpretation(config, drawn, question, spread_key)
     else:
         console.print("[dim]Skipped interpretation.[/dim]")

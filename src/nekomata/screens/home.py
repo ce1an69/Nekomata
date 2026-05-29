@@ -336,4 +336,4 @@ class HomeScreen(Screen):
         from nekomata.screens.draw import DrawScreen
 
         self.app.spread_key = spread_key
-        self.app.push_screen(DrawScreen(spread_key, self.app.question))
+        self.app.push_screen(DrawScreen(spread_key, self.app.question, lang=self.app.config.lang))

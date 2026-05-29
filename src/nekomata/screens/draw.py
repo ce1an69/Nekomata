@@ -62,11 +62,11 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
 
     DEFAULT_CSS = DRAW_SCREEN_CSS
 
-    def __init__(self, spread_key: str, question: str) -> None:
+    def __init__(self, spread_key: str, question: str, *, lang: str = "en") -> None:
         super().__init__()
         self._spread_key = spread_key
         self._question = question
-        self._spread = get_spread(spread_key)
+        self._spread = get_spread(spread_key, lang=lang)
         self._deck = Deck()
         self._deck.shuffle()
         self._planned_cards: list[DrawnCard] = []

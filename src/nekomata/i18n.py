@@ -30,13 +30,14 @@ def get_lang() -> str:
     return _current_lang
 
 
-def _load_locale(name: str) -> dict:
-    key = f"{name}:{_current_lang}"
+def _load_locale(name: str, lang: str | None = None) -> dict:
+    effective_lang = lang or _current_lang
+    key = f"{name}:{effective_lang}"
     if key not in _cache:
         path = (
-            LOCALES_DIR / f"{_current_lang}.json"
+            LOCALES_DIR / f"{effective_lang}.json"
             if name == "ui"
-            else LOCALES_DIR / f"{name}_{_current_lang}.json"
+            else LOCALES_DIR / f"{name}_{effective_lang}.json"
         )
         if not path.exists():
             fallback = (
@@ -53,20 +54,20 @@ def _load_locale(name: str) -> dict:
     return _cache[key]
 
 
-def ui_section(name: str) -> dict:
-    return _load_locale("ui").get(name, {})
+def ui_section(name: str, lang: str | None = None) -> dict:
+    return _load_locale("ui", lang).get(name, {})
 
 
-def ui_strings() -> dict:
-    return _load_locale("ui")
+def ui_strings(lang: str | None = None) -> dict:
+    return _load_locale("ui", lang)
 
 
-def spread_strings() -> dict:
-    return _load_locale("spreads")
+def spread_strings(lang: str | None = None) -> dict:
+    return _load_locale("spreads", lang)
 
 
-def arcana_label(key: str) -> str:
-    return ui_section("arcana_labels").get(key, key)
+def arcana_label(key: str, lang: str | None = None) -> str:
+    return ui_section("arcana_labels", lang).get(key, key)
 
 
 class _LazySection:

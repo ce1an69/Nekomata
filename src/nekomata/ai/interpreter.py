@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Generator, Protocol, runtime_checkable
 
 from nekomata.card.types import DrawnCard
+from nekomata.card.display import card_keywords, card_meaning, card_name, status_label as _status_label
 from nekomata.ai.prompts import build_user_prompt, load_spread_prompt, load_system_prompt
 from nekomata.storage.config import AppConfig
 
@@ -34,38 +35,40 @@ class StreamChunk:
 class AIInterpreter(Protocol):
     """Protocol for AI interpretation backends."""
 
-    def interpret(self, drawn_cards: list[DrawnCard], question: str) -> str:
-        """Return a textual interpretation for the given cards and question."""
-        ...
+    def interpret(self, drawn_cards: list[DrawnCard], question: str, spread_key: str = "", lang: str = "en") -> str: ...
 
     def interpret_stream(
-        self, drawn_cards: list[DrawnCard], question: str
-    ) -> Generator[StreamChunk, None, None]:
-        """Yield typed text chunks for the given cards and question."""
-        ...
+        self, drawn_cards: list[DrawnCard], question: str, spread_key: str = "", lang: str = "en"
+    ) -> Generator[StreamChunk, None, None]: ...
+
+    def stream_raw(
+        self, messages: list[dict], *, thinking: bool = True
+    ) -> Generator[StreamChunk, None, None]: ...
 
 
-def _cards_info(drawn_cards: list[DrawnCard]) -> str:
+def _cards_info(drawn_cards: list[DrawnCard], lang: str) -> str:
     """Format drawn cards into a structured string for AI prompt."""
-    from nekomata.i18n import get_lang
-    lang = get_lang()
     lines = []
     for dc in drawn_cards:
         desc = f" ({dc.position.description})" if dc.position.description else ""
+        name = card_name(dc.card, lang)
+        slbl = _status_label(dc.is_reversed, lang)
+        kw = ", ".join(card_keywords(dc.card, dc.is_reversed, lang))
+        meaning = card_meaning(dc.card, dc.is_reversed, lang)
         if lang == "en":
             lines.append(
-                f"[{dc.position.name}]{desc} {dc.card.name} ({dc.status_label})"
-                f" — keywords: {', '.join(dc.keywords)}, meaning: {dc.meaning}"
+                f"[{dc.position.name}]{desc} {name} ({slbl})"
+                f" — keywords: {kw}, meaning: {meaning}"
             )
         else:
             lines.append(
-                f"【{dc.position.name}】{desc}{dc.card.name}（{dc.status_label}）"
-                f" — keywords: {', '.join(dc.keywords)}, meaning: {dc.meaning}"
+                f"【{dc.position.name}】{desc}{name}（{slbl}）"
+                f" — keywords: {kw}, meaning: {meaning}"
             )
     return "\n".join(lines)
 
 
-def build_messages(style: str, question: str, drawn_cards: list[DrawnCard], spread_key: str = "") -> list[dict]:
+def build_messages(style: str, question: str, drawn_cards: list[DrawnCard], spread_key: str = "", lang: str = "en") -> list[dict]:
     """Build the system + user message list for the OpenAI chat API."""
     system_content = load_system_prompt().format(style=style)
     spread_prompt = load_spread_prompt(spread_key) if spread_key else ""
@@ -73,7 +76,7 @@ def build_messages(style: str, question: str, drawn_cards: list[DrawnCard], spre
         system_content += "\n\n" + spread_prompt
     return [
         {"role": "system", "content": system_content},
-        {"role": "user", "content": build_user_prompt(question, _cards_info(drawn_cards))},
+        {"role": "user", "content": build_user_prompt(question, _cards_info(drawn_cards, lang))},
     ]
 
 
@@ -103,11 +106,11 @@ class OpenAIInterpreter:
             headers=self._build_headers(),
         )
 
-    def interpret(self, drawn_cards: list[DrawnCard], question: str, spread_key: str = "") -> str:
+    def interpret(self, drawn_cards: list[DrawnCard], question: str, spread_key: str = "", lang: str = "en") -> str:
         """Send cards and question to the API and return the interpretation."""
         req = self._make_request({
             "model": self._model,
-            "messages": build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key),
+            "messages": build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key, lang),
             "stream": False,
         })
         try:
@@ -123,10 +126,10 @@ class OpenAIInterpreter:
             raise InterpretationError(str(e), retryable=False) from e
 
     def interpret_stream(
-        self, drawn_cards: list[DrawnCard], question: str, spread_key: str = ""
+        self, drawn_cards: list[DrawnCard], question: str, spread_key: str = "", lang: str = "en"
     ) -> Generator[StreamChunk, None, None]:
         """Yield text chunks from the streaming API (SSE)."""
-        messages = build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key)
+        messages = build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key, lang)
         yield from self.stream_raw(messages)
 
     def stream_raw(

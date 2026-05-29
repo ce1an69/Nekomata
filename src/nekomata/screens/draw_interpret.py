@@ -382,6 +382,8 @@ class InterpretMixin:
         )
 
     def _update_followup_hints(self) -> None:
+        if self._dialog.is_streaming or not self._first_interp_done:
+            return
         parts = [_STR["done_marker"]]
         if self._followup_remaining > 0:
             parts.append(
@@ -442,7 +444,12 @@ class InterpretMixin:
     async def _export_image(self) -> None:
         tmp_path = ""
         try:
-            img = render_interp_image(self._initial_interp_content, self._drawn_cards)
+            img = render_interp_image(
+                self._initial_interp_content,
+                self._drawn_cards,
+                lang=self.app.config.lang,
+                question=self._question,
+            )
             tmp_path = _save_tmp_image(img)
             ok = _copy_image_to_clipboard(tmp_path)
         except Exception:

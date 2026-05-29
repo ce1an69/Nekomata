@@ -7,7 +7,8 @@ from textual.screen import Screen
 from textual.widgets import Button, Static
 
 from nekomata.card.data import load_all_cards
-from nekomata.card.types import Arcana, Card, DrawnCard, Position, ROMAN, arcana_display
+from nekomata.card.types import ROMAN, Arcana, Card, DrawnCard, Position
+from nekomata.i18n import arcana_label, lazy_section, ui_section
 from nekomata.render.animations import animate_entrance
 from nekomata.render.card_renderer import (
     render_card_detail,
@@ -22,7 +23,6 @@ from nekomata.render.styles import (
     C_SURFACE0,
     C_SURFACE1,
 )
-from nekomata.i18n import lazy_section, ui_section
 
 _STR = lazy_section("card_browser")
 
@@ -341,7 +341,7 @@ class CardListItem(Static):
 
     def __init__(self, card: Card) -> None:
         self._card = card
-        suit = arcana_display(card.arcana)
+        suit = arcana_label(card.arcana.value)
         num = (
             ROMAN[card.number]
             if card.arcana == Arcana.MAJOR and card.number < len(ROMAN)
@@ -373,7 +373,7 @@ class CardListItem(Static):
         detail_panel.remove_children()
 
         if self.app.render_mode != "text":
-            result = render_card_full_detail_widgets(drawn)
+            result = render_card_full_detail_widgets(drawn, lang=self.app.config.lang)
             if result is not None:
                 img_widget, text_panel = result
                 detail_panel.mount(img_widget)
@@ -386,7 +386,7 @@ class CardListItem(Static):
                     )
                 return
 
-        widget = Static(render_card_detail(drawn))
+        widget = Static(render_card_detail(drawn, lang=self.app.config.lang))
         detail_panel.mount(widget)
         if self.app.animation_enabled:
             animate_entrance(widget, duration=0.18)

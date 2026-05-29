@@ -12,6 +12,7 @@ from PIL import ImageDraw
 from rich.panel import Panel
 from rich.text import Text
 
+from nekomata.card.display import card_keywords, card_meaning, card_name, status_label
 from nekomata.card.types import Card, DrawnCard
 from nekomata.render.themes import get_theme
 from nekomata.i18n import ui_section as section
@@ -19,19 +20,16 @@ from nekomata.i18n import ui_section as section
 _ORIGIN_MAX_SIZE = (1024, 1536)
 _DETAIL_MAX_SIZE = (256, 384)
 
-# Two-tier cache: runtime images (small, for spread slots) and origin images (large, for detail view).
-# Keys include ":rev" suffix for reversed cards since rotation is baked into the cached image.
+# Intentional module-level mutable state: image caches are managed by clear_cache()
+# and keyed by card ID + reversal state. Safe for single-threaded TUI / CLI.
 _image_cache: dict[str, PILImage.Image] = {}
 _origin_cache: dict[str, PILImage.Image] = {}
 
+# Intentional module-level mutable state: written once on first call.
+_CACHED_TUI_CLASS = None
 
 # Terminals with working TGP (Kitty Graphics Protocol) diacritic support.
-# WezTerm/Konsole report TGP but have broken diacritic rendering —
-# textual-image falls back to Sixel for those, handled by AutoImage.
 _TGP_TERMINALS = {"kitty", "ghostty", "contour"}
-
-
-_CACHED_TUI_CLASS = None
 
 
 def _get_tui_image_class():
@@ -176,35 +174,35 @@ def create_card_origin_widget(drawn: DrawnCard):
     return TUIImage(img, classes="card-origin")
 
 
-def _build_detail_text(drawn: DrawnCard) -> Text:
+def _build_detail_text(drawn: DrawnCard, lang: str = "en") -> Text:
     """Build the rich Text content for a card's full detail view."""
-    labels = section("card_detail")
+    labels = section("card_detail", lang)
     card = drawn.card
     text = Text()
-    text.append(f"{card.display_name}  [{drawn.status_label}]\n", style="bold")
+    text.append(f"{card_name(card, lang)}  [{status_label(drawn.is_reversed, lang)}]\n", style="bold")
     text.append(f"{labels['element']}: {card.element}  ·  {labels['astrology']}: {card.astrology}\n\n")
 
     text.append(f"{labels['upright']}: ", style="bold")
-    text.append(", ".join(card.keywords_for(False)))
+    text.append(", ".join(card_keywords(card, False, lang)))
     text.append("\n")
-    text.append(card.meaning_for(False))
+    text.append(card_meaning(card, False, lang))
     text.append("\n\n")
 
     text.append(f"{labels['reversed']}: ", style="bold")
-    text.append(", ".join(card.keywords_for(True)))
+    text.append(", ".join(card_keywords(card, True, lang)))
     text.append("\n")
-    text.append(card.meaning_for(True))
+    text.append(card_meaning(card, True, lang))
     return text
 
 
-def render_card_full_detail_widgets(drawn: DrawnCard) -> tuple[object, Panel] | None:
+def render_card_full_detail_widgets(drawn: DrawnCard, lang: str = "en") -> tuple[object, Panel] | None:
     """Return (image_widget, text_panel) for the detail view, or None if no image."""
     img_widget = create_card_origin_widget(drawn)
     if img_widget is None:
         return None
 
     text_panel = Panel(
-        _build_detail_text(drawn),
+        _build_detail_text(drawn, lang),
         border_style="none",
         padding=(0, 0),
     )
@@ -214,7 +212,7 @@ def render_card_full_detail_widgets(drawn: DrawnCard) -> tuple[object, Panel] | 
 # ── Text fallback ────────────────────────────────────────────────────
 
 
-def render_card_text(drawn: DrawnCard, width: int = 40) -> Panel:
+def render_card_text(drawn: DrawnCard, width: int = 40, lang: str = "en") -> Panel:
     """Render a card as a text panel (fallback when no PNG is available)."""
     theme = get_theme()
     card = drawn.card
@@ -223,10 +221,10 @@ def render_card_text(drawn: DrawnCard, width: int = 40) -> Panel:
     content = Text()
     reversal = " ↕" if drawn.is_reversed else ""
     content.append(f"{card.name_zh} ({card.name}){reversal}\n\n")
-    content.append(f"{drawn.status_label}: ", style="bold")
-    content.append(", ".join(drawn.keywords))
+    content.append(f"{status_label(drawn.is_reversed, lang)}: ", style="bold")
+    content.append(", ".join(card_keywords(card, drawn.is_reversed, lang)))
     content.append("\n\n")
-    content.append(drawn.meaning)
+    content.append(card_meaning(card, drawn.is_reversed, lang))
 
     return Panel(
         content,
@@ -237,14 +235,14 @@ def render_card_text(drawn: DrawnCard, width: int = 40) -> Panel:
     )
 
 
-def render_card_detail(drawn: DrawnCard, width: int = 60) -> Panel:
+def render_card_detail(drawn: DrawnCard, width: int = 60, lang: str = "en") -> Panel:
     """Text-based detail view showing both upright and reversed meanings."""
     theme = get_theme()
     border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
 
     return Panel(
-        _build_detail_text(drawn),
-        title=drawn.card.display_name,
+        _build_detail_text(drawn, lang),
+        title=card_name(drawn.card, lang),
         border_style=border_style,
         width=width,
         padding=(1, 2),
