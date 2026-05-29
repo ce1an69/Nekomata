@@ -113,6 +113,7 @@ export function makeBtn(label, cls, onClick) {
 export function resumeHome() {
     const input = document.getElementById('home-input');
     input.value = '';
+    input.style.height = 'auto';
     input.focus();
 }
 
