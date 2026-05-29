@@ -61,9 +61,9 @@
       <div class="card-panel home-panel">
         <h1 class="title">Nekomata</h1>
         <div class="ornament">─── ✦ ───</div>
-        <textarea id="home-input" placeholder="> ask your question..." autocomplete="off" rows="1" aria-label="Ask a divination question"></textarea>
+        <textarea id="home-input" placeholder="> ask your question..." data-i18n-placeholder="home.placeholder" autocomplete="off" rows="1" aria-label="Ask a divination question"></textarea>
         <div id="home-suggestions" class="suggestions hidden"></div>
-        <div class="hint-bar">Enter confirm · / commands</div>
+        <div class="hint-bar" data-i18n="home.hints">Enter confirm · / commands</div>
       </div>
     </div>
   </section>
@@ -113,9 +113,9 @@
         <button id="btn-followup" class="btn btn-sm" title="Ask a follow-up question"></button>
       </div>
       <div id="followup-bar" class="followup-bar hidden">
-        <textarea id="followup-input" placeholder="Ask a follow-up..." rows="1"></textarea>
-        <button id="followup-send" class="btn btn-primary btn-sm">Send</button>
-        <button id="followup-cancel" class="btn btn-sm">Cancel</button>
+        <textarea id="followup-input" placeholder="Ask a follow-up..." data-i18n-placeholder="draw.followup_placeholder" rows="1"></textarea>
+        <button id="followup-send" class="btn btn-primary btn-sm" data-i18n="common.send">Send</button>
+        <button id="followup-cancel" class="btn btn-sm" data-i18n="common.cancel">Cancel</button>
       </div>
     </div>
     <div class="draw-actions" id="draw-actions">
@@ -130,7 +130,7 @@
       <div id="filter-bar" class="filter-bar"></div>
       <div class="browser-actions">
         <button id="browser-reverse-btn" class="btn" data-i18n="card_detail.reversed">Reversed</button>
-        <button id="browser-back-btn" class="btn">← Back</button>
+        <button id="browser-back-btn" class="btn" data-i18n="common.back">← Back</button>
       </div>
     </div>
     <div id="browser-count" class="subtext"></div>

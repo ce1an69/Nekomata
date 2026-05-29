@@ -26,7 +26,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (state.cards.length === 0) {
         document.body.innerHTML = '<div style="padding:2em;color:var(--red);text-align:center">' +
-            '<h2>Load failed</h2><p>Unable to load card data. Please refresh the page.</p></div>';
+            `<h2>${t('errors.load_failed_title', 'Load failed')}</h2>` +
+            `<p>${t('errors.load_failed_body', 'Unable to load card data. Please refresh the page.')}</p></div>`;
         return;
     }
 
@@ -96,7 +97,7 @@ function initSetupScreen() {
 
     if (state.config.api_url) urlInput.value = state.config.api_url;
     if (state.config.api_key) keyInput.value = state.config.api_key;
-    else if (state.config.has_api_key) { keyInput.value = ''; keyInput.placeholder = '•••••••• (configured)'; }
+    else if (state.config.has_api_key) { keyInput.value = ''; keyInput.placeholder = t('setup.key_configured', '•••••••• (configured)'); }
     if (state.config.model) modelInput.value = state.config.model;
     if (state.config.lang) langSelect.value = state.config.lang;
     document.getElementById('setup-error').classList.add('hidden');
@@ -292,7 +293,7 @@ function initSpreadSelect() {
 
     const back = document.createElement('button');
     back.className = 'spread-back';
-    back.textContent = '← Back';
+    back.textContent = t('common.back', '← Back');
     back.addEventListener('click', () => {
         showScreen('home');
         resumeHome();
@@ -333,7 +334,7 @@ function initSpreadSelect() {
 
 function showSpreadPreview(sp) {
     const preview = document.getElementById('spread-preview');
-    const cardsLabel = state.config.lang === 'zh' ? '张牌' : 'cards';
+    const cardsLabel = t('common.cards_unit', 'cards');
     preview.innerHTML = `<h3>${sp.name}</h3>` +
         `<p class="subtext">${sp.description} · ${sp.card_count} ${cardsLabel}</p>` +
         `<ul class="pos-list">${sp.positions.map((p, i) =>
@@ -352,6 +353,7 @@ function selectSpread(key) {
 
 onShow('setup', initSetupScreen);
 onShow('home', () => {
+    applyI18n();
     initHomeScreen();
     document.getElementById('home-input').focus();
 });

@@ -2,8 +2,9 @@
 
 import json
 import logging
-import urllib.request
+import socket
 import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from typing import Generator, Protocol, runtime_checkable
 
@@ -18,9 +19,10 @@ log = logging.getLogger(__name__)
 class InterpretationError(Exception):
     """AI interpretation failure."""
 
-    def __init__(self, message: str, retryable: bool = False) -> None:
+    def __init__(self, message: str, retryable: bool = False, config_error: bool = False) -> None:
         super().__init__(message)
         self.retryable = retryable
+        self.config_error = config_error
 
 
 @dataclass(frozen=True)
@@ -120,8 +122,12 @@ class OpenAIInterpreter:
                 if not content or not content.strip():
                     raise InterpretationError("Empty response from API", retryable=True)
                 return content
+        except urllib.error.HTTPError as e:
+            is_config = e.code in (401, 403)
+            raise InterpretationError(str(e), retryable=not is_config, config_error=is_config) from e
         except urllib.error.URLError as e:
-            raise InterpretationError(str(e), retryable=True) from e
+            is_config = isinstance(e.reason, (socket.gaierror, ConnectionRefusedError))
+            raise InterpretationError(str(e), retryable=True, config_error=is_config) from e
         except (KeyError, IndexError) as e:
             raise InterpretationError(str(e), retryable=False) from e
 
@@ -179,8 +185,12 @@ class OpenAIInterpreter:
                         content = delta.get("content", "")
                         if content:
                             yield StreamChunk(str(content), "content")
+        except urllib.error.HTTPError as e:
+            is_config = e.code in (401, 403)
+            raise InterpretationError(str(e), retryable=not is_config, config_error=is_config) from e
         except urllib.error.URLError as e:
-            raise InterpretationError(str(e), retryable=True) from e
+            is_config = isinstance(e.reason, (socket.gaierror, ConnectionRefusedError))
+            raise InterpretationError(str(e), retryable=True, config_error=is_config) from e
         except (KeyError, IndexError, json.JSONDecodeError) as e:
             raise InterpretationError(str(e), retryable=False) from e
 
@@ -195,6 +205,7 @@ def get_interpreter(config: AppConfig) -> AIInterpreter:
             "API key not configured. "
             "Set api_key in .neko/settings.json to enable interpretation.",
             retryable=False,
+            config_error=True,
         )
     return OpenAIInterpreter(
         model=config.model,

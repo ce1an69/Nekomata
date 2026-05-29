@@ -28,7 +28,9 @@
 
   "errors": {
     "api_key_missing": "API key 未配置，请在 .neko/settings.json 中设置 api_key",
-    "interp_failed": "解读失败: {error}"
+    "interp_failed": "解读失败: {error}",
+    "load_failed_title": "加载失败",
+    "load_failed_body": "无法加载牌面数据，请刷新页面。"
   },
 
   "home": {
@@ -56,6 +58,7 @@
     "error_url_required": "请填写 API URL",
     "error_model_required": "请填写模型名称",
     "error_key_required": "请填写 API Key",
+    "key_configured": "•••••••• (已配置)",
     "hints": "Enter 下一步/保存 · Tab 切换 · Esc 返回"
   },
 
@@ -107,7 +110,8 @@
     "label_position": "位置",
     "label_status": "状态",
     "label_keywords": "关键词",
-    "label_meaning": "牌义"
+    "label_meaning": "牌义",
+    "hint_done": "点击牌面查看详情"
   },
 
   "card_browser": {
@@ -115,6 +119,8 @@
     "reversed_preview": "  (逆位预览)",
     "select_placeholder": "选择一张牌",
     "suit": "牌组",
+    "keywords": "关键词",
+    "meaning": "牌义",
     "hints": "↑/↓ 选牌 · ←/→ 筛选 · R 逆位 · Esc 返回"
   },
 
@@ -130,6 +136,10 @@
   "common": {
     "back": "← 返回",
     "detail": "详情",
-    "hide_detail": "隐藏详情"
+    "hide_detail": "隐藏详情",
+    "ok": "确定",
+    "send": "发送",
+    "cancel": "取消",
+    "cards_unit": "张牌"
   }
 }

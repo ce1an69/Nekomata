@@ -89,8 +89,9 @@ export function showDrawScreen() {
         document.getElementById('interp-load-msg'),
     );
     state.interpCtrl.onComplete = () => showInterpActions();
-    state.interpCtrl.onError = () => {
+    state.interpCtrl.onError = (_msg, configError) => {
         document.getElementById('interp-actions').classList.add('hidden');
+        if (configError) showScreen('setup');
     };
 }
 
@@ -368,7 +369,7 @@ function updateDrawActions() {
         hintEl.textContent = `${t('draw.hint_flip', 'Click to flip')} (${state.flipIndex}/${state.spread.positions.length})`;
         btnsEl.appendChild(makeBtn(t('common.back', '← Back'), '', () => { showScreen('home'); resumeHome(); }));
     } else {
-        hintEl.textContent = state.config.lang === 'zh' ? '点击牌面查看详情' : 'Click a card for details';
+        hintEl.textContent = t('draw.hint_done', 'Click a card for details');
         if (!state.showInterp) {
             btnsEl.appendChild(makeBtn(
                 state.showDetail ? t('common.hide_detail', 'Hide detail') : t('common.detail', 'Detail'),
@@ -385,10 +386,9 @@ function updateDrawActions() {
             btnsEl.appendChild(makeBtn(t('draw.interp_title', 'Interpret'), 'btn-primary', () => startInterpretation()));
         }
         if (state.showInterp) {
-            const fsKey = state.fullscreen ? 'draw.btn_exit_fullscreen' : 'draw.btn_fullscreen';
             const fsLabel = state.fullscreen
-                ? (state.strings?.[fsKey] || 'Exit Fullscreen')
-                : (state.strings?.[fsKey] || 'Fullscreen');
+                ? t('draw.btn_exit_fullscreen', 'Exit Fullscreen')
+                : t('draw.btn_fullscreen', 'Fullscreen');
             btnsEl.appendChild(makeBtn(fsLabel, state.fullscreen ? 'active' : '', () => toggleFullscreen()));
         }
         btnsEl.appendChild(makeBtn(t('common.back', '← Back'), '', () => { showScreen('home'); resumeHome(); }));

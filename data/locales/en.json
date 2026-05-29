@@ -28,7 +28,9 @@
 
   "errors": {
     "api_key_missing": "API key not configured. Set api_key in .neko/settings.json",
-    "interp_failed": "Interpretation failed: {error}"
+    "interp_failed": "Interpretation failed: {error}",
+    "load_failed_title": "Load failed",
+    "load_failed_body": "Unable to load card data. Please refresh the page."
   },
 
   "home": {
@@ -56,6 +58,7 @@
     "error_url_required": "API URL is required",
     "error_model_required": "Model is required",
     "error_key_required": "API Key is required",
+    "key_configured": "•••••••• (configured)",
     "hints": "Enter next / save · Tab switch · Esc back"
   },
 
@@ -107,7 +110,8 @@
     "label_position": "Position",
     "label_status": "Status",
     "label_keywords": "Keywords",
-    "label_meaning": "Meaning"
+    "label_meaning": "Meaning",
+    "hint_done": "Click a card for details"
   },
 
   "card_browser": {
@@ -115,6 +119,8 @@
     "reversed_preview": "  (reversed preview)",
     "select_placeholder": "Select a card",
     "suit": "Suit",
+    "keywords": "Keywords",
+    "meaning": "Meaning",
     "hints": "↑/↓ cards · ←/→ filter · R reversal · Esc back"
   },
 
@@ -130,6 +136,10 @@
   "common": {
     "back": "← Back",
     "detail": "Detail",
-    "hide_detail": "Hide detail"
+    "hide_detail": "Hide detail",
+    "ok": "OK",
+    "send": "Send",
+    "cancel": "Cancel",
+    "cards_unit": "cards"
   }
 }

@@ -80,7 +80,7 @@ export class InterpretationController {
                         if (chunk.error) {
                             this._appendError(chunk.error);
                             this._showLoading(false);
-                            if (this._onError) this._onError(chunk.error);
+                            if (this._onError) this._onError(chunk.error, chunk.config_error);
                             return;
                         }
                         if (chunk.kind === 'thinking') continue;
@@ -172,7 +172,7 @@ export class InterpretationController {
                         if (chunk.error) {
                             this._appendError(chunk.error);
                             this._showLoading(false);
-                            if (this._onError) this._onError(chunk.error);
+                            if (this._onError) this._onError(chunk.error, chunk.config_error);
                             return;
                         }
                         if (chunk.kind === 'thinking') continue;

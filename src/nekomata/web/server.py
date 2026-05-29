@@ -60,9 +60,9 @@ _THEME_COLORS = {
 }
 
 
-async def _sse_error(message: str):
+async def _sse_error(message: str, config_error: bool = False):
     """Single-shot SSE generator that yields one error then stops."""
-    yield f"data: {json.dumps({'error': message})}\n\n"
+    yield f"data: {json.dumps({'error': message, 'config_error': config_error})}\n\n"
 
 
 def _card_to_dict(card: Card, has_origin: bool = False) -> dict:
@@ -298,7 +298,7 @@ def create_app() -> FastAPI:
             interp = get_interpreter(config)
         except InterpretationError as exc:
             return StreamingResponse(
-                _sse_error(str(exc)), media_type="text/event-stream"
+                _sse_error(str(exc), config_error=exc.config_error), media_type="text/event-stream"
             )
 
         async def _stream():
@@ -315,7 +315,7 @@ def create_app() -> FastAPI:
                     yield f"data: {data}\n\n"
                 yield "data: [DONE]\n\n"
             except InterpretationError as e:
-                data = json.dumps({"error": str(e)})
+                data = json.dumps({"error": str(e), "config_error": e.config_error})
                 yield f"data: {data}\n\n"
             except Exception as e:
                 log.exception("Unexpected interpretation failure")
@@ -332,7 +332,7 @@ def create_app() -> FastAPI:
             interp = get_interpreter(config)
         except InterpretationError as exc:
             return StreamingResponse(
-                _sse_error(str(exc)), media_type="text/event-stream"
+                _sse_error(str(exc), config_error=exc.config_error), media_type="text/event-stream"
             )
 
         followup_msg = build_followup_prompt(req.question, lang=config.lang)
@@ -350,7 +350,7 @@ def create_app() -> FastAPI:
                     yield f"data: {data}\n\n"
                 yield "data: [DONE]\n\n"
             except InterpretationError as e:
-                data = json.dumps({"error": str(e)})
+                data = json.dumps({"error": str(e), "config_error": e.config_error})
                 yield f"data: {data}\n\n"
             except Exception as e:
                 log.exception("Unexpected follow-up interpretation failure")
@@ -389,11 +389,25 @@ def create_app() -> FastAPI:
     return app
 
 
+def _find_available_port(start: int = 8080, host: str = "127.0.0.1") -> int:
+    """Return the first available port starting from *start*."""
+    import socket
+
+    for port in range(start, start + 100):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            if sock.connect_ex((host, port)) != 0:
+                return port
+    raise RuntimeError(f"No available port found in range {start}-{start + 99}")
+
+
 def start_web_server(port: int = 8080) -> None:
     import uvicorn
 
+    actual_port = _find_available_port(port)
     app = create_app()
-    url = f"http://localhost:{port}"
+    url = f"http://localhost:{actual_port}"
+    if actual_port != port:
+        print(f"  Port {port} is in use, using {actual_port} instead.")
     print(f"\n  Nekomata Web UI: {url}\n")
     threading.Timer(0.5, lambda: webbrowser.open(url)).start()
-    uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
+    uvicorn.run(app, host="127.0.0.1", port=actual_port, log_level="warning")
