@@ -145,6 +145,7 @@ async function saveSetup() {
         }
         state.config = await r.json();
         await loadStrings();
+        await loadSpreads();
         applyI18n();
         showScreen('home');
     } catch (e) {
