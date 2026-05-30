@@ -56,9 +56,13 @@ jobs:
         with:
           python-version: ${{ runner.os == 'Windows' && '3.13' || '3.14' }}
       - name: Install dependencies
-        run: uv sync --extra desktop --python ${{ runner.os == 'Windows' && '3.13' || '3.14' }}
+        run: uv sync --extra desktop
+        env:
+          UV_PYTHON: ${{ runner.os == 'Windows' && '3.13' || '3.14' }}
       - name: Build desktop app
         run: uv run python scripts/build_desktop.py
+        env:
+          UV_PYTHON: ${{ runner.os == 'Windows' && '3.13' || '3.14' }}
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
