@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nekomata"
+name = "nekomata-tarot"
 version = "0.1.0"
 description = "像素风猫咪塔罗牌终端占卜应用"
 readme = "README.md"

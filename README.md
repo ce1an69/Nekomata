@@ -47,7 +47,7 @@ uv sync
 或直接安装：
 
 ```bash
-pip install nekomata
+pip install nekomata-tarot
 ```
 
 可选依赖：
