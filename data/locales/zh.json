@@ -58,7 +58,7 @@
     "error_model_required": "请填写模型名称",
     "error_key_required": "请填写 API Key",
     "key_configured": "•••••••• (已配置)",
-    "hints": "Enter 下一步/保存 · Tab 切换 · Esc 返回"
+    "hints": "↑↓ 切换字段 · Enter 下一步 · Esc 返回"
   },
 
   "spread_select": {

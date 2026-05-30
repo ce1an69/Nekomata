@@ -27,7 +27,16 @@ from nekomata.storage.config import AppConfig
 
 _STR = lazy_section("setup")
 
+_FOCUS_FIELDS = ("api-url-input", "api-key-input", "model-input", "lang-select", "save-btn")
+
 _LANG_OPTIONS = [("English", "en"), ("中文", "zh")]
+
+
+class NavSelect(Select, inherit_bindings=False):
+    """Select that only opens on Enter/Space, not on up/down arrow keys."""
+
+    BINDINGS = [Binding("enter,space", "show_overlay", "Show menu", show=False)]
+
 
 if SUPPORTED_LANGS != ("en", "zh"):
     _LANG_OPTIONS = [
@@ -236,7 +245,7 @@ class SetupScreen(Screen):
                 classes="setup-input",
             )
             yield Static(_STR["field_lang"], classes="field-label")
-            yield Select(
+            yield NavSelect(
                 options=_LANG_OPTIONS,
                 allow_blank=False,
                 value=cfg.lang if cfg else "en",
@@ -254,13 +263,28 @@ class SetupScreen(Screen):
         self.query_one("#api-url-input", Input).focus()
         animate_entrance(self.query_one("#setup-stack"), duration=0.35)
 
+    def _navigate_field(self, direction: int) -> None:
+        """Move focus to adjacent field. Skips when Select overlay is open."""
+        focused = self.app.focused
+        if focused is None or focused.id not in _FOCUS_FIELDS:
+            return
+        idx = _FOCUS_FIELDS.index(focused.id) + direction
+        if 0 <= idx < len(_FOCUS_FIELDS):
+            self.query_one(f"#{_FOCUS_FIELDS[idx]}").focus()
+
+    def key_down(self) -> None:
+        self._navigate_field(1)
+
+    def key_up(self) -> None:
+        self._navigate_field(-1)
+
     def on_input_submitted(self, event: Input.Submitted) -> None:
         if event.input.id == "api-url-input":
             self.query_one("#api-key-input", Input).focus()
         elif event.input.id == "api-key-input":
             self.query_one("#model-input", Input).focus()
         elif event.input.id == "model-input":
-            self._save()
+            self.query_one("#lang-select", NavSelect).focus()
 
     def on_setup_button_pressed(self, event: SetupButton.Pressed) -> None:
         event.stop()
@@ -270,7 +294,7 @@ class SetupScreen(Screen):
         url = self.query_one("#api-url-input", Input).value.strip()
         key = self.query_one("#api-key-input", Input).value.strip()
         model = self.query_one("#model-input", Input).value.strip()
-        lang = self.query_one("#lang-select", Select).value
+        lang = self.query_one("#lang-select", NavSelect).value
         if not url:
             self._show_error(_STR["error_url_required"])
             return

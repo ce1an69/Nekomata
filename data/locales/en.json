@@ -58,7 +58,7 @@
     "error_model_required": "Model is required",
     "error_key_required": "API Key is required",
     "key_configured": "•••••••• (configured)",
-    "hints": "Enter next / save · Tab switch · Esc back"
+    "hints": "↑↓ Navigate · Enter next · Esc back"
   },
 
   "spread_select": {
