@@ -104,6 +104,7 @@
     "btn_export_image": "Export Image",
     "btn_followup": "Follow-up",
     "followup_placeholder": "> ask a follow-up...",
+    "followup_placeholder_remaining": "> ask a follow-up ({remaining} left)...",
     "followup_remaining": "F follow-up ({remaining})",
     "confirm_exit_title": "Exit interpretation?",
     "confirm_exit_body": "Current reading will stop and return to home.",

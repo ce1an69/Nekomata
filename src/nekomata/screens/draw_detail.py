@@ -73,23 +73,17 @@ class DetailPanel:
             self._finish_hide()
 
     def _fit_height(self) -> None:
-        """Match detail panel height to the main area bottom edge.
-
-        This ensures the detail panel doesn't extend past the spread area
-        or interp dialog, whichever is lower on screen.
-        """
-        main_area = self._screen.query_one("#main-area")
-        interp = self._screen.query_one("#interp-dialog")
-        bottom = main_area.region.y + main_area.region.height
-        if interp.has_class("visible"):
-            bottom = max(bottom, interp.region.y + interp.region.height)
-        self._w_preview.styles.height = max(1, bottom - 1)
+        """Let the shared reading-area flow define the detail panel height."""
+        self._w_preview.styles.height = "1fr"
+        self._w_preview.styles.margin = (0, 0, 0, 0)
+        self._w_preview.refresh(layout=True)
 
     def _finish_hide(self) -> None:
         """Complete the hide animation: remove panel from layout, then recenter spread."""
         self._w_preview.remove_class("visible")
         self._w_preview.display = False
         self._w_preview.styles.height = "1fr"
+        self._w_preview.styles.margin = (0, 0, 0, 0)
         if self._pending_center_spread:
             self._pending_center_spread()
             self._pending_center_spread = None
@@ -119,7 +113,7 @@ class DetailPanel:
         lang = self._screen.app.config.lang
 
         if self._screen.app.render_mode != "text":
-            result = render_card_full_detail_widgets(dc, lang)
+            result = render_card_full_detail_widgets(dc, lang, upright_image=True)
             if result is not None:
                 from textual.containers import Horizontal
                 img_widget, text_panel = result

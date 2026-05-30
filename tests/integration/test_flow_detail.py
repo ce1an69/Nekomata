@@ -417,7 +417,7 @@ async def test_footer_hides_interpret_hint_after_interpretation_starts():
 
 @pytest.mark.asyncio
 async def test_interpretation_hints_do_not_duplicate_shortcut_keys():
-    """Hint strings already include their shortcut keys."""
+    """Completed interpretation actions live in the footer and keep single keys."""
     app = NekomataApp()
     app.animation_enabled = False
     async with app.run_test() as pilot:
@@ -439,9 +439,61 @@ async def test_interpretation_hints_do_not_duplicate_shortcut_keys():
         app.screen._update_followup_hints()
 
         hints = str(app.screen.query_one("#interp-dialog-hints").render())
+        footer = str(app.screen.query_one("#draw-footer").render())
+        assert hints == ""
         assert "F F " not in hints
         assert "C C " not in hints
         assert "E E " not in hints
+        assert "F follow-up" in footer
+        assert "C copy text" in footer
+        assert "E export image" in footer
+
+
+@pytest.mark.asyncio
+async def test_followup_input_is_centered_above_footer_with_remaining_placeholder():
+    """Follow-up input should reserve bottom space and show remaining questions."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test(size=(198, 62)) as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "followup layout"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+
+        from nekomata.screens.draw import DrawScreen
+
+        assert isinstance(app.screen, DrawScreen)
+        app.screen._dialog.show(
+            sync_layout=app.screen._sync_interp_layout,
+            fit_height=lambda: app.screen._dialog.fit_height(
+                app.screen._w_main_area,
+                app.screen._detail.visible,
+            ),
+        )
+        await pilot.pause(0.2)
+        interp = app.screen.query_one("#interp-dialog")
+        preview = app.screen.query_one("#card-preview")
+        assert interp.styles.margin.bottom == 0
+        assert preview.region.y + preview.region.height == interp.region.y + interp.region.height
+
+        app.screen._first_interp_done = True
+        app.screen._show_followup()
+        await pilot.pause(0.2)
+
+        followup_input = app.screen.query_one("#followup-input")
+        interp = app.screen.query_one("#interp-dialog")
+        preview = app.screen.query_one("#card-preview")
+
+        assert followup_input.placeholder == "> ask a follow-up (1 left)..."
+        assert interp.styles.margin.bottom == 0
+        assert preview.styles.margin.bottom == 0
+        assert preview.region.y + preview.region.height == interp.region.y + interp.region.height
 
 
 @pytest.mark.asyncio

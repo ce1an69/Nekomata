@@ -131,27 +131,30 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
                             yield DeckCard(i)
                     card_index += row_size
 
-        with Horizontal(id="main-area"):
-            with Vertical(id="spread-area"):
-                yield Static("", id="spread-label")
-                with Horizontal(id="spread-grid"):
-                    for i, pos in enumerate(self._ordered_positions):
-                        yield SpreadSlot(i, pos.name)
+        with Horizontal(id="reading-area"):
+            with Vertical(id="left-pane"):
+                with Horizontal(id="main-area"):
+                    with Vertical(id="spread-area"):
+                        yield Static("", id="spread-label")
+                        with Horizontal(id="spread-grid"):
+                            for i, pos in enumerate(self._ordered_positions):
+                                yield SpreadSlot(i, pos.name)
 
-        with VerticalScroll(id="card-preview"):
-            pass
+                with VerticalScroll(id="interp-dialog"):
+                    yield Static(_STR["interp_title"], id="interp-dialog-title")
+                    yield Static("", id="interp-dialog-content")
+                    yield Static("", id="interp-dialog-hints")
+
+            with VerticalScroll(id="card-preview"):
+                pass
 
         yield Static("", id="status")
         yield Static("", id="draw-footer")
 
-        with VerticalScroll(id="interp-dialog"):
-            yield Static(_STR["interp_title"], id="interp-dialog-title")
-            yield Static("", id="interp-dialog-content")
-            with Vertical(id="followup-section"):
-                yield Input(
-                    placeholder=_STR["followup_placeholder"], id="followup-input"
-                )
-            yield Static(_STR["interp_close_hint"], id="interp-dialog-hints")
+        with Vertical(id="followup-section"):
+            yield Input(
+                placeholder=_STR["followup_placeholder"], id="followup-input"
+            )
 
     # -- Mount / Unmount --
 

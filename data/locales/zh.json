@@ -104,6 +104,7 @@
     "btn_export_image": "导出图片",
     "btn_followup": "追问",
     "followup_placeholder": "> 输入追问...",
+    "followup_placeholder_remaining": "> 输入追问（剩余 {remaining} 次）...",
     "followup_remaining": "F 追问 ({remaining})",
     "confirm_exit_title": "退出解读？",
     "confirm_exit_body": "当前解读将停止，并直接返回首页。",

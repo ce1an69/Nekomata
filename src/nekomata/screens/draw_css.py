@@ -65,6 +65,14 @@ DrawScreen {{
     margin-top: 0;
     transition: offset 280ms {EASE_SPRING};
 }}
+#reading-area {{
+    height: 1fr;
+    width: 1fr;
+}}
+#left-pane {{
+    width: 1fr;
+    height: 1fr;
+}}
 #spread-area {{
     width: 1fr;
     height: 1fr;
@@ -108,7 +116,6 @@ DrawScreen {{
     grid-rows: auto auto;
 }}
 #card-preview {{
-    dock: right;
     width: {DETAIL_PANEL_WIDTH};
     min-width: {DETAIL_PANEL_WIDTH};
     height: 1fr;
@@ -153,7 +160,6 @@ DrawScreen {{
     padding: 0 2;
 }}
 #interp-dialog {{
-    dock: bottom;
     width: 1fr;
     height: {INTERP_PANEL_HEIGHT};
     min-height: {INTERP_MIN_HEIGHT};
@@ -162,7 +168,7 @@ DrawScreen {{
     border: round {C_SURFACE1};
     background: {C_MANTLE};
     padding: 0 1;
-    margin: 0 1 1 1;
+    margin: 0 1 0 1;
     opacity: 0;
     offset: 0 2;
     transition: width 300ms {EASE_OUT}, border 180ms {EASE_OUT};
@@ -195,12 +201,16 @@ DrawScreen {{
     margin: 0;
 }}
 #followup-section {{
+    dock: bottom;
+    width: 100%;
     height: 3;
-    margin: 0 0 0 0;
+    margin: 0 0 1 0;
     padding: 0;
+    background: transparent;
     display: none;
     opacity: 0;
     offset: 0 1;
+    align: center middle;
     transition: opacity 240ms {EASE_OUT}, offset 300ms {EASE_SPRING};
 }}
 #followup-section.visible {{
@@ -209,15 +219,16 @@ DrawScreen {{
     offset: 0 0;
 }}
 #followup-input {{
-    width: 1fr;
+    width: 50;
     height: 3;
     padding: 0 1;
     border: round {C_MAUVE};
-    background: {C_CRUST};
+    background: transparent;
     color: {C_TEXT};
 }}
 #followup-input:focus {{
     border: round {C_PINK};
+    background: transparent;
 }}
 #status {{
     text-align: center;
