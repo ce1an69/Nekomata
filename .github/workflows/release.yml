@@ -80,6 +80,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           merge-multiple: true
+      - name: Rename artifacts for release
+        run: |
+          mv dist/Nekomata.dmg Nekomata-macOS.dmg
+          mv dist/Nekomata.exe Nekomata-Windows.exe
       - uses: softprops/action-gh-release@v2
         with:
           files: |
