@@ -41,8 +41,6 @@
     "unknown_command": "Unknown command",
     "commands": {
       "/browse": ["card_browser", "Browse all 78 cards"],
-      "/browse_short": ["card_browser", "Browse all"],
-      "/browse_cards": ["card_browser", "cards"],
       "/config": ["config", "Edit API settings"],
       "/quit": ["quit", "Exit application"]
     }

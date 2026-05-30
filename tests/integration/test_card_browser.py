@@ -91,7 +91,7 @@ async def test_card_browser_back():
         await pilot.press("enter")
         await pilot.pause()
         assert isinstance(app.screen, CardBrowserScreen)
-        await pilot.click("#back")
+        await pilot.press("escape")
         await pilot.pause()
         from nekomata.screens.home import HomeScreen
         assert isinstance(app.screen, HomeScreen)
@@ -168,7 +168,7 @@ async def test_card_browser_card_list_uses_up_down_arrows():
 
 @pytest.mark.asyncio
 async def test_card_browser_tab_cycles_all_panels():
-    """Tab cycles: card list → filter buttons → back button → card list."""
+    """Tab cycles: card list → filter buttons → card list."""
     app = NekomataApp()
     async with app.run_test() as pilot:
         inp = app.screen.query_one("#prompt-input")
@@ -189,18 +189,13 @@ async def test_card_browser_tab_cycles_all_panels():
         assert isinstance(app.screen.focused, Button)
         assert app.screen.focused.id == "filter-all"
 
-        # Tab: last filter → back button (skip through remaining filters)
+        # Tab through remaining filter buttons
         filter_buttons = list(app.screen.query("#filter-bar Button"))
         for _ in range(len(filter_buttons) - 1):
             await pilot.press("tab")
             await pilot.pause()
 
-        # Now on last filter, Tab should go to back button
-        await pilot.press("tab")
-        await pilot.pause()
-        assert app.screen.focused.id == "back"
-
-        # Tab: back button → wrap to first card
+        # Now on last filter, Tab should wrap to first card
         await pilot.press("tab")
         await pilot.pause()
         assert isinstance(app.screen.focused, type(items[0]))

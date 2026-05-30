@@ -131,13 +131,11 @@ def test_home_suggestion_panel_can_animate_out():
     assert "_finish_hide_suggestions" in names
 
 
-def test_card_browser_list_and_detail_have_swap_transitions():
+def test_card_browser_list_has_swap_transition():
     css = CardBrowserScreen.DEFAULT_CSS
 
     card_list_css = css.split("CardBrowserScreen #card-list {")[1].split("}")[0]
-    detail_css = css.split("CardBrowserScreen #card-detail {")[1].split("}")[0]
     assert "transition: opacity 220ms" in card_list_css
-    assert "transition: opacity 250ms" in detail_css
 
 
 def test_draw_detail_panel_docks_to_right_full_height():

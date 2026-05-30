@@ -41,8 +41,6 @@
     "unknown_command": "未知命令",
     "commands": {
       "/browse": ["card_browser", "浏览全部 78 张牌"],
-      "/browse_short": ["card_browser", "浏览全部"],
-      "/browse_cards": ["card_browser", "张牌"],
       "/config": ["config", "修改 API 设置"],
       "/quit": ["quit", "退出应用"]
     }

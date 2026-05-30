@@ -160,7 +160,7 @@ async function saveSetup() {
 
 function slashDesc(cmd) {
     switch (cmd) {
-        case '/browse': return `${t('home.commands./browse_short.1', 'Browse all')} ${state.cards.length || 78} ${t('home.commands./browse_cards.1', 'cards')}`;
+        case '/browse': return t('home.commands./browse.1', 'Browse all 78 cards');
         case '/config': return t('home.commands./config.1', 'Edit API settings');
     }
 }
