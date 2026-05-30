@@ -109,13 +109,20 @@ class CardBrowserScreen(Screen):
         padding: 1 2;
         margin-left: 1;
         align: center top;
+        scrollbar-gutter: stable;
+    }}
+    CardBrowserScreen #card-detail .card-origin-frame {{
+        width: 100%;
+        height: auto;
+        align: center middle;
+        background: {C_CRUST};
+        border: round {C_SURFACE1};
+        padding: 1 1;
     }}
     CardBrowserScreen #card-detail .card-origin {{
         width: 50%;
         height: auto;
         background: {C_CRUST};
-        border: round {C_SURFACE1};
-        padding: 1 1;
     }}
     CardBrowserScreen #card-detail Static {{
         background: {C_MANTLE};
@@ -134,6 +141,7 @@ class CardBrowserScreen(Screen):
         self._cards = load_all_cards()
         self._reversed_preview = False
         self._active_arcana: Arcana | None = None
+        self._detail_preview_id: str | None = None
 
     def compose(self) -> ComposeResult:
         labels = ui_section("arcana_labels")
@@ -297,6 +305,7 @@ class CardBrowserScreen(Screen):
 
     def _show_placeholder_detail(self) -> None:
         """Reset the detail panel to the placeholder."""
+        self._detail_preview_id = None
         detail = self.query_one("#card-detail")
         detail.remove_children()
         detail.mount(Static(_STR["select_placeholder"]))
@@ -363,13 +372,18 @@ class CardListItem(Static):
         drawn = DrawnCard(
             card=self._card, position=_BROWSER_POS, is_reversed=is_reversed
         )
+        preview_id = f"{drawn.card.id}:{drawn.is_reversed}"
+        if self.screen._detail_preview_id == preview_id:
+            return
+        self.screen._detail_preview_id = preview_id
+
         detail_panel = self.screen.query_one("#card-detail")
         detail_panel.remove_children()
 
         if self.app.render_mode != "text":
             img_widget = create_card_origin_widget(drawn)
             if img_widget is not None:
-                detail_panel.mount(img_widget)
+                detail_panel.mount(Horizontal(img_widget, classes="card-origin-frame"))
 
         text_widget = Static(
             Panel(

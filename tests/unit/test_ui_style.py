@@ -138,6 +138,13 @@ def test_card_browser_list_has_swap_transition():
     assert "transition: opacity 220ms" in card_list_css
 
 
+def test_card_browser_detail_reserves_scrollbar_gutter():
+    css = CardBrowserScreen.DEFAULT_CSS
+
+    detail_css = css.split("CardBrowserScreen #card-detail {")[1].split("}")[0]
+    assert "scrollbar-gutter: stable;" in detail_css
+
+
 def test_draw_detail_panel_docks_to_right_full_height():
     css = DrawScreen.DEFAULT_CSS
 

@@ -130,6 +130,69 @@ async def test_card_browser_detail_updates_on_focus():
 
 
 @pytest.mark.asyncio
+async def test_card_browser_detail_wraps_card_image_in_frame():
+    """Browser detail keeps image layout on a normal Textual container."""
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/browse"
+        await pilot.press("enter")
+        await pilot.pause()
+        items = app.screen.query("CardListItem")
+        items[0].focus()
+        await pilot.pause()
+
+        detail = app.screen.query_one("#card-detail")
+        frame = detail.query_one(".card-origin-frame")
+        image = frame.query_one(".card-origin")
+
+        assert frame is not None
+        assert image is not None
+
+
+@pytest.mark.asyncio
+async def test_card_browser_ignores_duplicate_detail_refresh():
+    """Focusing the same card again should not rebuild the detail panel."""
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/browse"
+        await pilot.press("enter")
+        await pilot.pause()
+        items = app.screen.query("CardListItem")
+        items[0].focus()
+        await pilot.pause()
+
+        detail = app.screen.query_one("#card-detail")
+        children = tuple(detail.children)
+        items[0]._show_detail()
+        await pilot.pause()
+
+        assert tuple(detail.children) == children
+
+
+@pytest.mark.asyncio
+async def test_card_browser_reversal_refreshes_detail():
+    """Changing orientation should rebuild the current card detail."""
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/browse"
+        await pilot.press("enter")
+        await pilot.pause()
+        items = app.screen.query("CardListItem")
+        items[0].focus()
+        await pilot.pause()
+
+        detail = app.screen.query_one("#card-detail")
+        children = tuple(detail.children)
+        await pilot.press("r")
+        await pilot.pause()
+
+        assert tuple(detail.children) != children
+
+
+@pytest.mark.asyncio
 async def test_card_browser_selected_state():
     """Focusing a card adds the .selected class."""
     app = NekomataApp()
