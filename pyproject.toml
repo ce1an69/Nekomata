@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nekomata-tarot"
-version = "0.1.0"
+version = "0.1.1"
 description = "像素风猫咪塔罗牌终端占卜应用"
 readme = "README.md"
 requires-python = ">=3.13"
