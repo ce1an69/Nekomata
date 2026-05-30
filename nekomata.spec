@@ -16,6 +16,11 @@ APP_ICON = ICON_ICO if sys.platform == "win32" else ICON_ICNS if sys.platform ==
 _USE_UPX = sys.platform != "win32"
 
 # --- Collect data files ---
+#
+# Keep this whitelist tight. Runtime bundles need locale/prompt data, web static
+# files, optimized card images, and fonts. README-only images and reference
+# photos under assets/brand, assets/screenshots, assets/cats, and icon source
+# images are intentionally excluded from packaged builds.
 
 datas = [
     (str(PROJECT_ROOT / "data"), "data"),
@@ -37,6 +42,16 @@ if assets_fonts.is_dir():
     for f in sorted(assets_fonts.iterdir()):
         if f.suffix in (".ttf", ".woff2"):
             datas.append((str(f), "assets/fonts"))
+
+_EXCLUDED_ASSET_PREFIXES = (
+    Path("assets/brand"),
+    Path("assets/screenshots"),
+    Path("assets/cats"),
+)
+for _src, _dest in datas:
+    _dest_path = Path(_dest)
+    if any(_dest_path == p or p in _dest_path.parents for p in _EXCLUDED_ASSET_PREFIXES):
+        raise RuntimeError(f"Non-runtime asset included in package data: {_src} -> {_dest}")
 
 a = Analysis(
     [str(PROJECT_ROOT / "src" / "nekomata" / "desktop.py")],

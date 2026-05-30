@@ -34,7 +34,7 @@
   },
 
   "home": {
-    "title": "Nekomata",
+    "title": "塔罗猫子",
     "placeholder": "> 输入你的问题...",
     "hints": "Enter 确认 · / 命令 · Ctrl+Q 退出",
     "web_hints": "Enter 确认 · / 命令",
