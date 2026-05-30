@@ -138,7 +138,7 @@ if sys.platform == "darwin":
         name="Nekomata.app",
         icon=str(ICON_ICNS),
         bundle_identifier="com.nekomata.app",
-        version="0.1.1",
+        version="0.1.2",
         info_plist={
             "CFBundleName": "Nekomata",
             "CFBundleDisplayName": "Nekomata",
