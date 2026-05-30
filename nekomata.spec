@@ -7,7 +7,8 @@ from pathlib import Path
 block_cipher = None
 
 PROJECT_ROOT = Path(SPECPATH)
-ICON_DIR = PROJECT_ROOT / "assets" / "icon"
+PKG_DIR = PROJECT_ROOT / "src" / "nekomata"
+ICON_DIR = PKG_DIR / "assets" / "icon"
 ICON_ICNS = ICON_DIR / "nekomata.icns"
 ICON_ICO = ICON_DIR / "nekomata.ico"
 APP_ICON = ICON_ICO if sys.platform == "win32" else ICON_ICNS if sys.platform == "darwin" else None
@@ -21,14 +22,16 @@ _USE_UPX = sys.platform != "win32"
 # files, optimized card images, and fonts. README-only images and reference
 # photos under assets/brand, assets/screenshots, assets/cats, and icon source
 # images are intentionally excluded from packaged builds.
+# Keep in sync with [tool.setuptools.exclude-package-data] in pyproject.toml.
 
 datas = [
-    (str(PROJECT_ROOT / "data"), "data"),
-    (str(PROJECT_ROOT / "src" / "nekomata" / "web" / "static"), "static"),
+    (str(PKG_DIR / "data"), "data"),
+    (str(PKG_DIR / "web" / "static"), "static"),
 ]
 
-# Card images: include base PNG + _detail.png, exclude _origin.png (262MB) and contact_sheet
-assets_cards = PROJECT_ROOT / "assets" / "cards"
+# Card images: include base PNG + _detail.png, exclude _origin.png and contact_sheet.
+# Mirrored in pyproject.toml [tool.setuptools.exclude-package-data].
+assets_cards = PKG_DIR / "assets" / "cards"
 for arcana_dir in sorted(assets_cards.iterdir()):
     if not arcana_dir.is_dir():
         continue
@@ -37,7 +40,7 @@ for arcana_dir in sorted(assets_cards.iterdir()):
             datas.append((str(f), f"assets/cards/{arcana_dir.name}"))
 
 # Font files (WOFF2 + TTF)
-assets_fonts = PROJECT_ROOT / "assets" / "fonts"
+assets_fonts = PKG_DIR / "assets" / "fonts"
 if assets_fonts.is_dir():
     for f in sorted(assets_fonts.iterdir()):
         if f.suffix in (".ttf", ".woff2"):

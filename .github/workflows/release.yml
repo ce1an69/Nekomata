@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.13", "3.14"]
+    continue-on-error: ${{ matrix.python-version == '3.14' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync --extra dev
+      - run: uv run pytest
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: uv build
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  build:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            artifact: dist/Nekomata.dmg
+            name: Nekomata-macOS.dmg
+          - os: windows-latest
+            artifact: dist/Nekomata.exe
+            name: Nekomata-Windows.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      # macOS desktop works with 3.14; Windows needs 3.13 (pythonnet limitation)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ runner.os == 'Windows' && '3.13' || '3.14' }}
+      - name: Install dependencies
+        run: uv sync --extra desktop
+      - name: Build desktop app
+        run: uv run python scripts/build_desktop.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.artifact }}
+          if-no-files-found: error
+
+  release:
+    needs: [publish, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Nekomata-macOS.dmg
+            Nekomata-Windows.exe

@@ -2,6 +2,7 @@ from pathlib import Path
 
 from rich.panel import Panel
 
+from nekomata._paths import assets_dir
 from nekomata.card.types import Arcana, Card, DrawnCard, Position
 from nekomata.i18n import set_lang
 from nekomata.render.card_renderer import (
@@ -103,9 +104,9 @@ def test_get_preview_path():
         arcana=Arcana.MAJOR, number=0, element="air", astrology="Uranus",
         keywords_upright=("a",), keywords_reversed=("b",),
         meaning_upright="up", meaning_reversed="down",
-        image_path=Path("assets/cards/major/major_00.png"),
+        image_path=assets_dir() / "cards" / "major" / "major_00.png",
     )
-    assert get_preview_path(card) == Path("assets/cards/major/major_00_detail.png")
+    assert get_preview_path(card) == assets_dir() / "cards" / "major" / "major_00_detail.png"
 
 
 def test_get_preview_path_no_image():
@@ -124,9 +125,9 @@ def test_get_origin_path():
         arcana=Arcana.MAJOR, number=0, element="air", astrology="Uranus",
         keywords_upright=("a",), keywords_reversed=("b",),
         meaning_upright="up", meaning_reversed="down",
-        image_path=Path("assets/cards/major/major_00.png"),
+        image_path=assets_dir() / "cards" / "major" / "major_00.png",
     )
-    assert get_origin_path(card) == Path("assets/cards/major/major_00_origin.png")
+    assert get_origin_path(card) == assets_dir() / "cards" / "major" / "major_00_origin.png"
 
 
 def test_create_card_face_widget_no_image():
@@ -143,7 +144,7 @@ def test_create_card_face_widget_with_png():
         arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
         keywords_upright=("a",), keywords_reversed=("b",),
         meaning_upright="up", meaning_reversed="down",
-        image_path=Path("assets/cards/major/major_02.png"),
+        image_path=assets_dir() / "cards" / "major" / "major_02.png",
     )
     pos = Position(name="Test", name_zh="测试", description="test")
     dc = DrawnCard(card=card, position=pos, is_reversed=False)
@@ -159,7 +160,7 @@ def test_load_image_reversed_rotates():
         arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
         keywords_upright=("a",), keywords_reversed=("b",),
         meaning_upright="up", meaning_reversed="down",
-        image_path=Path("assets/cards/major/major_02.png"),
+        image_path=assets_dir() / "cards" / "major" / "major_02.png",
     )
     origin_path = get_origin_path(card)
     img_normal = _load_image(origin_path, upside_down=False)
@@ -176,7 +177,7 @@ def test_load_image_applies_size_cap():
         arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
         keywords_upright=("a",), keywords_reversed=("b",),
         meaning_upright="up", meaning_reversed="down",
-        image_path=Path("assets/cards/major/major_02.png"),
+        image_path=assets_dir() / "cards" / "major" / "major_02.png",
     )
     img = _load_image(get_origin_path(card))
     assert img is not None
@@ -197,7 +198,7 @@ def test_create_card_origin_widget_with_png():
         arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
         keywords_upright=("a",), keywords_reversed=("b",),
         meaning_upright="up", meaning_reversed="down",
-        image_path=Path("assets/cards/major/major_02.png"),
+        image_path=assets_dir() / "cards" / "major" / "major_02.png",
     )
     pos = Position(name="Test", name_zh="测试", description="test")
     dc = DrawnCard(card=card, position=pos, is_reversed=False)
@@ -247,7 +248,7 @@ def test_preload_and_cache():
         arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
         keywords_upright=("a",), keywords_reversed=("b",),
         meaning_upright="up", meaning_reversed="down",
-        image_path=Path("assets/cards/major/major_02.png"),
+        image_path=assets_dir() / "cards" / "major" / "major_02.png",
     )
     assert get_cached_image(card, is_reversed=False) is None
     preload_card_image(card, is_reversed=False)

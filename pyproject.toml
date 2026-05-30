@@ -3,9 +3,10 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nekomata"
+name = "nekomata-tarot"
 version = "0.1.0"
 description = "像素风猫咪塔罗牌终端占卜应用"
+readme = "README.md"
 requires-python = ">=3.13"
 license = {text = "MIT"}
 dependencies = [
@@ -36,6 +37,11 @@ dev = [
     "pyright>=1.1",
 ]
 
+[project.urls]
+Homepage = "https://github.com/ce1an69/Nekomata"
+Repository = "https://github.com/ce1an69/Nekomata"
+Issues = "https://github.com/ce1an69/Nekomata/issues"
+
 [project.scripts]
 nekomata = "nekomata.app:main"
 nekomata-desktop = "nekomata.desktop:main"
@@ -46,6 +52,33 @@ testpaths = ["tests"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+nekomata = [
+    "data/**/*",
+    "assets/cards/*/*.png",
+    "assets/fonts/*.ttf",
+    "assets/fonts/*.woff2",
+    "assets/icon/*.icns",
+    "assets/icon/*.ico",
+    "assets/ui/**/*",
+    "web/static/**/*",
+]
+
+# Exclude large non-runtime files from the wheel.
+# NOTE: _origin.png (3.5 MB each) are excluded here to keep the wheel at ~52 MB.
+# The TUI uses _detail.png (~230 KB each); the web/desktop detail view and
+# image export gracefully fall back to _detail.png when _origin.png is absent.
+# If full-resolution export is required, install from source instead.
+# Keep in sync with nekomata.spec _EXCLUDED_ASSET_PREFIXES and _origin/contact filters.
+[tool.setuptools.exclude-package-data]
+nekomata = [
+    "assets/cards/*contact_sheet*.png",
+    "assets/cards/*/*_origin.png",
+    "assets/brand/**/*",
+    "assets/screenshots/**/*",
+    "assets/cats/**/*",
+]
 
 [tool.pyright]
 pythonVersion = "3.13"

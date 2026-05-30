@@ -2,7 +2,7 @@
   <img src="assets/brand/nekomata-logo.png" alt="Nekomata pixel-art logo" width="100%">
 </p>
 
-<h1 align="center">塔罗猫子 · Nekomata</h1>
+<h1 align="center">塔罗猫 · Nekomata</h1>
 
 <p align="center">
   <strong>住在终端里的像素风猫咪塔罗占卜应用</strong>
@@ -16,9 +16,9 @@
   <img alt="UI" src="https://img.shields.io/badge/ui-TUI_%2F_CLI_%2F_Web_%2F_Desktop-a6e3a1?style=flat-square">
 </p>
 
-> 中文名 **塔罗猫子**。Nekomata 取自日语"猫又"：传说中的二尾妖猫，擅长变化与预知。
+> 中文名 **塔罗猫**。Nekomata 取自日语"猫又"：传说中的二尾妖猫，擅长变化与预知。
 
-塔罗猫子把 78 张塔罗牌全部画成猫咪主题像素牌面，并用 AI 做个性化解牌。它可以是一只住在终端里的占卜猫，也可以切换成 CLI、Web UI 或桌面窗口。
+塔罗猫把 78 张塔罗牌全部画成猫咪主题像素牌面，并用 AI 做个性化解牌。它可以是一只住在终端里的占卜猫，也可以切换成 CLI、Web UI 或桌面窗口。
 
 <p align="center">
   <img src="assets/screenshots/home.png" alt="Nekomata TUI screenshot" width="100%">
@@ -42,6 +42,12 @@ Python 3.13+，推荐使用 [uv](https://docs.astral.sh/uv/)：
 git clone https://github.com/ce1an69/Nekomata.git
 cd Nekomata
 uv sync
+```
+
+或直接安装：
+
+```bash
+pip install nekomata-tarot
 ```
 
 可选依赖：
