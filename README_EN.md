@@ -26,6 +26,12 @@ cd Nekomata
 uv sync
 ```
 
+Or install directly:
+
+```bash
+pip install nekomata
+```
+
 Optional deps: `--extra web` / `--extra desktop` (includes Web) / `--extra dev`.
 
 ## Usage

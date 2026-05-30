@@ -44,6 +44,12 @@ cd Nekomata
 uv sync
 ```
 
+或直接安装：
+
+```bash
+pip install nekomata
+```
+
 可选依赖：
 
 | 依赖 | 用途 |

@@ -7,10 +7,12 @@ from unittest.mock import patch
 class TestDevMode:
     """Path resolution in normal (non-frozen) development mode."""
 
-    def test_base_dir_is_project_root(self):
+    def test_base_dir_resolves_to_package_dir(self):
         from nekomata._paths import base_dir
 
         result = base_dir()
+        # base_dir() returns the nekomata package directory (src/nekomata/)
+        assert result.name == "nekomata"
         assert (result / "data" / "card_meanings.yaml").exists()
 
     def test_data_dir(self):
@@ -58,5 +60,6 @@ class TestFrozenMode:
 
         with patch.object(sys, "frozen", False, create=True):
             result = _paths.base_dir()
-            # Should resolve to project root, not any fake path
+            # Should resolve to package dir, not any fake path
+            assert result.name == "nekomata"
             assert (result / "data" / "card_meanings.yaml").exists()
