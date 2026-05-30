@@ -206,6 +206,39 @@ def test_create_card_origin_widget_with_png():
     assert result.has_class("card-origin")
 
 
+def test_create_card_origin_widget_can_force_upright(monkeypatch):
+    """Detail panels can keep image art upright while text stays reversed."""
+    clear_cache()
+    calls = []
+
+    class DummyImage:
+        def __init__(self, _img, classes="") -> None:
+            self.classes = classes
+
+        def has_class(self, name: str) -> bool:
+            return name in self.classes.split()
+
+    def fake_load(_card, upside_down=False, *, rounded=True):
+        calls.append(upside_down)
+        return object()
+
+    monkeypatch.setattr(
+        "nekomata.render.card_renderer._load_runtime_image", fake_load
+    )
+    monkeypatch.setattr(
+        "nekomata.render.card_renderer._get_tui_image_class", lambda: DummyImage
+    )
+
+    drawn = make_drawn(reversed=True)
+    result = create_card_origin_widget(drawn, upright_image=True)
+
+    assert result is not None
+    assert result.has_class("card-origin")
+    assert calls == [False]
+
+    clear_cache()
+
+
 def test_preload_and_cache():
     """preload_card_image should populate the cache."""
     clear_cache()

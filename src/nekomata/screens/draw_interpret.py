@@ -116,9 +116,6 @@ class InterpretMixin:
         self._dialog._streaming = False
         self._update_followup_hints()
 
-        if self._followup_remaining > 0 and self._dialog.is_visible:
-            self._show_followup()
-
     @property
     def _loading_timer(self):
         return self._stream._loading_timer
@@ -143,9 +140,8 @@ class InterpretMixin:
         elif self._phase == Phase.DONE and self._first_interp_done:
             self._update_followup_hints()
         elif self._phase == Phase.DONE:
-            self._w_interp_hints.update(
-                Text(f"I {_STR['hint_interpret']}", style=C_OVERLAY0)
-            )
+            self._w_interp_hints.update("")
+            self._update_footer_fullscreen()
 
     def _available_boxes(self) -> list[str]:
         from nekomata.screens.draw import Phase
@@ -178,14 +174,18 @@ class InterpretMixin:
             if self._first_interp_done and self._followup_remaining > 0
             else ""
         )
+        c_hint = _STR["copy_text"] if self._first_interp_done else ""
+        e_hint = _STR["export_image"] if self._first_interp_done else ""
         h_hint = (
             _STR["fullscreen_exit" if self._dialog.fullscreen else "fullscreen_enter"]
             if self._dialog.is_visible
             else ""
         )
         i_hint = "" if self._dialog.is_visible else _STR["hint_interpret"]
-        parts = [d_hint, h_hint, f_hint, i_hint, _STR["hint_back"]]
-        self._w_footer.update(Text("  ".join(p for p in parts if p), style=C_OVERLAY0))
+        parts = [d_hint, h_hint, f_hint, c_hint, e_hint, i_hint, _STR["hint_back"]]
+        self._w_footer.update(
+            Text("  ".join(p for p in parts if p), style=C_OVERLAY0)
+        )
 
     def _update_phase_ui(self) -> None:
         from nekomata.screens.draw import Phase
@@ -343,14 +343,33 @@ class InterpretMixin:
         else:
             self._show_followup()
 
+    def _sync_detail_height(self) -> None:
+        if self._detail.visible:
+            self._dialog.fit_height(self._w_main_area, True)
+
+    def _sync_detail_height_after_refresh(self) -> None:
+        self._sync_detail_height()
+        self.call_after_refresh(self._sync_detail_height)
+
+    def _update_followup_placeholder(self) -> None:
+        template = _STR.get("followup_placeholder_remaining")
+        if not template:
+            template = _STR["followup_placeholder"]
+        self._w_followup_input.placeholder = template.format(
+            remaining=self._followup_remaining
+        )
+
     def _show_followup(self) -> None:
         self._followup_visible = True
         self._w_followup_input.value = ""
+        self._update_followup_placeholder()
         self._w_followup_section.display = True
         if self.app.animation_enabled:
             self._w_followup_section.styles.opacity = 0
             self._w_followup_section.styles.offset = (0, 1)
         self._w_followup_section.add_class("visible")
+        self._sync_interp_layout()
+        self._sync_detail_height_after_refresh()
         if self.app.animation_enabled:
             self._w_followup_section.styles.animate(
                 "opacity", 1.0, duration=0.24, easing=EASE
@@ -365,6 +384,8 @@ class InterpretMixin:
 
     def _hide_followup(self) -> None:
         self._followup_visible = False
+        self._sync_interp_layout()
+        self._sync_detail_height_after_refresh()
         if self.app.animation_enabled:
             self._w_followup_section.styles.animate(
                 "opacity", 0.0, duration=0.18, easing=EASE
@@ -411,17 +432,8 @@ class InterpretMixin:
     def _update_followup_hints(self) -> None:
         if self._dialog.is_streaming or not self._first_interp_done:
             return
-        parts = [_STR["done_marker"]]
-        if self._followup_remaining > 0:
-            parts.append(
-                _STR["followup_remaining"].format(remaining=self._followup_remaining)
-            )
-        parts.append(
-            _STR["fullscreen_exit" if self._dialog.fullscreen else "fullscreen_enter"]
-        )
-        parts.append(_STR["copy_text"])
-        parts.append(_STR["export_image"])
-        self._w_interp_hints.update(Text("  ".join(parts), style=C_OVERLAY0))
+        self._w_interp_hints.update("")
+        self._update_footer_fullscreen()
 
     # -- Fullscreen / Copy / Export --
 
@@ -453,8 +465,8 @@ class InterpretMixin:
             )
             ok = _copy_text_to_clipboard(text)
             msg = _STR["copy_success"] if ok else _STR["copy_failed"]
-            self._w_interp_hints.update(Text(msg, style=C_MAUVE if ok else C_OVERLAY0))
-            self.set_timer(2.0, self._update_followup_hints)
+            self._w_footer.update(Text(msg, style=C_MAUVE if ok else C_OVERLAY0))
+            self.set_timer(2.0, self._update_footer_fullscreen)
 
     def key_e(self, event: Key) -> None:
         from nekomata.screens.draw import Phase
@@ -490,8 +502,8 @@ class InterpretMixin:
             except OSError:
                 pass
         msg = _STR["export_success"] if ok else _STR["export_failed"]
-        self._w_interp_hints.update(Text(msg, style=C_MAUVE if ok else C_OVERLAY0))
-        self.set_timer(2.0, self._update_followup_hints)
+        self._w_footer.update(Text(msg, style=C_MAUVE if ok else C_OVERLAY0))
+        self.set_timer(2.0, self._update_footer_fullscreen)
 
     # -- Interpretation / back actions --
 

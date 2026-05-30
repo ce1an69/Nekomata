@@ -29,6 +29,7 @@ from nekomata.screens.draw_widgets import (
 )
 from nekomata.screens.home import HomeScreen
 from nekomata.screens.setup import SetupButton, SetupScreen
+from nekomata.screens.solid_static import SolidStatic
 from nekomata.screens.spread_select import SpreadSelectScreen
 
 
@@ -86,6 +87,34 @@ def test_setup_hints_do_not_advertise_q_quit():
     assert "Q quit" not in SetupScreen.compose.__code__.co_consts
 
 
+def test_solid_static_paints_full_line_with_current_css_style():
+    render_source = inspect.getsource(SolidStatic.render)
+    pad_source = inspect.getsource(SolidStatic._padded_content)
+
+    assert "self.rich_style" in render_source
+    assert "self.content_size.width" in pad_source
+
+
+def test_setup_and_spread_static_headers_use_solid_static_lines():
+    setup_source = inspect.getsource(SetupScreen.compose)
+    spread_source = inspect.getsource(SpreadSelectScreen.compose)
+
+    assert "SolidStatic" in setup_source
+    assert "id=\"setup-title\"" in setup_source
+    assert "SetupButton(_STR[\"save_label\"]" in setup_source
+    assert "SolidStatic(question" in spread_source
+
+
+def test_setup_language_select_has_no_blank_prompt_and_uses_local_style():
+    css = SetupScreen.DEFAULT_CSS
+    source = inspect.getsource(SetupScreen.compose)
+
+    assert "allow_blank=False" in source
+    assert "SetupScreen #lang-select > SelectCurrent" in css
+    assert "SetupScreen #lang-select > SelectOverlay" in css
+    assert ".option-list--option-highlighted" in css
+
+
 def test_card_rendering_catppuccin_theme_uses_purple_accents():
     theme = THEMES["catppuccin"]
 
@@ -102,20 +131,41 @@ def test_home_suggestion_panel_can_animate_out():
     assert "_finish_hide_suggestions" in names
 
 
-def test_card_browser_list_and_detail_have_swap_transitions():
+def test_card_browser_list_has_swap_transition():
     css = CardBrowserScreen.DEFAULT_CSS
 
     card_list_css = css.split("CardBrowserScreen #card-list {")[1].split("}")[0]
-    detail_css = css.split("CardBrowserScreen #card-detail {")[1].split("}")[0]
     assert "transition: opacity 220ms" in card_list_css
-    assert "transition: opacity 250ms" in detail_css
 
 
-def test_draw_detail_panel_docks_to_right_full_height():
+def test_card_browser_detail_reserves_scrollbar_gutter():
+    css = CardBrowserScreen.DEFAULT_CSS
+
+    detail_css = css.split("CardBrowserScreen #card-detail {")[1].split("}")[0]
+    assert "scrollbar-gutter: stable;" in detail_css
+
+
+def test_card_browser_detail_slots_have_stable_layout():
+    css = CardBrowserScreen.DEFAULT_CSS
+
+    image_slot_css = css.split("CardBrowserScreen #card-detail .card-origin-frame {")[1].split("}")[0]
+    image_css = css.split("CardBrowserScreen #card-detail .card-origin {")[1].split("}")[0]
+    assert "height: 26;" in image_slot_css
+    assert "transition: opacity 160ms" in image_slot_css
+    assert "height: 100%;" in image_css
+
+
+def test_draw_detail_panel_lives_in_shared_reading_flow():
     css = DrawScreen.DEFAULT_CSS
 
+    reading_css = css.split("#reading-area {")[1].split("}")[0]
+    left_css = css.split("#left-pane {")[1].split("}")[0]
     detail_css = css.split("#card-preview {")[1].split("}")[0]
-    assert "dock: right;" in detail_css
+    assert "height: 1fr;" in reading_css
+    assert "width: 1fr;" in reading_css
+    assert "height: 1fr;" in left_css
+    assert "width: 1fr;" in left_css
+    assert "dock: right;" not in detail_css
     assert "height: 1fr;" in detail_css
     assert "transition: opacity 280ms" in detail_css
     assert "offset 340ms" in detail_css
@@ -126,7 +176,7 @@ def test_draw_interpretation_panel_fills_bottom_flow_space():
 
     interp_css = css.split("#interp-dialog {")[1].split("}")[0]
     content_css = css.split("#interp-dialog-content {")[1].split("}")[0]
-    assert "dock: bottom;" in interp_css
+    assert "dock: bottom;" not in interp_css
     assert "width: 1fr;" in interp_css
     assert "transition: width 300ms" in interp_css
     assert "transition: opacity" not in interp_css
@@ -139,11 +189,9 @@ def test_draw_interpretation_panel_width_tracks_detail_space():
     from nekomata.screens.draw_dialog import InterpretationDialog
     source = inspect.getsource(InterpretationDialog.sync_layout)
 
-    assert "styles.width = max(" in source
-    assert "screen_width" in source
-    assert "DETAIL_PANEL_WIDTH" in source
-    assert "INTERP_FULL_SIDE_MARGIN * 2" in source
-    assert "INTERP_FULL_WIDTH_CORRECTION" in source
+    assert 'styles.width = "1fr"' in source
+    assert "detail-visible" in source
+    assert "styles.margin" in source
 
 
 def test_draw_interpretation_height_animation_starts_from_cell_height():
@@ -225,6 +273,20 @@ def test_draw_interpretation_panel_uses_arrow_scroll():
     assert "scroll_up(animate=True)" in up_source
     assert "interp" in down_source
     assert "scroll_down(animate=True)" in down_source
+
+
+def test_draw_followup_input_is_centered_above_footer():
+    css = DrawScreen.DEFAULT_CSS
+
+    followup_css = css.split("#followup-section {")[1].split("}")[0]
+    input_css = css.split("#followup-input {")[1].split("}")[0]
+    assert "dock: bottom;" in followup_css
+    assert "width: 100%;" in followup_css
+    assert "margin: 0 0 1 0;" in followup_css
+    assert "background: transparent;" in followup_css
+    assert "align: center middle;" in followup_css
+    assert "width: 50;" in input_css
+    assert "background: transparent;" in input_css
 
 
 def test_draw_stream_content_renders_markdown():

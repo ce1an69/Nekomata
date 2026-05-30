@@ -41,8 +41,6 @@
     "unknown_command": "Unknown command",
     "commands": {
       "/browse": ["card_browser", "Browse all 78 cards"],
-      "/browse_short": ["card_browser", "Browse all"],
-      "/browse_cards": ["card_browser", "cards"],
       "/config": ["config", "Edit API settings"],
       "/quit": ["quit", "Exit application"]
     }
@@ -60,7 +58,7 @@
     "error_model_required": "Model is required",
     "error_key_required": "API Key is required",
     "key_configured": "•••••••• (configured)",
-    "hints": "Enter next / save · Tab switch · Esc back"
+    "hints": "↑↓ Navigate · Enter next · Esc back"
   },
 
   "spread_select": {
@@ -106,6 +104,7 @@
     "btn_export_image": "Export Image",
     "btn_followup": "Follow-up",
     "followup_placeholder": "> ask a follow-up...",
+    "followup_placeholder_remaining": "> ask a follow-up ({remaining} left)...",
     "followup_remaining": "F follow-up ({remaining})",
     "confirm_exit_title": "Exit interpretation?",
     "confirm_exit_body": "Current reading will stop and return to home.",

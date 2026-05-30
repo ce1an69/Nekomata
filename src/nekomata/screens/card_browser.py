@@ -1,7 +1,8 @@
 """Card browser screen — browse and filter all 78 tarot cards."""
 
+from rich.panel import Panel
 from textual.app import ComposeResult
-from textual.containers import Center, Horizontal, VerticalScroll
+from textual.containers import Horizontal, VerticalScroll
 from textual.events import Key
 from textual.screen import Screen
 from textual.widgets import Button, Static
@@ -11,8 +12,8 @@ from nekomata.card.types import ROMAN, Arcana, Card, DrawnCard, Position
 from nekomata.i18n import arcana_label, lazy_section, ui_section
 from nekomata.render.animations import animate_entrance
 from nekomata.render.card_renderer import (
-    render_card_detail,
-    render_card_full_detail_widgets,
+    _build_detail_text,
+    create_card_origin_widget,
 )
 from nekomata.render.styles import (
     C_BASE,
@@ -22,6 +23,7 @@ from nekomata.render.styles import (
     C_OVERLAY0,
     C_SURFACE0,
     C_SURFACE1,
+    C_TEXT,
 )
 
 _STR = lazy_section("card_browser")
@@ -65,11 +67,20 @@ class CardBrowserScreen(Screen):
         width: auto;
         min-width: 10;
         margin: 0 1;
-        transition: background 180ms, border 180ms, color 180ms;
+        background: {C_SURFACE0};
+        border: round {C_SURFACE0};
+        color: {C_OVERLAY0};
     }}
-    CardBrowserScreen #filter-bar Button.active-filter {{
+    CardBrowserScreen #filter-bar Button:focus {{
+        background: {C_SURFACE1};
         border: round {C_MAUVE};
         color: {C_MAUVE};
+    }}
+    CardBrowserScreen #filter-bar Button.active-filter {{
+        background: {C_MANTLE};
+        border: round {C_MAUVE};
+        color: {C_MAUVE};
+        text-style: bold;
     }}
     CardBrowserScreen #card-count {{
         width: 100%;
@@ -98,20 +109,29 @@ class CardBrowserScreen(Screen):
         padding: 1 2;
         margin-left: 1;
         align: center top;
-        transition: opacity 250ms out_quint;
+        scrollbar-gutter: stable;
+    }}
+    CardBrowserScreen #card-detail .card-origin-frame {{
+        width: 100%;
+        height: 26;
+        align: center middle;
+        background: {C_CRUST};
+        border: round {C_SURFACE1};
+        padding: 1 1;
+        transition: opacity 160ms out_quint;
     }}
     CardBrowserScreen #card-detail .card-origin {{
-        width: 50%;
+        width: auto;
+        height: 100%;
+        background: {C_CRUST};
+    }}
+    CardBrowserScreen #detail-text-slot {{
+        width: 100%;
         height: auto;
-        background: {C_MANTLE};
+        transition: opacity 160ms out_quint;
     }}
     CardBrowserScreen #card-detail Static {{
         background: {C_MANTLE};
-    }}
-    CardBrowserScreen #back-bar {{
-        align: center middle;
-        height: auto;
-        margin-top: 1;
     }}
     CardBrowserScreen #hints {{
         width: 100%;
@@ -127,6 +147,7 @@ class CardBrowserScreen(Screen):
         self._cards = load_all_cards()
         self._reversed_preview = False
         self._active_arcana: Arcana | None = None
+        self._detail_preview_id: str | None = None
 
     def compose(self) -> ComposeResult:
         labels = ui_section("arcana_labels")
@@ -142,9 +163,9 @@ class CardBrowserScreen(Screen):
             with VerticalScroll(id="card-list"):
                 pass
             with VerticalScroll(id="card-detail"):
-                yield Static(_STR["select_placeholder"], id="detail-placeholder")
-        with Center(id="back-bar"):
-            yield Button("Back", id="back")
+                with Horizontal(id="detail-image-slot", classes="card-origin-frame"):
+                    pass
+                yield Static(_STR["select_placeholder"], id="detail-text-slot")
         yield Static(_STR["hints"], id="hints")
 
     def on_mount(self) -> None:
@@ -182,11 +203,8 @@ class CardBrowserScreen(Screen):
             btn.set_class(btn_id == active_btn_id, "active-filter")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle filter and back button clicks."""
+        """Handle filter button clicks."""
         btn_id = event.button.id
-        if btn_id == "back":
-            self.app.pop_screen()
-            return
 
         for i, arcana in enumerate(_SUIT_ARCANAS):
             filter_id = f"filter-{arcana.value}" if arcana else "filter-all"
@@ -256,7 +274,7 @@ class CardBrowserScreen(Screen):
             items[new_idx].focus()
 
     def key_tab(self, event: Key) -> None:
-        """Cycle focus: cards → filter buttons → back button → cards."""
+        """Cycle focus: cards → filter buttons → cards."""
         event.stop()
         filter_buttons = list(self.query("#filter-bar Button"))
         visible_items = [i for i in self.query(CardListItem) if i.display]
@@ -270,10 +288,7 @@ class CardBrowserScreen(Screen):
             return
 
         focused_id = self.focused.id or ""
-        if focused_id == "back":
-            if visible_items:
-                visible_items[0].focus()
-        elif focused_id.startswith("filter-"):
+        if focused_id.startswith("filter-"):
             try:
                 idx = filter_buttons.index(self.focused)
             except ValueError:
@@ -281,7 +296,8 @@ class CardBrowserScreen(Screen):
             if idx < len(filter_buttons) - 1:
                 filter_buttons[idx + 1].focus()
             else:
-                self.query_one("#back", Button).focus()
+                if visible_items:
+                    visible_items[0].focus()
         else:
             if visible_items:
                 visible_items[0].focus()
@@ -296,14 +312,10 @@ class CardBrowserScreen(Screen):
             self._apply_filter(arcana)
 
     def _show_placeholder_detail(self) -> None:
-        """Reset the detail panel with the same soft swap used for card previews."""
-        detail = self.query_one("#card-detail")
-        if self.app.animation_enabled:
-            detail.styles.opacity = 0.2
-        detail.remove_children()
-        detail.mount(Static(_STR["select_placeholder"]))
-        if self.app.animation_enabled:
-            detail.styles.animate("opacity", 1.0, duration=0.18, easing="out_quint")
+        """Reset the detail panel to the placeholder."""
+        self._detail_preview_id = None
+        self.query_one("#detail-image-slot").remove_children()
+        self.query_one("#detail-text-slot", Static).update(_STR["select_placeholder"])
 
 
 class CardListItem(Static):
@@ -367,29 +379,31 @@ class CardListItem(Static):
         drawn = DrawnCard(
             card=self._card, position=_BROWSER_POS, is_reversed=is_reversed
         )
-        detail_panel = self.screen.query_one("#card-detail")
+        preview_id = f"{drawn.card.id}:{drawn.is_reversed}"
+        if self.screen._detail_preview_id == preview_id:
+            return
+        self.screen._detail_preview_id = preview_id
+
+        image_slot = self.screen.query_one("#detail-image-slot")
+        text_slot = self.screen.query_one("#detail-text-slot", Static)
         if self.app.animation_enabled:
-            detail_panel.styles.opacity = 0.2
-        detail_panel.remove_children()
+            image_slot.styles.opacity = 0.35
+            text_slot.styles.opacity = 0.35
+        image_slot.remove_children()
 
         if self.app.render_mode != "text":
-            result = render_card_full_detail_widgets(drawn, lang=self.app.config.lang)
-            if result is not None:
-                img_widget, text_panel = result
-                detail_panel.mount(img_widget)
-                text_widget = Static(text_panel)
-                detail_panel.mount(text_widget)
-                detail_panel.scroll_home(animate=False)
-                if self.app.animation_enabled:
-                    detail_panel.styles.animate(
-                        "opacity", 1.0, duration=0.18, easing="out_quint"
-                    )
-                return
+            img_widget = create_card_origin_widget(drawn)
+            if img_widget is not None:
+                image_slot.mount(img_widget)
 
-        widget = Static(render_card_detail(drawn, lang=self.app.config.lang))
-        detail_panel.mount(widget)
-        if self.app.animation_enabled:
-            animate_entrance(widget, duration=0.18)
-            detail_panel.styles.animate(
-                "opacity", 1.0, duration=0.18, easing="out_quint"
+        text_slot.update(
+            Panel(
+                _build_detail_text(drawn, self.app.config.lang, orientation_only=True),
+                border_style="none",
+                padding=(0, 0),
             )
+        )
+        if self.app.animation_enabled:
+            image_slot.styles.animate("opacity", 1.0, duration=0.16, easing="out_quint")
+            text_slot.styles.animate("opacity", 1.0, duration=0.16, easing="out_quint")
+        self.screen.query_one("#card-detail").scroll_home(animate=False)

@@ -1,5 +1,8 @@
 """Home screen with animated banner, question input, and slash commands."""
 
+from rich.highlighter import Highlighter
+from rich.style import Style
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.css.scalar import ScalarOffset
@@ -30,8 +33,27 @@ _STR = lazy_section("home")
 SLASH_COMMANDS = {k: tuple(v) for k, v in _STR["commands"].items()}
 
 
+class _SlashCommandHighlighter(Highlighter):
+    """Colors the command portion (before first space) in mauve, rest in normal."""
+
+    def highlight(self, text: Text) -> None:
+        value = text.plain
+        if not value.startswith("/"):
+            text.stylize(Style(color=C_TEXT))
+            return
+        space_idx = value.find(" ")
+        if space_idx > 0:
+            text.stylize(Style(color=C_MAUVE), 0, space_idx)
+            text.stylize(Style(color=C_TEXT), space_idx)
+        else:
+            text.stylize(Style(color=C_MAUVE))
+
+
 class HomePromptInput(Input):
-    """Prompt input on the home screen."""
+    """Prompt input with per-character command coloring."""
+
+    def __init__(self, **kwargs: object) -> None:
+        super().__init__(highlighter=_SlashCommandHighlighter(), **kwargs)
 
 
 class HomeScreen(Screen):
@@ -80,7 +102,6 @@ class HomeScreen(Screen):
         height: 3;
         border: round {C_SURFACE1};
         background: {C_BASE};
-        color: {C_TEXT};
         padding: 0 1;
     }}
     HomeScreen #prompt-input:focus {{
@@ -88,7 +109,7 @@ class HomeScreen(Screen):
         background: {C_MANTLE};
     }}
     HomeScreen #command-suggestions {{
-        width: 100%;
+        width: auto;
         height: auto;
         margin-top: 1;
         padding: 0 1;
@@ -117,7 +138,6 @@ class HomeScreen(Screen):
         self._suggestion_matches: list[str] = []
         self._suggestion_idx: int = -1
         self._suggestion_typed_prefix: str = ""
-        self._navigating_suggestions: bool = False
 
     def compose(self) -> ComposeResult:
         with Vertical(id="home-stack"):
@@ -179,7 +199,10 @@ class HomeScreen(Screen):
         prompt = self.query_one("#prompt-input", Input)
 
         if event.key == "tab":
-            match = self._matching_command(prompt.value)
+            if self._suggestion_idx >= 0 and self._suggestion_matches:
+                match = self._suggestion_matches[self._suggestion_idx]
+            else:
+                match = self._matching_command(prompt.value)
             if match is None:
                 return
             prompt.value = match
@@ -197,11 +220,15 @@ class HomeScreen(Screen):
             elif new_idx >= len(self._suggestion_matches):
                 new_idx = 0
             self._suggestion_idx = new_idx
-            self._navigating_suggestions = True
-            prompt.value = self._suggestion_matches[new_idx]
-            prompt.cursor_position = len(prompt.value)
             self._render_suggestions()
-            self._navigating_suggestions = False
+            return
+
+        if event.key == "right" and self._suggestion_idx >= 0 and self._suggestion_matches:
+            match = self._suggestion_matches[self._suggestion_idx]
+            prompt.value = match
+            prompt.cursor_position = len(match)
+            self._refresh_command_suggestions(match)
+            event.stop()
             return
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
@@ -209,20 +236,25 @@ class HomeScreen(Screen):
         if event.input.id != "prompt-input":
             return
         value = event.value.strip()
+
+        # If a suggestion is highlighted, use that as the command
+        if self._suggestion_idx >= 0 and self._suggestion_matches:
+            value = self._suggestion_matches[self._suggestion_idx]
+
         if not value:
             return
 
         cmd_entry = SLASH_COMMANDS.get(value.lower())
         if cmd_entry is not None:
+            self.query_one("#prompt-input", Input).value = ""
+            self._hide_suggestions()
             cmd = cmd_entry[0]
             if cmd == "card_browser":
-                self.query_one("#prompt-input", Input).value = ""
                 from nekomata.screens.card_browser import CardBrowserScreen
 
                 self.app.push_screen(CardBrowserScreen())
                 return
             if cmd == "config":
-                self.query_one("#prompt-input", Input).value = ""
                 from nekomata.screens.setup import SetupScreen
 
                 self.app.push_screen(
@@ -247,8 +279,6 @@ class HomeScreen(Screen):
 
     def _refresh_command_suggestions(self, value: str) -> None:
         """Show or hide the command suggestions dropdown based on input."""
-        if self._navigating_suggestions:
-            return
         suggestions = self.query_one("#command-suggestions", Static)
         matches = [cmd for cmd in SLASH_COMMANDS if cmd.startswith(value.lower())]
         if not value.startswith("/") or not matches or value.lower() in SLASH_COMMANDS:
@@ -272,22 +302,36 @@ class HomeScreen(Screen):
             suggestions.styles.offset = (0, 0)
 
     def _render_suggestions(self) -> None:
-        """Render the suggestion list with the current selection highlighted."""
+        """Render the suggestion list with full-row highlight for selection."""
         suggestions = self.query_one("#command-suggestions", Static)
         if not self._suggestion_matches:
             suggestions.display = False
             suggestions.update("")
             return
         prefix_len = len(self._suggestion_typed_prefix)
+        # Pad all lines to the same visible width so the highlight background
+        # covers the full row instead of just the text characters.
+        visible_widths = [
+            2 + len(cmd) + 2 + len(desc)
+            for cmd in self._suggestion_matches
+            for (_, desc) in [SLASH_COMMANDS[cmd]]
+        ]
+        max_width = max(visible_widths) if visible_widths else 0
         lines = []
         for i, cmd in enumerate(self._suggestion_matches):
             _, desc = SLASH_COMMANDS[cmd]
+            plain = f"  {cmd}  {desc}"
+            padding = " " * (max_width - len(plain))
             if i == self._suggestion_idx:
-                lines.append(f" ▸ [command-highlight]{cmd}[/]  {desc}")
+                lines.append(
+                    f"[{C_MAUVE} bold on {C_SURFACE0}]{plain}{padding}[/]"
+                )
             else:
                 typed = cmd[:prefix_len]
                 rest = cmd[prefix_len:]
-                lines.append(f"   [command-highlight]{typed}[/]{rest}  {desc}")
+                lines.append(
+                    f"  [bold {C_MAUVE}]{typed}[/]{rest}  {desc}{padding}"
+                )
         suggestions.update("\n".join(lines))
 
     def _hide_suggestions(self) -> None:

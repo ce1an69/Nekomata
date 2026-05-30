@@ -20,6 +20,7 @@ INTERP_FULL_WIDTH_CORRECTION = 4
 INTERP_FULLSCREEN_VERTICAL_CHROME = 5
 INTERP_FULLSCREEN_SIDE_MARGIN = 1
 DETAIL_PANEL_WIDTH = 66
+FOLLOWUP_BOTTOM_MARGIN = 5
 
 
 class InterpretationDialog:
@@ -142,52 +143,27 @@ class InterpretationDialog:
             self._height_timers.append(timer)
 
     def sync_layout(self, detail_visible: bool, screen_width: int) -> None:
-        """Adjust interp dialog width to share space with the detail panel.
-
-        When detail is visible, the interp panel shrinks to avoid overlap.
-        When detail is hidden, it expands to full available width.
-        """
+        """Keep interp spacing in sync with the surrounding reading layout."""
+        bottom_margin = 0
         if self._fullscreen:
-            self._w_interp.styles.margin = (0, 1, 2, 1)
+            self._w_interp.styles.margin = (0, 1, bottom_margin, 1)
+            self._w_interp.styles.width = "1fr"
             if detail_visible:
                 self._w_interp.add_class("detail-visible")
-                self._w_interp.styles.width = max(
-                    40,
-                    screen_width - DETAIL_PANEL_WIDTH - INTERP_FULLSCREEN_SIDE_MARGIN * 2,
-                )
             else:
                 self._w_interp.remove_class("detail-visible")
-                self._w_interp.styles.width = max(
-                    40,
-                    screen_width - INTERP_FULLSCREEN_SIDE_MARGIN * 2,
-                )
             return
 
         if detail_visible:
             self._w_interp.add_class("detail-visible")
-            self._w_interp.styles.margin = (0, 1, 2, 1)
-            self._w_interp.styles.width = max(
-                40,
-                screen_width - DETAIL_PANEL_WIDTH
-                - INTERP_SIDE_MARGIN - INTERP_DETAIL_GAP,
-            )
         else:
             self._w_interp.remove_class("detail-visible")
-            self._w_interp.styles.margin = (0, 1, 1, 1)
-            self._w_interp.styles.width = max(
-                40,
-                screen_width - INTERP_FULL_SIDE_MARGIN * 2
-                + INTERP_FULL_WIDTH_CORRECTION,
-            )
+        self._w_interp.styles.margin = (0, 1, bottom_margin, 1)
+        self._w_interp.styles.width = "1fr"
 
     def fit_height(self, main_area, detail_visible: bool) -> None:
-        """Size the interp panel to fill available vertical space."""
-        bottom = main_area.region.y + main_area.region.height
-        if self.is_visible:
-            bottom = max(bottom, self._w_interp.region.y + self._w_interp.region.height)
-        if detail_visible:
-            preview = self._screen.query_one("#card-preview")
-            preview.styles.height = max(1, bottom - 1)
+        """Retained for callers; flow layout now owns panel heights."""
+        return
 
     # -- Show / Hide --
 

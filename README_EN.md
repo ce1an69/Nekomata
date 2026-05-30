@@ -50,6 +50,18 @@ nekomata-desktop          # native desktop window
 | `-S` / `--spread`   | Spread key                   |
 | `-y` / `--yes`      | Skip confirmation            |
 
+### TUI Terminal Compatibility
+
+TUI mode uses Kitty Graphics Protocol / Sixel for pixel-art card rendering. Experience varies by terminal:
+
+| Experience | Terminals | Notes |
+|-----------|-----------|-------|
+| ✅ Best | **Kitty** · **Ghostty** · **Contour** | Native TGP support, sharpest card rendering |
+| 👍 Good | **WezTerm** · **Konsole** · **foot** | Sixel auto-detected, cards display fine |
+| 📝 Text-only | Other terminals (e.g. Alacritty, iTerm2) | Falls back to text/colored-block cards |
+
+> 💡 Terminal window of at least **160×50** recommended for full layout. Below **80×24**, text-only mode kicks in.
+
 ### TUI Shortcuts
 
 `q`/`Esc` back · `↑↓←→` navigate · `Enter` confirm · `Tab` switch panel · `1`-`6` select spread · `i` interpret · `d` details · `r` toggle reversed

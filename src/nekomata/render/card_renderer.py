@@ -156,16 +156,18 @@ def create_card_face_widget(drawn: DrawnCard):
     return TUIImage(img, classes="card-face")
 
 
-def create_card_origin_widget(drawn: DrawnCard):
+def create_card_origin_widget(drawn: DrawnCard, *, upright_image: bool = False):
     """Return an Image widget for the origin detail image, or None if no PNG.
 
-    Always shows the upright (non-reversed) orientation regardless of
-    the drawn card's reversed state.
+    By default, respects the drawn card's reversed state to show the correct
+    orientation. Pass upright_image=True when the detail view should keep the
+    card art upright while still showing reversed text metadata.
     """
-    key = _cache_key(drawn.card, is_reversed=False)
+    is_reversed = drawn.is_reversed and not upright_image
+    key = _cache_key(drawn.card, is_reversed=is_reversed)
     img = _origin_cache.get(key)
     if img is None:
-        img = _load_runtime_image(drawn.card, upside_down=False, rounded=False)
+        img = _load_runtime_image(drawn.card, upside_down=is_reversed, rounded=False)
         if img is not None:
             _origin_cache[key] = img
     if img is None:
@@ -174,35 +176,55 @@ def create_card_origin_widget(drawn: DrawnCard):
     return TUIImage(img, classes="card-origin")
 
 
-def _build_detail_text(drawn: DrawnCard, lang: str = "en") -> Text:
-    """Build the rich Text content for a card's full detail view."""
+def _build_detail_text(drawn: DrawnCard, lang: str = "en", *, orientation_only: bool = False) -> Text:
+    """Build the rich Text content for a card's full detail view.
+
+    Args:
+        orientation_only: If True, only show the current orientation's
+            keywords and meaning. If False (default), show both upright
+            and reversed.
+    """
     labels = section("card_detail", lang)
     card = drawn.card
     text = Text()
     text.append(f"{card_name(card, lang)}  [{status_label(drawn.is_reversed, lang)}]\n", style="bold")
     text.append(f"{labels['element']}: {card.element}  ·  {labels['astrology']}: {card.astrology}\n\n")
 
-    text.append(f"{labels['upright']}: ", style="bold")
-    text.append(", ".join(card_keywords(card, False, lang)))
-    text.append("\n")
-    text.append(card_meaning(card, False, lang))
-    text.append("\n\n")
+    if orientation_only:
+        is_rev = drawn.is_reversed
+        label = labels["reversed"] if is_rev else labels["upright"]
+        text.append(f"{label}: ", style="bold")
+        text.append(", ".join(card_keywords(card, is_rev, lang)))
+        text.append("\n")
+        text.append(card_meaning(card, is_rev, lang))
+    else:
+        text.append(f"{labels['upright']}: ", style="bold")
+        text.append(", ".join(card_keywords(card, False, lang)))
+        text.append("\n")
+        text.append(card_meaning(card, False, lang))
+        text.append("\n\n")
 
-    text.append(f"{labels['reversed']}: ", style="bold")
-    text.append(", ".join(card_keywords(card, True, lang)))
-    text.append("\n")
-    text.append(card_meaning(card, True, lang))
+        text.append(f"{labels['reversed']}: ", style="bold")
+        text.append(", ".join(card_keywords(card, True, lang)))
+        text.append("\n")
+        text.append(card_meaning(card, True, lang))
     return text
 
 
-def render_card_full_detail_widgets(drawn: DrawnCard, lang: str = "en") -> tuple[object, Panel] | None:
+def render_card_full_detail_widgets(
+    drawn: DrawnCard,
+    lang: str = "en",
+    *,
+    orientation_only: bool = False,
+    upright_image: bool = False,
+) -> tuple[object, Panel] | None:
     """Return (image_widget, text_panel) for the detail view, or None if no image."""
-    img_widget = create_card_origin_widget(drawn)
+    img_widget = create_card_origin_widget(drawn, upright_image=upright_image)
     if img_widget is None:
         return None
 
     text_panel = Panel(
-        _build_detail_text(drawn, lang),
+        _build_detail_text(drawn, lang, orientation_only=orientation_only),
         border_style="none",
         padding=(0, 0),
     )

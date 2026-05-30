@@ -34,15 +34,13 @@
   },
 
   "home": {
-    "title": "Nekomata",
+    "title": "塔罗猫子",
     "placeholder": "> 输入你的问题...",
     "hints": "Enter 确认 · / 命令 · Ctrl+Q 退出",
     "web_hints": "Enter 确认 · / 命令",
     "unknown_command": "未知命令",
     "commands": {
       "/browse": ["card_browser", "浏览全部 78 张牌"],
-      "/browse_short": ["card_browser", "浏览全部"],
-      "/browse_cards": ["card_browser", "张牌"],
       "/config": ["config", "修改 API 设置"],
       "/quit": ["quit", "退出应用"]
     }
@@ -60,7 +58,7 @@
     "error_model_required": "请填写模型名称",
     "error_key_required": "请填写 API Key",
     "key_configured": "•••••••• (已配置)",
-    "hints": "Enter 下一步/保存 · Tab 切换 · Esc 返回"
+    "hints": "↑↓ 切换字段 · Enter 下一步 · Esc 返回"
   },
 
   "spread_select": {
@@ -106,6 +104,7 @@
     "btn_export_image": "导出图片",
     "btn_followup": "追问",
     "followup_placeholder": "> 输入追问...",
+    "followup_placeholder_remaining": "> 输入追问（剩余 {remaining} 次）...",
     "followup_remaining": "F 追问 ({remaining})",
     "confirm_exit_title": "退出解读？",
     "confirm_exit_body": "当前解读将停止，并直接返回首页。",

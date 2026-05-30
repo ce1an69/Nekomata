@@ -91,7 +91,7 @@ async def test_card_browser_back():
         await pilot.press("enter")
         await pilot.pause()
         assert isinstance(app.screen, CardBrowserScreen)
-        await pilot.click("#back")
+        await pilot.press("escape")
         await pilot.pause()
         from nekomata.screens.home import HomeScreen
         assert isinstance(app.screen, HomeScreen)
@@ -127,6 +127,99 @@ async def test_card_browser_detail_updates_on_focus():
         # Detail panel should have content (not the placeholder)
         children = list(detail.children)
         assert len(children) > 0
+
+
+@pytest.mark.asyncio
+async def test_card_browser_detail_wraps_card_image_in_frame():
+    """Browser detail keeps image layout on a normal Textual container."""
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/browse"
+        await pilot.press("enter")
+        await pilot.pause()
+        items = app.screen.query("CardListItem")
+        items[0].focus()
+        await pilot.pause()
+
+        detail = app.screen.query_one("#card-detail")
+        frame = detail.query_one(".card-origin-frame")
+        image = frame.query_one(".card-origin")
+
+        assert frame is not None
+        assert image is not None
+
+
+@pytest.mark.asyncio
+async def test_card_browser_ignores_duplicate_detail_refresh():
+    """Focusing the same card again should not rebuild the detail panel."""
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/browse"
+        await pilot.press("enter")
+        await pilot.pause()
+        items = app.screen.query("CardListItem")
+        items[0].focus()
+        await pilot.pause()
+
+        detail = app.screen.query_one("#card-detail")
+        children = tuple(detail.children)
+        items[0]._show_detail()
+        await pilot.pause()
+
+        assert tuple(detail.children) == children
+
+
+@pytest.mark.asyncio
+async def test_card_browser_reversal_refreshes_detail():
+    """Changing orientation should rebuild the current card detail."""
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/browse"
+        await pilot.press("enter")
+        await pilot.pause()
+        items = app.screen.query("CardListItem")
+        items[0].focus()
+        await pilot.pause()
+
+        detail_text = app.screen.query_one("#detail-text-slot")
+        before = str(detail_text.render())
+        await pilot.press("r")
+        await pilot.pause()
+
+        assert str(detail_text.render()) != before
+
+
+@pytest.mark.asyncio
+async def test_card_browser_detail_slots_stay_stable_between_cards():
+    """Switching cards updates slot content without moving detail layout."""
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/browse"
+        await pilot.press("enter")
+        await pilot.pause()
+        items = app.screen.query("CardListItem")
+        items[0].focus()
+        await pilot.pause()
+
+        detail = app.screen.query_one("#card-detail")
+        image_slot = app.screen.query_one("#detail-image-slot")
+        text_slot = app.screen.query_one("#detail-text-slot")
+        detail_children = tuple(detail.children)
+        image_region = image_slot.region
+        text_region = text_slot.region
+        first_text = str(text_slot.render())
+
+        items[1].focus()
+        await pilot.pause()
+
+        assert tuple(detail.children) == detail_children
+        assert image_slot.region == image_region
+        assert text_slot.region == text_region
+        assert str(text_slot.render()) != first_text
 
 
 @pytest.mark.asyncio
@@ -168,7 +261,7 @@ async def test_card_browser_card_list_uses_up_down_arrows():
 
 @pytest.mark.asyncio
 async def test_card_browser_tab_cycles_all_panels():
-    """Tab cycles: card list → filter buttons → back button → card list."""
+    """Tab cycles: card list → filter buttons → card list."""
     app = NekomataApp()
     async with app.run_test() as pilot:
         inp = app.screen.query_one("#prompt-input")
@@ -189,18 +282,13 @@ async def test_card_browser_tab_cycles_all_panels():
         assert isinstance(app.screen.focused, Button)
         assert app.screen.focused.id == "filter-all"
 
-        # Tab: last filter → back button (skip through remaining filters)
+        # Tab through remaining filter buttons
         filter_buttons = list(app.screen.query("#filter-bar Button"))
         for _ in range(len(filter_buttons) - 1):
             await pilot.press("tab")
             await pilot.pause()
 
-        # Now on last filter, Tab should go to back button
-        await pilot.press("tab")
-        await pilot.pause()
-        assert app.screen.focused.id == "back"
-
-        # Tab: back button → wrap to first card
+        # Now on last filter, Tab should wrap to first card
         await pilot.press("tab")
         await pilot.pause()
         assert isinstance(app.screen.focused, type(items[0]))

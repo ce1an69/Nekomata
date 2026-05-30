@@ -158,7 +158,6 @@ class StreamHandler:
     def _finish(self) -> None:
         self.stop()
         self.streaming = False
-        self._render_hints(Text(_s()["draw"]["interp_done_hint"], style=C_OVERLAY0))
         if self._on_done:
             self._on_done()
 
