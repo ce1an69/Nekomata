@@ -113,16 +113,22 @@ class CardBrowserScreen(Screen):
     }}
     CardBrowserScreen #card-detail .card-origin-frame {{
         width: 100%;
-        height: auto;
+        height: 26;
         align: center middle;
         background: {C_CRUST};
         border: round {C_SURFACE1};
         padding: 1 1;
+        transition: opacity 160ms out_quint;
     }}
     CardBrowserScreen #card-detail .card-origin {{
-        width: 50%;
-        height: auto;
+        width: auto;
+        height: 100%;
         background: {C_CRUST};
+    }}
+    CardBrowserScreen #detail-text-slot {{
+        width: 100%;
+        height: auto;
+        transition: opacity 160ms out_quint;
     }}
     CardBrowserScreen #card-detail Static {{
         background: {C_MANTLE};
@@ -157,7 +163,9 @@ class CardBrowserScreen(Screen):
             with VerticalScroll(id="card-list"):
                 pass
             with VerticalScroll(id="card-detail"):
-                yield Static(_STR["select_placeholder"], id="detail-placeholder")
+                with Horizontal(id="detail-image-slot", classes="card-origin-frame"):
+                    pass
+                yield Static(_STR["select_placeholder"], id="detail-text-slot")
         yield Static(_STR["hints"], id="hints")
 
     def on_mount(self) -> None:
@@ -306,9 +314,8 @@ class CardBrowserScreen(Screen):
     def _show_placeholder_detail(self) -> None:
         """Reset the detail panel to the placeholder."""
         self._detail_preview_id = None
-        detail = self.query_one("#card-detail")
-        detail.remove_children()
-        detail.mount(Static(_STR["select_placeholder"]))
+        self.query_one("#detail-image-slot").remove_children()
+        self.query_one("#detail-text-slot", Static).update(_STR["select_placeholder"])
 
 
 class CardListItem(Static):
@@ -377,20 +384,26 @@ class CardListItem(Static):
             return
         self.screen._detail_preview_id = preview_id
 
-        detail_panel = self.screen.query_one("#card-detail")
-        detail_panel.remove_children()
+        image_slot = self.screen.query_one("#detail-image-slot")
+        text_slot = self.screen.query_one("#detail-text-slot", Static)
+        if self.app.animation_enabled:
+            image_slot.styles.opacity = 0.35
+            text_slot.styles.opacity = 0.35
+        image_slot.remove_children()
 
         if self.app.render_mode != "text":
             img_widget = create_card_origin_widget(drawn)
             if img_widget is not None:
-                detail_panel.mount(Horizontal(img_widget, classes="card-origin-frame"))
+                image_slot.mount(img_widget)
 
-        text_widget = Static(
+        text_slot.update(
             Panel(
                 _build_detail_text(drawn, self.app.config.lang, orientation_only=True),
                 border_style="none",
                 padding=(0, 0),
             )
         )
-        detail_panel.mount(text_widget)
-        detail_panel.scroll_home(animate=False)
+        if self.app.animation_enabled:
+            image_slot.styles.animate("opacity", 1.0, duration=0.16, easing="out_quint")
+            text_slot.styles.animate("opacity", 1.0, duration=0.16, easing="out_quint")
+        self.screen.query_one("#card-detail").scroll_home(animate=False)

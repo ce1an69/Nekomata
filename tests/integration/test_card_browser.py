@@ -184,12 +184,42 @@ async def test_card_browser_reversal_refreshes_detail():
         items[0].focus()
         await pilot.pause()
 
-        detail = app.screen.query_one("#card-detail")
-        children = tuple(detail.children)
+        detail_text = app.screen.query_one("#detail-text-slot")
+        before = str(detail_text.render())
         await pilot.press("r")
         await pilot.pause()
 
-        assert tuple(detail.children) != children
+        assert str(detail_text.render()) != before
+
+
+@pytest.mark.asyncio
+async def test_card_browser_detail_slots_stay_stable_between_cards():
+    """Switching cards updates slot content without moving detail layout."""
+    app = NekomataApp()
+    async with app.run_test() as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "/browse"
+        await pilot.press("enter")
+        await pilot.pause()
+        items = app.screen.query("CardListItem")
+        items[0].focus()
+        await pilot.pause()
+
+        detail = app.screen.query_one("#card-detail")
+        image_slot = app.screen.query_one("#detail-image-slot")
+        text_slot = app.screen.query_one("#detail-text-slot")
+        detail_children = tuple(detail.children)
+        image_region = image_slot.region
+        text_region = text_slot.region
+        first_text = str(text_slot.render())
+
+        items[1].focus()
+        await pilot.pause()
+
+        assert tuple(detail.children) == detail_children
+        assert image_slot.region == image_region
+        assert text_slot.region == text_region
+        assert str(text_slot.render()) != first_text
 
 
 @pytest.mark.asyncio

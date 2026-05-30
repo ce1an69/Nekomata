@@ -145,6 +145,16 @@ def test_card_browser_detail_reserves_scrollbar_gutter():
     assert "scrollbar-gutter: stable;" in detail_css
 
 
+def test_card_browser_detail_slots_have_stable_layout():
+    css = CardBrowserScreen.DEFAULT_CSS
+
+    image_slot_css = css.split("CardBrowserScreen #card-detail .card-origin-frame {")[1].split("}")[0]
+    image_css = css.split("CardBrowserScreen #card-detail .card-origin {")[1].split("}")[0]
+    assert "height: 26;" in image_slot_css
+    assert "transition: opacity 160ms" in image_slot_css
+    assert "height: 100%;" in image_css
+
+
 def test_draw_detail_panel_docks_to_right_full_height():
     css = DrawScreen.DEFAULT_CSS
 
