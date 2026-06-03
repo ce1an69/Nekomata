@@ -41,6 +41,10 @@ from nekomata.core.i18n import lazy_section
 from nekomata.tui.screens.draw_constants import (
     DECK_CARD_HEIGHT,
     DECK_CARD_WIDTH,
+    SLOT_FLIP_FADE_IN,
+    SLOT_FLIP_FADE_OUT,
+    SLOT_FLIP_GLOW_HOLD,
+    SLOT_FLIP_SWAP_PAUSE,
     SPREAD_SLOT_HEIGHT,
     SPREAD_SLOT_WIDTH,
 )
