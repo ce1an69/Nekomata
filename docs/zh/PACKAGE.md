@@ -2,6 +2,8 @@
 
 从零开始在 macOS / Windows 上构建 Nekomata 桌面应用。
 
+**[English](../en/PACKAGE.md)**
+
 ## 前置条件
 
 | 依赖 | 最低版本 | 说明 |

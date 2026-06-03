@@ -46,6 +46,10 @@ data/
 └── prompts/            # system.md · user_template.md · {spread}.md（每牌阵一个）
 
 assets/cards/           # 78 牌 × 3 变体，按 suit 分目录（major/cups/pentacles/swords/wands）
+
+docs/                   # 项目文档（中英双语）
+├── en/                 # English — INSTALLATION.md · PACKAGE.md
+└── zh/                 # 中文 — INSTALLATION.md · PACKAGE.md
 ```
 
 ## 运行模式

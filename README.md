@@ -1,16 +1,26 @@
 # Nekomata
 
-English | **[中文](README_ZH.md)**
+<p align="center">
+  <img src="gallery/screenshots/home.png" alt="Nekomata TUI screenshot" width="100%">
+</p>
+
+<p align="center">
+  <strong>English</strong> | <a href="README_ZH.md">中文</a>
+</p>
+
+<p align="center">
+  <a href="https://pypi.org/project/nekomata-tarot/"><img alt="PyPI" src="https://img.shields.io/pypi/v/nekomata-tarot?style=flat-square&color=89b4fa"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-cba6f7?style=flat-square"></a>
+  <a href="LICENSE-ASSETS.md"><img alt="Assets" src="https://img.shields.io/badge/assets-CC_BY--NC--SA_4.0-f5c2e7?style=flat-square"></a>
+  <img alt="Python" src="https://img.shields.io/badge/python-3.13%2B-89b4fa?style=flat-square">
+  <img alt="UI" src="https://img.shields.io/badge/ui-TUI_%2F_CLI_%2F_Desktop-a6e3a1?style=flat-square">
+</p>
 
 > "Nekomata" comes from the Japanese mythological two-tailed cat spirit, known for shapeshifting and foresight.
 
 A pixel-art cat tarot divination app in your terminal. All 78 cards feature cat-themed artwork, with AI-powered personalized interpretations.
 
 Supports three modes: **TUI** (default) / **CLI** / **Desktop**.
-
-<p align="center">
-  <img src="gallery/screenshots/home.png" alt="Nekomata TUI screenshot" width="100%">
-</p>
 
 ## Features
 
@@ -22,7 +32,11 @@ Supports three modes: **TUI** (default) / **CLI** / **Desktop**.
 
 ## Installation
 
-Python 3.13+, [uv](https://docs.astral.sh/uv/) recommended:
+```bash
+pip install nekomata-tarot
+```
+
+Or install from source with [uv](https://docs.astral.sh/uv/):
 
 ```bash
 git clone https://github.com/ce1an69/Nekomata.git
@@ -30,13 +44,9 @@ cd Nekomata
 uv sync
 ```
 
-Or install directly:
-
-```bash
-pip install nekomata-tarot
-```
-
 Optional deps: `--extra desktop` (native desktop window) / `--extra dev` (testing, type checking).
+
+See [Installation Guide](docs/en/INSTALLATION.md) for details.
 
 ## Usage
 
@@ -49,24 +59,24 @@ nekomata-tarot --desktop        # native desktop window
 
 ### CLI Arguments
 
-| Argument            | Description                  |
-| ------------------- | ---------------------------- |
-| `--cli` / `-c`      | CLI mode                     |
-| `--desktop`         | Launch Desktop mode          |
-| `-q` / `--question` | Question for reading         |
-| `-s` / `--seed`     | Random seed (reproducible)   |
-| `-S` / `--spread`   | Spread key                   |
-| `-y` / `--yes`      | Skip confirmation            |
+| Argument            | Description                |
+| ------------------- | -------------------------- |
+| `--cli` / `-c`      | CLI mode                   |
+| `--desktop`         | Launch Desktop mode        |
+| `-q` / `--question` | Question for reading       |
+| `-s` / `--seed`     | Random seed (reproducible) |
+| `-S` / `--spread`   | Spread key                 |
+| `-y` / `--yes`      | Skip confirmation          |
 
 ### TUI Terminal Compatibility
 
 TUI mode uses Kitty Graphics Protocol / Sixel for pixel-art card rendering. Experience varies by terminal:
 
-| Experience | Terminals | Notes |
-|-----------|-----------|-------|
-| ✅ Best | **Kitty** · **Ghostty** · **Contour** | Native TGP support, sharpest card rendering |
-| 👍 Good | **WezTerm** · **Konsole** · **foot** | Sixel auto-detected, cards display fine |
-| 📝 Text-only | Other terminals (e.g. Alacritty, iTerm2) | Falls back to text/colored-block cards |
+| Experience   | Terminals                                | Notes                                       |
+| ------------ | ---------------------------------------- | ------------------------------------------- |
+| ✅ Best      | **Kitty** · **Ghostty** · **Contour**    | Native TGP support, sharpest card rendering |
+| 👍 Good      | **WezTerm** · **Konsole** · **foot**     | Sixel auto-detected, cards display fine     |
+| 📝 Text-only | Other terminals (e.g. Alacritty, iTerm2) | Falls back to text/colored-block cards      |
 
 > 💡 Terminal window of at least **160×50** recommended for full layout. Below **80×24**, text-only mode kicks in.
 
@@ -109,6 +119,13 @@ uv run pytest                  # all tests
 uv run pytest --cov=nekomata   # coverage
 ```
 
+## Documentation
+
+| Document             | English                       | 中文                          |
+| -------------------- | ----------------------------- | ----------------------------- |
+| Installation Guide   | [EN](docs/en/INSTALLATION.md) | [ZH](docs/zh/INSTALLATION.md) |
+| Building Desktop App | [EN](docs/en/PACKAGE.md)      | [ZH](docs/zh/PACKAGE.md)      |
+
 ## License
 
 - **Code**: [MIT License](LICENSE)
@@ -116,4 +133,4 @@ uv run pytest --cov=nekomata   # coverage
 
 ## Acknowledgments
 
-[Textual](https://textual.textualize.io/) · [textual-image](https://github.com/sarusso/textual-image) · [FastAPI](https://fastapi.tiangolo.com/) · [Catppuccin](https://github.com/catppuccin/catppuccin) · [PyWebView](https://pywebview.flowrl.com/)
+[Textual](https://textual.textualize.io/) · [textual-image](https://github.com/sarusso/textual-image) · [FastAPI](https://fastapi.tiangolo.com/) · [Catppuccin](https://github.com/catppuccin/catppuccin) · [PyWebView](https://pywebview.flowrl.com/) · [Maple Mono](https://github.com/subframe7536/maple-font)
