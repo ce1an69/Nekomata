@@ -63,30 +63,34 @@ class InterpretationDialog:
             self._prev_detail_visible = detail.visible
             self._prev_main_area_display = main_area.display
             self._prev_status_display = self._w_status.display
+            fullscreen_height = self._fullscreen_height_cells()
             spread_area.display = False
             main_area.display = False
-            self._w_status.display = False
-            self._start_height_fullscreen()
+            self._start_height_fullscreen(fullscreen_height)
         else:
+            current_height = self._w_interp.region.height
+            self._restore_fullscreen_layout(spread_area, detail, main_area)
             self._animate_interp_height(
-                self._w_interp.region.height,
+                current_height,
                 self._panel_height_cells(),
-                on_complete=lambda: self._restore_from_fullscreen(spread_area, detail, main_area),
+                on_complete=self._finish_fullscreen_exit,
             )
 
-    def _start_height_fullscreen(self) -> None:
+    def _start_height_fullscreen(self, height: int) -> None:
         self._w_interp.add_class("fullscreen")
         self._cancel_height_anim()
         self.sync_layout(self._screen._detail.visible, self._screen.size.width)
-        self._w_interp.styles.height = max(
-            INTERP_MIN_HEIGHT,
-            self._screen.size.height - INTERP_FULLSCREEN_VERTICAL_CHROME,
-        )
+        self._w_interp.styles.height = height
 
-    def _restore_from_fullscreen(self, spread_area, detail, main_area) -> None:
-        """Restore spread and detail after fullscreen exit animation."""
-        self._w_interp.remove_class("fullscreen")
-        self._w_interp.styles.height = self._panel_height_cells()
+    def _fullscreen_height_cells(self) -> int:
+        reading_area = self._screen.query_one("#reading-area")
+        height = reading_area.region.height
+        if height <= 0:
+            height = self._screen.size.height - INTERP_FULLSCREEN_VERTICAL_CHROME
+        return max(INTERP_MIN_HEIGHT, height)
+
+    def _restore_fullscreen_layout(self, spread_area, detail, main_area) -> None:
+        """Restore normal flow before shrinking the fullscreen dialog."""
         main_area.display = self._prev_main_area_display
         self._w_status.display = self._prev_status_display
         spread_area.display = True
@@ -100,6 +104,11 @@ class InterpretationDialog:
         else:
             self.sync_layout(detail.visible, self._screen.size.width)
         self.fit_height(main_area, detail.visible)
+
+    def _finish_fullscreen_exit(self) -> None:
+        """Finish returning the interpretation dialog to its normal panel."""
+        self._w_interp.remove_class("fullscreen")
+        self._w_interp.styles.height = self._panel_height_cells()
 
     def _cancel_height_anim(self) -> None:
         for t in self._height_timers:
@@ -199,11 +208,11 @@ class InterpretationDialog:
             self._w_interp.remove_class("visible")
             if was_fullscreen:
                 self._w_interp.remove_class("fullscreen")
-                self._w_interp.styles.height = self._panel_height_cells()
                 self._screen.query_one(
                     "#main-area"
                 ).display = self._prev_main_area_display
                 self._w_status.display = self._prev_status_display
+            self._w_interp.styles.height = self._panel_height_cells()
             if sync_layout:
                 sync_layout()
             if fit_height:

@@ -238,6 +238,18 @@ def test_draw_fullscreen_height_animation_uses_cell_heights():
     assert 'INTERP_PANEL_HEIGHT,' not in source
 
 
+def test_draw_fullscreen_exit_restores_layout_before_height_animation():
+    from nekomata.tui.screens.draw_dialog import InterpretationDialog
+
+    source = inspect.getsource(InterpretationDialog.toggle_fullscreen)
+
+    assert "current_height = self._w_interp.region.height" in source
+    assert source.index("self._restore_fullscreen_layout(") < source.index(
+        "self._animate_interp_height("
+    )
+    assert "on_complete=self._finish_fullscreen_exit" in source
+
+
 def test_draw_hiding_fullscreen_interpretation_restores_layout_after_animation():
     from nekomata.tui.screens.draw_dialog import InterpretationDialog
 
@@ -247,6 +259,16 @@ def test_draw_hiding_fullscreen_interpretation_restores_layout_after_animation()
     assert "def _finish_hide()" in source
     assert "if was_fullscreen:" in source
     assert source.index("if was_fullscreen:") > source.index("def _finish_hide()")
+
+
+def test_draw_hiding_interpretation_animates_down_without_height_collapse():
+    from nekomata.tui.screens.draw_dialog import InterpretationDialog
+
+    source = inspect.getsource(InterpretationDialog.hide)
+
+    assert "ScalarOffset.from_offset(Offset(0, 2))" in source
+    assert "self._screen.set_timer(0.28, _finish_hide)" in source
+    assert "self._animate_interp_height(" not in source
 
 
 def test_draw_hiding_detail_recenters_spread_area():

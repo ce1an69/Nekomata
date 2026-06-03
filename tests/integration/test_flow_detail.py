@@ -296,7 +296,7 @@ async def test_fullscreen_interpretation_keeps_top_visible():
         assert app.screen._dialog.fullscreen
         assert dialog.region.y == divider.region.y + divider.region.height
         assert dialog.region.x - content.x == content.right - dialog.region.right
-        assert dialog.region.y + dialog.region.height < app.screen.size.height
+        assert dialog.region.y + dialog.region.height <= app.screen.size.height
         assert app.screen.max_scroll_y == 0
 
 
@@ -348,6 +348,7 @@ async def test_fullscreen_can_toggle_detail_panel():
         assert preview.has_class("visible")
         assert dialog.region.width < full_width
         assert preview.region.x >= dialog.region.right
+        assert preview.region.y + preview.region.height == dialog.region.y + dialog.region.height
         assert app.screen.max_scroll_y == 0
 
         await pilot.press("d")
@@ -355,6 +356,50 @@ async def test_fullscreen_can_toggle_detail_panel():
 
         assert not app.screen._detail.visible
         assert dialog.region.width == full_width
+
+
+@pytest.mark.asyncio
+async def test_fullscreen_preserves_bottom_alignment_with_detail_panel():
+    """Fullscreen interpretation should grow upward without moving the shared bottom edge."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test(size=(198, 62)) as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "fullscreen bottom alignment"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+
+        from nekomata.tui.screens.draw import DrawScreen
+
+        assert isinstance(app.screen, DrawScreen)
+        if not app.screen._detail.visible:
+            await pilot.press("d")
+            await pilot.pause(0.2)
+        app.screen._dialog.show(
+            sync_layout=app.screen._sync_interp_layout,
+            fit_height=lambda: app.screen._dialog.fit_height(
+                app.screen._w_main_area,
+                app.screen._detail.visible,
+            ),
+        )
+        await pilot.pause(0.2)
+
+        dialog = app.screen.query_one("#interp-dialog")
+        preview = app.screen.query_one("#card-preview")
+        bottom = dialog.region.y + dialog.region.height
+        assert bottom == preview.region.y + preview.region.height
+
+        await pilot.press("h")
+        await pilot.pause(0.2)
+
+        assert dialog.region.y + dialog.region.height == bottom
+        assert preview.region.y + preview.region.height == bottom
 
 
 @pytest.mark.asyncio
