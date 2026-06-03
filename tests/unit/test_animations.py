@@ -5,21 +5,20 @@ from textual.css.query import NoMatches
 
 from nekomata.tui.app import NekomataApp
 from nekomata.core.card.types import Arcana, Card, DrawnCard, Position
-from nekomata.tui.screens.draw_widgets import (
+from nekomata.tui.screens.draw_constants import (
     DECK_HIDE_DELAY,
-    PICK_COMPLETE_DELAY,
-    DeckCard,
     NUM_DECK_CARDS,
-    SPREAD_SLOT_HEIGHT,
-    SPREAD_SLOT_WIDTH,
+    PICK_COMPLETE_DELAY,
     SLOT_FLIP_FADE_IN,
     SLOT_FLIP_FADE_OUT,
     SLOT_FLIP_GLOW_HOLD,
     SLOT_FLIP_SWAP_PAUSE,
     SPREAD_RECENTER_DURATION,
     SPREAD_RECENTER_OFFSET,
-    SpreadSlot,
+    SPREAD_SLOT_HEIGHT,
+    SPREAD_SLOT_WIDTH,
 )
+from nekomata.tui.screens.draw_widgets import DeckCard, SpreadSlot
 
 
 def _make_drawn_card() -> DrawnCard:

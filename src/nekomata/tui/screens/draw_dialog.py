@@ -6,21 +6,13 @@ from textual.css.scalar import ScalarOffset
 from textual.geometry import Offset
 
 from nekomata.core.render.styles import C_RED, EASE
+from nekomata.tui.screens.draw_constants import (
+    INTERP_FULLSCREEN_VERTICAL_CHROME,
+    INTERP_MAX_HEIGHT,
+    INTERP_MIN_HEIGHT,
+    INTERP_PANEL_HEIGHT_RATIO,
+)
 from nekomata.tui.screens.stream_handler import StreamHandler
-
-# Layout constants
-INTERP_PANEL_HEIGHT = "46%"  # CSS-only; runtime code uses _panel_height_cells()
-INTERP_PANEL_HEIGHT_RATIO = 0.46
-INTERP_MIN_HEIGHT = 14
-INTERP_MAX_HEIGHT = 30
-INTERP_SIDE_MARGIN = 1
-INTERP_DETAIL_GAP = 0
-INTERP_FULL_SIDE_MARGIN = 5
-INTERP_FULL_WIDTH_CORRECTION = 4
-INTERP_FULLSCREEN_VERTICAL_CHROME = 5
-INTERP_FULLSCREEN_SIDE_MARGIN = 1
-DETAIL_PANEL_WIDTH = 66
-FOLLOWUP_BOTTOM_MARGIN = 5
 
 
 class InterpretationDialog:

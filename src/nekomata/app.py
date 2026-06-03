@@ -10,6 +10,9 @@ def main() -> None:
         "--desktop", action="store_true", help="Launch Desktop mode"
     )
     parser.add_argument(
+        "--debug", action="store_true", help="Enable debug mode (desktop only)"
+    )
+    parser.add_argument(
         "-q", "--question", type=str, default="", help="Your question for the reading"
     )
     parser.add_argument(
@@ -31,7 +34,7 @@ def main() -> None:
     elif args.desktop:
         from nekomata.desktop import main as desktop_main
 
-        desktop_main()
+        desktop_main(debug=args.debug)
     else:
         from nekomata.tui.app import NekomataApp
 

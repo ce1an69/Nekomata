@@ -61,12 +61,9 @@ nekomata = [
 
 [tool.pyright]
 pythonVersion = "3.13"
-typeCheckingMode = "basic"
+typeCheckingMode = "standard"
 include = ["src"]
 reportMissingImports = "none"
 reportOptionalMemberAccess = "none"
 reportAttributeAccessIssue = "none"
 reportArgumentType = "none"
-reportUnknownMemberType = "none"
-reportUnknownVariableType = "none"
-reportUnknownArgumentType = "none"

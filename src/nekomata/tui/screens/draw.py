@@ -24,18 +24,14 @@ from nekomata.core.i18n import ORNAMENT, lazy_section
 from nekomata.core.render.card_renderer import clear_cache
 from nekomata.core.render.styles import C_MAUVE, C_SUBTEXT0, EASE
 from nekomata.tui.screens.box_manager import BoxManager
+from nekomata.tui.screens.draw_constants import DECK_ROW_COUNT, NUM_DECK_CARDS
 from nekomata.tui.screens.draw_css import DRAW_SCREEN_CSS
 from nekomata.tui.screens.draw_deck_anim import DeckAnimMixin
 from nekomata.tui.screens.draw_detail import DetailPanel
 from nekomata.tui.screens.draw_dialog import InterpretationDialog
 from nekomata.tui.screens.draw_interpret import InterpretMixin
 from nekomata.tui.screens.draw_pick import PickMixin
-from nekomata.tui.screens.draw_widgets import (
-    DECK_ROW_COUNT,
-    NUM_DECK_CARDS,
-    DeckCard,
-    SpreadSlot,
-)
+from nekomata.tui.screens.draw_widgets import DeckCard, SpreadSlot
 from nekomata.tui.screens.stream_handler import StreamHandler
 from nekomata.core.spread import get_spread
 
@@ -53,8 +49,6 @@ class Phase(Enum):
 
 class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
     """Card drawing screen: pick from deck -> flip to reveal -> detail + interpret."""
-
-    allow_select = False
 
     BINDINGS = [
         Binding("escape", "handle_back", "Back"),

@@ -1,6 +1,5 @@
 """PyWebView desktop entry point — opens a native window for the Web UI."""
 
-import argparse
 import queue
 import socket
 import threading
@@ -9,14 +8,7 @@ import urllib.request
 
 import webview
 
-from nekomata.web.server import create_app
-
-
-def find_free_port() -> int:
-    """Find an available port on localhost."""
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
+from nekomata.web.server import create_app, find_free_port
 
 
 def _wait_for_server(
@@ -54,14 +46,8 @@ def _run_server(
     uvicorn.run(app, host=host, port=port, log_level=log_level, log_config=None)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(prog="nekomata-tarot --desktop")
-    parser.add_argument(
-        "--debug", action="store_true", help="Enable debug mode with logs and devtools"
-    )
-    args = parser.parse_args()
-
-    debug = args.debug
+def main(*, debug: bool = False) -> None:
+    """Launch the desktop app. *debug* enables verbose logs and webview devtools."""
     if debug:
         print("[debug] starting Nekomata desktop...")
 
@@ -99,4 +85,11 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    parser = argparse.ArgumentParser(prog="nekomata-tarot --desktop")
+    parser.add_argument(
+        "--debug", action="store_true", help="Enable debug mode with logs and devtools"
+    )
+    args = parser.parse_args()
+    main(debug=args.debug)

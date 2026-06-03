@@ -158,7 +158,7 @@ def create_card_detail_widget(drawn: DrawnCard, *, upright_image: bool = False):
     return TUIImage(img, classes="card-detail")
 
 
-def _build_detail_text(drawn: DrawnCard, lang: str = "en", *, orientation_only: bool = False) -> Text:
+def build_detail_text(drawn: DrawnCard, lang: str = "en", *, orientation_only: bool = False) -> Text:
     """Build the rich Text content for a card's full detail view.
 
     Args:
@@ -206,7 +206,7 @@ def render_card_full_detail_widgets(
         return None
 
     text_panel = Panel(
-        _build_detail_text(drawn, lang, orientation_only=orientation_only),
+        build_detail_text(drawn, lang, orientation_only=orientation_only),
         border_style="none",
         padding=(0, 0),
     )
@@ -245,7 +245,7 @@ def render_card_detail(drawn: DrawnCard, width: int = 60, lang: str = "en") -> P
     border_style = theme.reversed_border if drawn.is_reversed else theme.upright_border
 
     return Panel(
-        _build_detail_text(drawn, lang),
+        build_detail_text(drawn, lang),
         title=card_name(drawn.card, lang),
         border_style=border_style,
         width=width,

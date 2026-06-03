@@ -2,6 +2,7 @@
 
 from textual.css.query import NoMatches
 
+from nekomata.tui.screens.draw_constants import DECK_ROW_COUNT, NUM_DECK_CARDS
 from nekomata.tui.screens.draw_widgets import DeckCard, SpreadSlot
 
 _BOX_SELECTORS = {
@@ -79,7 +80,6 @@ class BoxManager:
         from nekomata.tui.screens.draw import Phase
 
         if phase == Phase.PICK:
-            from nekomata.tui.screens.draw_widgets import DECK_ROW_COUNT, NUM_DECK_CARDS
             widgets = list(self._screen.query(DeckCard))
             row_width = NUM_DECK_CARDS // DECK_ROW_COUNT
         elif phase == Phase.FLIP:

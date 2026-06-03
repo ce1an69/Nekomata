@@ -3,8 +3,6 @@
 import asyncio
 import json
 import logging
-import threading
-import webbrowser
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse
@@ -387,25 +385,10 @@ def create_app() -> FastAPI:
     return app
 
 
-def _find_available_port(start: int = 8080, host: str = "127.0.0.1") -> int:
-    """Return the first available port starting from *start*."""
+def find_free_port(host: str = "127.0.0.1") -> int:
+    """Return an OS-assigned available port on *host*."""
     import socket
 
-    for port in range(start, start + 100):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            if sock.connect_ex((host, port)) != 0:
-                return port
-    raise RuntimeError(f"No available port found in range {start}-{start + 99}")
-
-
-def start_web_server(port: int = 8080) -> None:
-    import uvicorn
-
-    actual_port = _find_available_port(port)
-    app = create_app()
-    url = f"http://localhost:{actual_port}"
-    if actual_port != port:
-        print(f"  Port {port} is in use, using {actual_port} instead.")
-    print(f"\n  Nekomata Web UI: {url}\n")
-    threading.Timer(0.5, lambda: webbrowser.open(url)).start()
-    uvicorn.run(app, host="127.0.0.1", port=actual_port, log_level="warning")
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind((host, 0))
+        return s.getsockname()[1]

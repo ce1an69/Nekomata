@@ -10,13 +10,12 @@ from textual.geometry import Offset
 
 from nekomata.core.render.card_renderer import preload_all_async, preload_card_image_async
 from nekomata.core.render.styles import EASE, EASE_SPRING
-from nekomata.tui.screens.draw_widgets import (
+from nekomata.tui.screens.draw_constants import (
     PICK_COMPLETE_DELAY,
     SPREAD_SLOT_ENTRANCE_FADE,
     SPREAD_SLOT_ENTRANCE_STAGGER,
-    DeckCard,
-    SpreadSlot,
 )
+from nekomata.tui.screens.draw_widgets import DeckCard, SpreadSlot
 
 log = logging.getLogger(__name__)
 

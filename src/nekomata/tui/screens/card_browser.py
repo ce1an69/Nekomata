@@ -12,7 +12,7 @@ from nekomata.core.card.types import ROMAN, Arcana, Card, DrawnCard, Position
 from nekomata.core.i18n import arcana_label, lazy_section, ui_section
 from nekomata.tui.render.animations import animate_entrance
 from nekomata.core.render.card_renderer import (
-    _build_detail_text,
+    build_detail_text,
     create_card_detail_widget,
 )
 from nekomata.core.render.styles import (
@@ -398,7 +398,7 @@ class CardListItem(Static):
 
         text_slot.update(
             Panel(
-                _build_detail_text(drawn, self.app.config.lang, orientation_only=True),
+                build_detail_text(drawn, self.app.config.lang, orientation_only=True),
                 border_style="none",
                 padding=(0, 0),
             )

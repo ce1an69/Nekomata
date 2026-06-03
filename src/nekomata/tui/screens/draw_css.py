@@ -5,7 +5,7 @@ from nekomata.core.render.styles import (
     C_PINK, C_SUBTEXT0, C_SURFACE0, C_SURFACE1, C_SURFACE2, C_TEXT,
     EASE_OUT, EASE_SPRING,
 )
-from nekomata.tui.screens.draw_dialog import DETAIL_PANEL_WIDTH, INTERP_PANEL_HEIGHT, INTERP_MIN_HEIGHT, INTERP_MAX_HEIGHT
+from nekomata.tui.screens.draw_constants import DETAIL_PANEL_WIDTH, INTERP_PANEL_HEIGHT, INTERP_MIN_HEIGHT, INTERP_MAX_HEIGHT
 
 DRAW_SCREEN_CSS = f"""
 DrawScreen {{

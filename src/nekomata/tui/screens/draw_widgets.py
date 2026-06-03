@@ -38,32 +38,14 @@ from nekomata.core.render.styles import (
     EASE_OUT,
 )
 from nekomata.core.i18n import lazy_section
+from nekomata.tui.screens.draw_constants import (
+    DECK_CARD_HEIGHT,
+    DECK_CARD_WIDTH,
+    SPREAD_SLOT_HEIGHT,
+    SPREAD_SLOT_WIDTH,
+)
 
 _STR = lazy_section("draw")
-
-# Deck layout constants
-NUM_DECK_CARDS = 48
-DECK_ROW_COUNT = 4
-DECK_CARD_WIDTH = 9
-DECK_CARD_HEIGHT = 7
-SPREAD_SLOT_WIDTH = 16
-SPREAD_SLOT_HEIGHT = 12
-
-# Animation timing constants
-DECK_HIDE_DELAY = 0.42
-PICK_COMPLETE_DELAY = 0.0
-SPREAD_RECENTER_OFFSET = 4
-SPREAD_RECENTER_DURATION = 0.28
-SLOT_PLACE_OFFSET = 2
-SLOT_PLACE_DURATION = 0.22
-SLOT_FLIP_FADE_OUT = 0.14
-SLOT_FLIP_SWAP_PAUSE = 0.02
-SLOT_FLIP_FADE_IN = 0.28
-SLOT_FLIP_GLOW_HOLD = 0.16
-DECK_ENTRANCE_STAGGER = 0.015
-DECK_ENTRANCE_FADE = 0.28
-SPREAD_SLOT_ENTRANCE_STAGGER = 0.07
-SPREAD_SLOT_ENTRANCE_FADE = 0.28
 
 
 class ConfirmExitInterpretation(ModalScreen[bool]):
