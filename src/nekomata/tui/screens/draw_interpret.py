@@ -16,16 +16,16 @@ from textual.events import Key
 from textual.geometry import Offset
 from textual.widgets import Input
 
-from nekomata.card.display import card_keywords as _card_keywords
-from nekomata.card.display import card_name as _card_name
-from nekomata.card.display import status_label as _status_label
-from nekomata.clipboard import copy_image as _copy_image_to_clipboard
-from nekomata.clipboard import copy_text as _copy_text_to_clipboard
-from nekomata.i18n import lazy_section
-from nekomata.render.image_export import render_interp_image, save_image as _save_tmp_image
-from nekomata.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_TEXT, EASE, EASE_SPRING
-from nekomata.screens.draw_widgets import ConfirmExitInterpretation, SpreadSlot
-from nekomata.screens.widgets import go_home
+from nekomata.core.card.display import card_keywords as _card_keywords
+from nekomata.core.card.display import card_name as _card_name
+from nekomata.core.card.display import status_label as _status_label
+from nekomata.core.clipboard import copy_image as _copy_image_to_clipboard
+from nekomata.core.clipboard import copy_text as _copy_text_to_clipboard
+from nekomata.core.i18n import lazy_section
+from nekomata.core.render.image_export import render_interp_image, save_image as _save_tmp_image
+from nekomata.core.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_TEXT, EASE, EASE_SPRING
+from nekomata.tui.screens.draw_widgets import ConfirmExitInterpretation, SpreadSlot
+from nekomata.tui.screens.widgets import go_home
 
 _STR = lazy_section("draw")
 
@@ -87,7 +87,7 @@ class InterpretMixin:
             ),
         )
         if config_error:
-            from nekomata.screens.setup import SetupScreen
+            from nekomata.tui.screens.setup import SetupScreen
 
             app = self.app
             go_home(self)
@@ -133,7 +133,7 @@ class InterpretMixin:
             self._w_interp_hints.update("")
 
     def _sync_interp_hints(self) -> None:
-        from nekomata.screens.draw import Phase
+        from nekomata.tui.screens.draw import Phase
 
         if self._dialog.is_streaming:
             pass
@@ -144,7 +144,7 @@ class InterpretMixin:
             self._update_footer_fullscreen()
 
     def _available_boxes(self) -> list[str]:
-        from nekomata.screens.draw import Phase
+        from nekomata.tui.screens.draw import Phase
 
         if self._phase == Phase.PICK:
             return ["deck"]
@@ -188,8 +188,8 @@ class InterpretMixin:
         )
 
     def _update_phase_ui(self) -> None:
-        from nekomata.screens.draw import Phase
-        from nekomata.render.styles import C_LAVENDER
+        from nekomata.tui.screens.draw import Phase
+        from nekomata.core.render.styles import C_LAVENDER
 
         lbl = f"bold {C_LAVENDER}"
         if self._phase == Phase.PICK:
@@ -232,7 +232,7 @@ class InterpretMixin:
     # -- Flip phase --
 
     async def on_spread_slot_flipped(self, event: SpreadSlot.Flipped) -> None:
-        from nekomata.screens.draw import Phase
+        from nekomata.tui.screens.draw import Phase
 
         if self._phase != Phase.FLIP:
             return
@@ -265,7 +265,7 @@ class InterpretMixin:
                 unrevealed[0].focus()
 
     async def on_spread_slot_selected(self, event: SpreadSlot.Selected) -> None:
-        from nekomata.screens.draw import Phase
+        from nekomata.tui.screens.draw import Phase
 
         if self._phase != Phase.DONE:
             return
@@ -290,7 +290,7 @@ class InterpretMixin:
     # -- Detail toggle --
 
     def action_toggle_detail(self) -> None:
-        from nekomata.screens.draw import Phase
+        from nekomata.tui.screens.draw import Phase
 
         if self._phase != Phase.DONE:
             return
@@ -326,7 +326,7 @@ class InterpretMixin:
     # -- Follow-up --
 
     def key_f(self, event: Key) -> None:
-        from nekomata.screens.draw import Phase
+        from nekomata.tui.screens.draw import Phase
 
         if self._phase != Phase.DONE:
             return
@@ -438,7 +438,7 @@ class InterpretMixin:
     # -- Fullscreen / Copy / Export --
 
     def key_h(self, event: Key) -> None:
-        from nekomata.screens.draw import Phase
+        from nekomata.tui.screens.draw import Phase
 
         if self._phase != Phase.DONE or not self._dialog.is_visible:
             return
@@ -448,7 +448,7 @@ class InterpretMixin:
         self._update_footer_fullscreen()
 
     def key_c(self, event: Key) -> None:
-        from nekomata.screens.draw import Phase
+        from nekomata.tui.screens.draw import Phase
 
         if (
             self._phase != Phase.DONE
@@ -469,7 +469,7 @@ class InterpretMixin:
             self.set_timer(2.0, self._update_footer_fullscreen)
 
     def key_e(self, event: Key) -> None:
-        from nekomata.screens.draw import Phase
+        from nekomata.tui.screens.draw import Phase
 
         if (
             self._phase != Phase.DONE
@@ -508,7 +508,7 @@ class InterpretMixin:
     # -- Interpretation / back actions --
 
     def action_interpret(self) -> None:
-        from nekomata.screens.draw import Phase
+        from nekomata.tui.screens.draw import Phase
 
         if self._phase == Phase.DONE and not self._dialog.is_streaming:
             self._cancelled = False

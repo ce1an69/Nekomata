@@ -8,13 +8,13 @@ import threading
 from rich.console import Console
 from rich.table import Table
 
-from nekomata.ai.interpreter import InterpretationError, get_interpreter
-from nekomata.card.display import card_keywords, status_label as _status_label
-from nekomata.card.deck import Deck
-from nekomata.card.types import DrawnCard
-from nekomata.i18n import set_lang, ui_strings
-from nekomata.spread import SPREAD_REGISTRY, get_spread
-from nekomata.storage.config import AppConfig
+from nekomata.core.ai.interpreter import InterpretationError, get_interpreter
+from nekomata.core.card.display import card_keywords, status_label as _status_label
+from nekomata.core.card.deck import Deck
+from nekomata.core.card.types import DrawnCard
+from nekomata.core.i18n import set_lang, ui_strings
+from nekomata.core.spread import SPREAD_REGISTRY, get_spread
+from nekomata.core.storage.config import AppConfig
 
 console = Console()
 
@@ -166,7 +166,7 @@ def run_cli(args: argparse.Namespace) -> None:
     if not config.api_key or not config.api_url:
         console.print("[red]Error:[/red] API not configured.")
         console.print(
-            "[dim]Run the TUI first (just `nekomata`) to set up your API key,"
+            "[dim]Run the TUI first (just `nekomata-tarot`) to set up your API key,"
         )
         console.print("[dim]or edit .neko/settings.json manually.[/dim]")
         return

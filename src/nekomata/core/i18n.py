@@ -3,7 +3,7 @@
 import json
 import logging
 
-from nekomata._paths import data_dir
+from nekomata.core._paths import data_dir
 
 log = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/brand/nekomata-logo.png" alt="Nekomata pixel-art logo" width="100%">
+  <img src="gallery/brand/nekomata-logo.png" alt="Nekomata pixel-art logo" width="100%">
 </p>
 
 <h1 align="center">塔罗猫 · Nekomata</h1>
@@ -21,7 +21,7 @@
 塔罗猫把 78 张塔罗牌全部画成猫咪主题像素牌面，并用 AI 做个性化解牌。它可以是一只住在终端里的占卜猫，也可以切换成 CLI 或桌面窗口。
 
 <p align="center">
-  <img src="assets/screenshots/home.png" alt="Nekomata TUI screenshot" width="100%">
+  <img src="gallery/screenshots/home.png" alt="Nekomata TUI screenshot" width="100%">
 </p>
 
 ## 功能一览
@@ -134,8 +134,8 @@ src/nekomata/
 ├── tui/           TUI 模式（app / screens / animations）
 ├── web/           Web 服务器（Desktop 模式内部使用）
 ├── data/          牌义 YAML、i18n JSON、prompt 模板
-└── assets/        牌面、字体、图标
-assets/            README 品牌图与截图
+└── assets/        运行时资源（牌面、字体、图标）
+gallery/           非运行时资源（牌面原图、截图、品牌图）
 tests/             pytest 单元 + 集成测试
 scripts/           构建脚本
 ```

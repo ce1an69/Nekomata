@@ -8,10 +8,10 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Generator, Protocol, runtime_checkable
 
-from nekomata.card.types import DrawnCard
-from nekomata.card.display import card_keywords, card_meaning, card_name, status_label as _status_label
-from nekomata.ai.prompts import build_user_prompt, load_spread_prompt, load_system_prompt
-from nekomata.storage.config import AppConfig
+from nekomata.core.card.types import DrawnCard
+from nekomata.core.card.display import card_keywords, card_meaning, card_name, status_label as _status_label
+from nekomata.core.ai.prompts import build_user_prompt, load_spread_prompt, load_system_prompt
+from nekomata.core.storage.config import AppConfig
 
 log = logging.getLogger(__name__)
 

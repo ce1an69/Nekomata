@@ -5,13 +5,13 @@ from pathlib import Path
 
 import yaml
 
-from nekomata._paths import assets_dir, data_dir
-from nekomata.card.types import Arcana, Card
+from nekomata.core._paths import assets_dir, data_dir
+from nekomata.core.card.types import Arcana, Card
 
 
 def _resolve_image_path(card_id: str, arcana: Arcana) -> Path | None:
-    """Check if a card PNG exists in assets/cards/{arcana}/{id}.png."""
-    png_path = assets_dir() / "cards" / arcana.value / f"{card_id}.png"
+    """Check if a card detail PNG exists in assets/cards/{arcana}/{card_id}_detail.png."""
+    png_path = assets_dir() / "cards" / arcana.value / f"{card_id}_detail.png"
     return png_path if png_path.exists() else None
 
 

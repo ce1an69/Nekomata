@@ -1,11 +1,11 @@
 """TCSS stylesheet for the draw screen (extracted for readability)."""
 
-from nekomata.render.styles import (
+from nekomata.core.render.styles import (
     C_CRUST, C_LAVENDER, C_MANTLE, C_MAUVE, C_OVERLAY0,
     C_PINK, C_SUBTEXT0, C_SURFACE0, C_SURFACE1, C_SURFACE2, C_TEXT,
     EASE_OUT, EASE_SPRING,
 )
-from nekomata.screens.draw_dialog import DETAIL_PANEL_WIDTH, INTERP_PANEL_HEIGHT, INTERP_MIN_HEIGHT, INTERP_MAX_HEIGHT
+from nekomata.tui.screens.draw_dialog import DETAIL_PANEL_WIDTH, INTERP_PANEL_HEIGHT, INTERP_MIN_HEIGHT, INTERP_MAX_HEIGHT
 
 DRAW_SCREEN_CSS = f"""
 DrawScreen {{
@@ -131,7 +131,7 @@ DrawScreen {{
 #card-preview.box-active {{
     border: round {C_MAUVE};
 }}
-#card-preview .card-origin-frame {{
+#card-preview .card-detail-frame {{
     width: 100%;
     height: auto;
     align: center middle;
@@ -139,7 +139,7 @@ DrawScreen {{
     border: round {C_LAVENDER};
     padding: 1 1;
 }}
-#card-preview .card-origin {{
+#card-preview .card-detail {{
     width: 50%;
     height: auto;
     background: {C_CRUST};

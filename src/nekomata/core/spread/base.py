@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from nekomata.card.types import DrawnCard, Position
+from nekomata.core.card.types import DrawnCard, Position
 
 if TYPE_CHECKING:
-    from nekomata.card.deck import Deck
+    from nekomata.core.card.deck import Deck
 
 
 class Spread:

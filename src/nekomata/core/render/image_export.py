@@ -11,10 +11,9 @@ from typing import TYPE_CHECKING
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from nekomata._paths import assets_dir
-from nekomata.card.display import card_name as _card_name, status_label as _status_label
-from nekomata.render.card_renderer import get_origin_path, get_preview_path
-from nekomata.render.styles import (
+from nekomata.core._paths import assets_dir
+from nekomata.core.card.display import card_name as _card_name, status_label as _status_label
+from nekomata.core.render.styles import (
     C_LAVENDER,
     C_MANTLE,
     C_MAUVE,
@@ -25,7 +24,7 @@ from nekomata.render.styles import (
 )
 
 if TYPE_CHECKING:
-    from nekomata.card.types import DrawnCard
+    from nekomata.core.card.types import DrawnCard
 
 
 def _hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
@@ -396,7 +395,7 @@ def _draw_blocks(draw: ImageDraw.ImageDraw, blocks: list[_Block], x: int, y: int
 
 
 def _card_image_path(drawn: DrawnCard):
-    return get_preview_path(drawn.card) or get_origin_path(drawn.card) or drawn.card.image_path
+    return drawn.card.image_path
 
 
 def _load_card_image(drawn: DrawnCard) -> Image.Image | None:

@@ -4,8 +4,8 @@ from textual.css.scalar import ScalarOffset
 from textual.geometry import Offset
 from textual.widgets import Static
 
-from nekomata.render.card_renderer import render_card_detail, render_card_full_detail_widgets
-from nekomata.render.styles import EASE
+from nekomata.core.render.card_renderer import render_card_detail, render_card_full_detail_widgets
+from nekomata.core.render.styles import EASE
 
 
 class DetailPanel:
@@ -117,7 +117,7 @@ class DetailPanel:
             if result is not None:
                 from textual.containers import Horizontal
                 img_widget, text_panel = result
-                self._w_preview.mount(Horizontal(img_widget, classes="card-origin-frame"))
+                self._w_preview.mount(Horizontal(img_widget, classes="card-detail-frame"))
                 self._w_preview.mount(Static(text_panel))
                 return
 

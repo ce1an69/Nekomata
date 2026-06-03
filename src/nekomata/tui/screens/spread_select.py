@@ -6,8 +6,8 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import Static
 
-from nekomata.render.animations import animate_entrance
-from nekomata.render.styles import (
+from nekomata.tui.render.animations import animate_entrance
+from nekomata.core.render.styles import (
     C_BASE,
     C_CRUST,
     C_MANTLE,
@@ -17,9 +17,9 @@ from nekomata.render.styles import (
     C_SURFACE0,
     C_TEXT,
 )
-from nekomata.i18n import lazy_section
-from nekomata.screens.solid_static import SolidStatic
-from nekomata.spread import SPREAD_REGISTRY, get_spread
+from nekomata.core.i18n import lazy_section
+from nekomata.tui.screens.solid_static import SolidStatic
+from nekomata.core.spread import SPREAD_REGISTRY, get_spread
 
 _STR = lazy_section("spread_select")
 
@@ -225,7 +225,7 @@ class SpreadSelectScreen(Screen):
     def action_go_back(self) -> None:
         """Escape key binding — return to home and refocus input."""
         self.app.pop_screen()
-        from nekomata.screens.home import HomeScreen
+        from nekomata.tui.screens.home import HomeScreen
 
         if isinstance(self.app.screen, HomeScreen):
             self.app.screen.resume()

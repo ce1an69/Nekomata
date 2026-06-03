@@ -8,7 +8,7 @@ class TestDevMode:
     """Path resolution in normal (non-frozen) development mode."""
 
     def test_base_dir_resolves_to_package_dir(self):
-        from nekomata._paths import base_dir
+        from nekomata.core._paths import base_dir
 
         result = base_dir()
         # base_dir() returns the nekomata package directory (src/nekomata/)
@@ -16,19 +16,19 @@ class TestDevMode:
         assert (result / "data" / "card_meanings.yaml").exists()
 
     def test_data_dir(self):
-        from nekomata._paths import data_dir
+        from nekomata.core._paths import data_dir
 
         assert data_dir().name == "data"
         assert (data_dir() / "card_meanings.yaml").exists()
 
     def test_assets_dir(self):
-        from nekomata._paths import assets_dir
+        from nekomata.core._paths import assets_dir
 
         assert assets_dir().name == "assets"
         assert (assets_dir() / "cards").is_dir()
 
     def test_static_dir(self):
-        from nekomata._paths import static_dir
+        from nekomata.core._paths import static_dir
 
         assert static_dir().name == "static"
         assert (static_dir() / "index.html").exists()
@@ -38,7 +38,7 @@ class TestFrozenMode:
     """Path resolution in PyInstaller frozen mode."""
 
     def test_frozen_uses_meipass(self, tmp_path):
-        from nekomata import _paths
+        from nekomata.core import _paths
 
         fake_root = tmp_path / "frozen_root"
         fake_root.mkdir()
@@ -56,7 +56,7 @@ class TestFrozenMode:
             assert _paths.static_dir() == fake_root / "static"
 
     def test_not_frozen_ignores_meipass(self):
-        from nekomata import _paths
+        from nekomata.core import _paths
 
         with patch.object(sys, "frozen", False, create=True):
             result = _paths.base_dir()

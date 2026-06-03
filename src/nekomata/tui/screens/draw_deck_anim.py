@@ -5,8 +5,8 @@ from __future__ import annotations
 from textual.css.scalar import ScalarOffset
 from textual.geometry import Offset
 
-from nekomata.render.styles import EASE
-from nekomata.screens.draw_widgets import (
+from nekomata.core.render.styles import EASE
+from nekomata.tui.screens.draw_widgets import (
     DECK_ENTRANCE_FADE,
     DECK_ENTRANCE_STAGGER,
     DECK_HIDE_DELAY,
@@ -22,7 +22,7 @@ class DeckAnimMixin:
         self._animate_spread_recenter()
 
     def _animate_spread_recenter(self) -> None:
-        from nekomata.screens.draw_widgets import SPREAD_RECENTER_DURATION, SPREAD_RECENTER_OFFSET
+        from nekomata.tui.screens.draw_widgets import SPREAD_RECENTER_DURATION, SPREAD_RECENTER_OFFSET
 
         self._w_main_area.styles.offset = (0, SPREAD_RECENTER_OFFSET)
         if not self.app.animation_enabled:
@@ -78,7 +78,7 @@ class DeckAnimMixin:
         )
 
     def _enable_deck_selection(self) -> None:
-        from nekomata.screens.draw import Phase
+        from nekomata.tui.screens.draw import Phase
 
         self._dealing = False
         if self._phase != Phase.PICK:

@@ -2,8 +2,8 @@ import random
 
 import pytest
 
-from nekomata.card.deck import Deck
-from nekomata.card.types import Arcana, Card
+from nekomata.core.card.deck import Deck
+from nekomata.core.card.types import Arcana, Card
 
 
 def make_test_cards(n: int = 5) -> list[Card]:

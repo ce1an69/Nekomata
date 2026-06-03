@@ -3,7 +3,7 @@
 Pure functions with an explicit ``lang`` parameter — no global i18n state.
 """
 
-from nekomata.card.types import Card
+from nekomata.core.card.types import Card
 
 
 def card_name(card: Card, lang: str) -> str:
@@ -28,7 +28,7 @@ def card_meaning(card: Card, reversed: bool, lang: str) -> str:
 
 def status_label(is_reversed: bool, lang: str) -> str:
     if lang != "en":
-        from nekomata.i18n import ui_section
+        from nekomata.core.i18n import ui_section
 
         cd = ui_section("card_detail", lang)
         return cd.get(

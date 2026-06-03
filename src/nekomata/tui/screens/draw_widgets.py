@@ -17,11 +17,11 @@ from textual.screen import ModalScreen
 from textual.widget import Widget
 from textual.widgets import Static
 
-from nekomata.card.display import status_label as _status_label
-from nekomata.card.types import DrawnCard
-from nekomata.render.animations import animate_entrance
-from nekomata.render.card_renderer import create_card_face_widget
-from nekomata.render.styles import (
+from nekomata.core.card.display import status_label as _status_label
+from nekomata.core.card.types import DrawnCard
+from nekomata.tui.render.animations import animate_entrance
+from nekomata.core.render.card_renderer import create_card_face_widget
+from nekomata.core.render.styles import (
     C_CRUST,
     C_LAVENDER,
     C_MANTLE,
@@ -37,7 +37,7 @@ from nekomata.render.styles import (
     EASE_SPRING,
     EASE_OUT,
 )
-from nekomata.i18n import lazy_section
+from nekomata.core.i18n import lazy_section
 
 _STR = lazy_section("draw")
 

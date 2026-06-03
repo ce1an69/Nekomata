@@ -11,12 +11,12 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
-from nekomata.ai.interpreter import InterpretationError, build_messages, get_interpreter
-from nekomata.ai.prompts import build_followup_prompt
-from nekomata.card.data import load_all_cards
-from nekomata.card.types import Card, DrawnCard, Position
-from nekomata.i18n import SUPPORTED_LANGS, arcana_label, ui_strings
-from nekomata.render.styles import (
+from nekomata.core.ai.interpreter import InterpretationError, build_messages, get_interpreter
+from nekomata.core.ai.prompts import build_followup_prompt
+from nekomata.core.card.data import load_all_cards
+from nekomata.core.card.types import Card, DrawnCard, Position
+from nekomata.core.i18n import SUPPORTED_LANGS, arcana_label, ui_strings
+from nekomata.core.render.styles import (
     C_BASE,
     C_CRUST,
     C_LAVENDER,
@@ -32,9 +32,9 @@ from nekomata.render.styles import (
     C_SURFACE2,
     C_TEXT,
 )
-from nekomata._paths import assets_dir, static_dir
-from nekomata.spread import SPREAD_REGISTRY
-from nekomata.storage.config import AppConfig
+from nekomata.core._paths import assets_dir, static_dir
+from nekomata.core.spread import SPREAD_REGISTRY
+from nekomata.core.storage.config import AppConfig
 
 log = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ async def _sse_error(message: str, config_error: bool = False):
     yield f"data: {json.dumps({'error': message, 'config_error': config_error})}\n\n"
 
 
-def _card_to_dict(card: Card, has_origin: bool = False) -> dict:
+def _card_to_dict(card: Card, has_image: bool = False) -> dict:
     return {
         "id": card.id,
         "name": card.name,
@@ -83,7 +83,7 @@ def _card_to_dict(card: Card, has_origin: bool = False) -> dict:
         "keywords_reversed_en": list(card.keywords_reversed_en),
         "meaning_upright_en": card.meaning_upright_en,
         "meaning_reversed_en": card.meaning_reversed_en,
-        "has_image": has_origin,
+        "has_image": has_image,
     }
 
 
@@ -95,8 +95,7 @@ def _get_cached_cards(app) -> tuple[list[dict], dict[str, Card]]:
         app.state.cards_dict = [
             _card_to_dict(
                 c,
-                has_origin=c.image_path is not None
-                and (c.image_path.parent / f"{c.id}_detail.png").exists(),
+                has_image=c.image_path is not None,
             )
             for c in cards
         ]
@@ -104,7 +103,7 @@ def _get_cached_cards(app) -> tuple[list[dict], dict[str, Card]]:
 
 
 def _spreads_to_list(lang: str | None = None) -> list[dict]:
-    from nekomata.spread import get_spread as _get_spread
+    from nekomata.core.spread import get_spread as _get_spread
 
     result = []
     for key, cls in SPREAD_REGISTRY:
@@ -364,7 +363,7 @@ def create_app() -> FastAPI:
         from io import BytesIO
 
         from fastapi.responses import Response
-        from nekomata.render.image_export import render_interp_image
+        from nekomata.core.render.image_export import render_interp_image
 
         config = AppConfig.load()
         _, cards_by_id = _get_cached_cards(app)

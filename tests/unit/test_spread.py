@@ -1,7 +1,7 @@
-from nekomata.card.deck import Deck
-from nekomata.card.types import Card, Arcana
-from nekomata.spread import get_spread, SPREAD_REGISTRY
-from nekomata.spread.base import Spread
+from nekomata.core.card.deck import Deck
+from nekomata.core.card.types import Card, Arcana
+from nekomata.core.spread import get_spread, SPREAD_REGISTRY
+from nekomata.core.spread.base import Spread
 
 
 def make_deck(n: int = 10) -> Deck:

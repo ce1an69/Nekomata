@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from nekomata.screens.widgets import focus_sibling
+from nekomata.tui.screens.widgets import focus_sibling
 
 
 def test_focus_sibling_moves_to_next():

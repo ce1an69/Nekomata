@@ -1,5 +1,5 @@
-from nekomata.card.types import Arcana, Card, DrawnCard, Position
-from nekomata.card.display import card_name, card_keywords, card_meaning, status_label
+from nekomata.core.card.types import Arcana, Card, DrawnCard, Position
+from nekomata.core.card.display import card_name, card_keywords, card_meaning, status_label
 
 
 def test_arcana_values():

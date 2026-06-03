@@ -3,8 +3,8 @@
 
 import random
 
-from nekomata.card.data import load_all_cards
-from nekomata.card.types import Card
+from nekomata.core.card.data import load_all_cards
+from nekomata.core.card.types import Card
 
 
 class Deck:

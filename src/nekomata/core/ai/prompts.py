@@ -1,6 +1,6 @@
 """AI interpretation prompt templates for tarot readings."""
 
-from nekomata._paths import data_dir
+from nekomata.core._paths import data_dir
 
 _PROMPTS_DIR = data_dir() / "prompts"
 

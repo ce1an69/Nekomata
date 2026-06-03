@@ -7,15 +7,15 @@ from textual.events import Key
 from textual.screen import Screen
 from textual.widgets import Button, Static
 
-from nekomata.card.data import load_all_cards
-from nekomata.card.types import ROMAN, Arcana, Card, DrawnCard, Position
-from nekomata.i18n import arcana_label, lazy_section, ui_section
-from nekomata.render.animations import animate_entrance
-from nekomata.render.card_renderer import (
+from nekomata.core.card.data import load_all_cards
+from nekomata.core.card.types import ROMAN, Arcana, Card, DrawnCard, Position
+from nekomata.core.i18n import arcana_label, lazy_section, ui_section
+from nekomata.tui.render.animations import animate_entrance
+from nekomata.core.render.card_renderer import (
     _build_detail_text,
-    create_card_origin_widget,
+    create_card_detail_widget,
 )
-from nekomata.render.styles import (
+from nekomata.core.render.styles import (
     C_BASE,
     C_CRUST,
     C_MANTLE,
@@ -111,7 +111,7 @@ class CardBrowserScreen(Screen):
         align: center top;
         scrollbar-gutter: stable;
     }}
-    CardBrowserScreen #card-detail .card-origin-frame {{
+    CardBrowserScreen #card-detail .card-detail-frame {{
         width: 100%;
         height: 26;
         align: center middle;
@@ -120,7 +120,7 @@ class CardBrowserScreen(Screen):
         padding: 1 1;
         transition: opacity 160ms out_quint;
     }}
-    CardBrowserScreen #card-detail .card-origin {{
+    CardBrowserScreen #card-detail .card-detail {{
         width: auto;
         height: 100%;
         background: {C_CRUST};
@@ -163,7 +163,7 @@ class CardBrowserScreen(Screen):
             with VerticalScroll(id="card-list"):
                 pass
             with VerticalScroll(id="card-detail"):
-                with Horizontal(id="detail-image-slot", classes="card-origin-frame"):
+                with Horizontal(id="detail-image-slot", classes="card-detail-frame"):
                     pass
                 yield Static(_STR["select_placeholder"], id="detail-text-slot")
         yield Static(_STR["hints"], id="hints")
@@ -392,7 +392,7 @@ class CardListItem(Static):
         image_slot.remove_children()
 
         if self.app.render_mode != "text":
-            img_widget = create_card_origin_widget(drawn)
+            img_widget = create_card_detail_widget(drawn)
             if img_widget is not None:
                 image_slot.mount(img_widget)
 

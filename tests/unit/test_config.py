@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from nekomata.storage.config import AppConfig
+from nekomata.core.storage.config import AppConfig
 
 
 def test_default_config():

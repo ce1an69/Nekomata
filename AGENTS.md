@@ -4,7 +4,7 @@
 
 Nekomata 是终端里的像素风猫咪塔罗占卜应用，78 张牌融入猫咪元素，搭配 AI 个性化解牌。
 
-支持四种运行模式：TUI / CLI / Web UI / Desktop。
+支持三种运行模式：TUI（默认）/ CLI / Desktop。
 
 ## 技术栈
 
@@ -22,19 +22,23 @@ Python 3.13+ / Textual / textual-image / Pillow / FastAPI + vanilla JS / PyWebVi
 
 ```
 src/nekomata/
-├── app.py              # 入口 + argparse（调度 TUI/CLI/Web）
-├── cli.py              # 纯 CLI 模式
-├── desktop.py          # PyWebView 原生窗口
-├── _paths.py           # 路径解析（dev / PyInstaller frozen）
-├── i18n.py             # 国际化（en/zh）
-├── clipboard.py        # 跨平台剪贴板
-├── card/               # types.py · deck.py · data.py
-├── spread/             # base.py · __init__.py（SPREAD_REGISTRY 5 种牌阵）
-├── render/             # card_renderer · image_export · terminal · themes · styles · animations
-├── ai/                 # interpreter.py（urllib SSE）· prompts.py
-├── screens/            # home · spread_select · draw（拆为 8 子模块） · card_browser · setup
-├── storage/            # config.py（.neko/ → ~/.neko/ 回退）
-└── web/                # server.py（FastAPI） · static/（vanilla JS SPA）
+├── app.py              # 入口调度器（nekomata-tarot 命令，调度 TUI/CLI/Desktop）
+├── desktop.py          # PyWebView 原生窗口（Desktop 入口）
+├── core/               # 核心共享代码
+│   ├── _paths.py       # 路径解析（dev / PyInstaller frozen）
+│   ├── i18n.py         # 国际化（en/zh）
+│   ├── clipboard.py    # 跨平台剪贴板
+│   ├── card/           # types.py · deck.py · data.py · display.py
+│   ├── spread/         # base.py · __init__.py（SPREAD_REGISTRY 5 种牌阵）
+│   ├── ai/             # interpreter.py（urllib SSE）· prompts.py
+│   ├── storage/        # config.py（.neko/ → ~/.neko/ 回退）
+│   └── render/         # card_renderer · image_export · terminal · themes · styles
+├── cli/                # CLI 模式（run.py）
+├── tui/                # TUI 模式
+│   ├── app.py          # NekomataApp（Textual App）
+│   ├── render/         # animations.py（TUI 动画）
+│   └── screens/        # home · spread_select · draw（拆为 8 子模块） · card_browser · setup
+└── web/                # server.py（FastAPI） · static/（vanilla JS SPA）— Desktop 内部使用
 
 data/
 ├── card_meanings.yaml  # 78 张牌释义
@@ -46,12 +50,11 @@ assets/cards/           # 78 牌 × 3 变体，按 suit 分目录（major/cups/p
 
 ## 运行模式
 
-| 模式    | 命令                    | 入口              |
-| ------- | ----------------------- | ----------------- |
-| TUI     | `nekomata`              | `app.py`          |
-| CLI     | `nekomata -c`           | `cli.py`          |
-| Web UI  | `nekomata --web`        | `web/server.py`   |
-| Desktop | `nekomata-desktop`      | `desktop.py`      |
+| 模式    | 命令                        | 入口              |
+| ------- | --------------------------- | ----------------- |
+| TUI     | `nekomata-tarot`            | `tui/app.py`      |
+| CLI     | `nekomata-tarot --cli`      | `cli/run.py`      |
+| Desktop | `nekomata-tarot --desktop`  | `desktop.py`      |
 
 ## Web API
 

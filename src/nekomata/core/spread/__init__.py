@@ -1,8 +1,8 @@
 """Spread registry and factory for all tarot card layouts."""
 
-from nekomata.card.types import Position
-from nekomata.i18n import spread_strings
-from nekomata.spread.base import Spread
+from nekomata.core.card.types import Position
+from nekomata.core.i18n import spread_strings
+from nekomata.core.spread.base import Spread
 
 # Ordered registry: key → display order (None = default sequential)
 _SPREAD_DEFS: list[tuple[str, tuple[int, ...] | None]] = [

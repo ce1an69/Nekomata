@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from nekomata.card.data import load_all_cards
-from nekomata.card.types import Arcana
+from nekomata.core.card.data import load_all_cards
+from nekomata.core.card.types import Arcana
 
 
 DATA_PATH = Path(__file__).parent.parent.parent / "src" / "nekomata" / "data" / "card_meanings.yaml"

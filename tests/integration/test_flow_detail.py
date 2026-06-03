@@ -1,6 +1,6 @@
 import pytest
 
-from nekomata.app import NekomataApp
+from nekomata.tui.app import NekomataApp
 
 
 @pytest.mark.asyncio
@@ -13,12 +13,12 @@ async def test_draw_escape_goes_home():
         await pilot.pause()
         await pilot.click("#spread-single")
         await pilot.pause()
-        from nekomata.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw import DrawScreen
         assert isinstance(app.screen, DrawScreen)
 
         await pilot.press("escape")
         await pilot.pause()
-        from nekomata.screens.home import HomeScreen
+        from nekomata.tui.screens.home import HomeScreen
         assert isinstance(app.screen, HomeScreen)
 
 
@@ -32,7 +32,7 @@ async def test_draw_screen_has_spread_info():
         await pilot.pause()
         await pilot.click("#spread-single")
         await pilot.pause()
-        from nekomata.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw import DrawScreen
         assert isinstance(app.screen, DrawScreen)
         title = app.screen.query_one("#draw-title")
         rendered = str(title.render())
@@ -49,7 +49,7 @@ async def test_draw_screen_has_deck_cards():
         await pilot.pause()
         await pilot.click("#spread-single")
         await pilot.pause()
-        from nekomata.screens.draw import DrawScreen, DeckCard
+        from nekomata.tui.screens.draw import DrawScreen, DeckCard
         assert isinstance(app.screen, DrawScreen)
         deck_cards = list(app.screen.query(DeckCard))
         assert len(deck_cards) > 0
@@ -64,12 +64,12 @@ async def test_spread_select_digit_key():
         inp.value = "digit key test"
         await pilot.press("enter")
         await pilot.pause()
-        from nekomata.screens.spread_select import SpreadSelectScreen
+        from nekomata.tui.screens.spread_select import SpreadSelectScreen
         assert isinstance(app.screen, SpreadSelectScreen)
 
         await pilot.press("1")
         await pilot.pause()
-        from nekomata.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw import DrawScreen
         assert isinstance(app.screen, DrawScreen)
 
 
@@ -82,12 +82,12 @@ async def test_input_cleared_after_submit():
         inp.value = "clear test"
         await pilot.press("enter")
         await pilot.pause()
-        from nekomata.screens.spread_select import SpreadSelectScreen
+        from nekomata.tui.screens.spread_select import SpreadSelectScreen
         assert isinstance(app.screen, SpreadSelectScreen)
 
         await pilot.press("escape")
         await pilot.pause()
-        from nekomata.screens.home import HomeScreen
+        from nekomata.tui.screens.home import HomeScreen
         assert isinstance(app.screen, HomeScreen)
         inp = app.screen.query_one("#prompt-input")
         assert inp.value == ""
@@ -104,12 +104,12 @@ async def test_draw_escape_goes_home_from_multi_spread():
         await pilot.pause()
         await pilot.click("#spread-past_present_future")
         await pilot.pause()
-        from nekomata.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw import DrawScreen
         assert isinstance(app.screen, DrawScreen)
 
         await pilot.press("escape")
         await pilot.pause()
-        from nekomata.screens.home import HomeScreen
+        from nekomata.tui.screens.home import HomeScreen
         assert isinstance(app.screen, HomeScreen)
 
 
@@ -122,7 +122,7 @@ async def test_spread_select_shows_position_preview():
         inp.value = "preview test"
         await pilot.press("enter")
         await pilot.pause()
-        from nekomata.screens.spread_select import SpreadSelectScreen
+        from nekomata.tui.screens.spread_select import SpreadSelectScreen
         assert isinstance(app.screen, SpreadSelectScreen)
 
         desc = app.screen.query_one("#preview-desc")
@@ -173,8 +173,8 @@ async def test_detail_card_image_is_centered():
         await pilot.pause(1.2)
 
         preview = app.screen.query_one("#card-preview")
-        frame = preview.query_one(".card-origin-frame")
-        image = preview.query_one(".card-origin")
+        frame = preview.query_one(".card-detail-frame")
+        image = preview.query_one(".card-detail")
 
         frame_center = frame.region.x + frame.region.width / 2
         image_center = image.region.x + image.region.width / 2
@@ -198,9 +198,9 @@ async def test_q_during_interpretation_confirms_then_returns_home():
         await pilot.press("enter")
         await pilot.pause(1.0)
 
-        from nekomata.screens.draw import DrawScreen
-        from nekomata.screens.draw_widgets import ConfirmExitInterpretation
-        from nekomata.screens.home import HomeScreen
+        from nekomata.tui.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw_widgets import ConfirmExitInterpretation
+        from nekomata.tui.screens.home import HomeScreen
 
         assert isinstance(app.screen, DrawScreen)
         app.screen._dialog.show()
@@ -235,7 +235,7 @@ async def test_detail_panel_keeps_interpretation_height_after_toggle():
         await pilot.press("enter")
         await pilot.pause(1.0)
 
-        from nekomata.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw import DrawScreen
 
         assert isinstance(app.screen, DrawScreen)
         app.screen._dialog.show()
@@ -271,7 +271,7 @@ async def test_fullscreen_interpretation_keeps_top_visible():
         await pilot.press("enter")
         await pilot.pause(1.0)
 
-        from nekomata.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw import DrawScreen
 
         assert isinstance(app.screen, DrawScreen)
         app.screen._dialog.show(
@@ -317,7 +317,7 @@ async def test_fullscreen_can_toggle_detail_panel():
         await pilot.press("enter")
         await pilot.pause(1.0)
 
-        from nekomata.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw import DrawScreen
 
         assert isinstance(app.screen, DrawScreen)
         app.screen._dialog.show(
@@ -374,7 +374,7 @@ async def test_fullscreen_hint_hidden_before_interpretation_starts():
         await pilot.press("enter")
         await pilot.pause(1.0)
 
-        from nekomata.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw import DrawScreen
 
         assert isinstance(app.screen, DrawScreen)
         footer = app.screen.query_one("#draw-footer")
@@ -398,7 +398,7 @@ async def test_footer_hides_interpret_hint_after_interpretation_starts():
         await pilot.press("enter")
         await pilot.pause(1.0)
 
-        from nekomata.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw import DrawScreen
 
         assert isinstance(app.screen, DrawScreen)
         app.screen._dialog.show(
@@ -432,7 +432,7 @@ async def test_interpretation_hints_do_not_duplicate_shortcut_keys():
         await pilot.press("enter")
         await pilot.pause(1.0)
 
-        from nekomata.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw import DrawScreen
 
         assert isinstance(app.screen, DrawScreen)
         app.screen._first_interp_done = True
@@ -466,7 +466,7 @@ async def test_followup_input_is_centered_above_footer_with_remaining_placeholde
         await pilot.press("enter")
         await pilot.pause(1.0)
 
-        from nekomata.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw import DrawScreen
 
         assert isinstance(app.screen, DrawScreen)
         app.screen._dialog.show(
@@ -513,7 +513,7 @@ async def test_fullscreen_toggle_during_stream_does_not_show_action_hints():
         await pilot.press("enter")
         await pilot.pause(1.0)
 
-        from nekomata.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw import DrawScreen
 
         assert isinstance(app.screen, DrawScreen)
         app.screen._dialog.show(
@@ -551,8 +551,8 @@ async def test_loading_hint_keeps_rotating_between_stream_chunks():
         await pilot.press("enter")
         await pilot.pause(1.0)
 
-        from nekomata.ai.interpreter import StreamChunk
-        from nekomata.screens.draw import DrawScreen
+        from nekomata.core.ai.interpreter import StreamChunk
+        from nekomata.tui.screens.draw import DrawScreen
 
         assert isinstance(app.screen, DrawScreen)
         app.screen._dialog.show()

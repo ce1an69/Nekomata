@@ -7,10 +7,10 @@ from typing import Callable
 from rich.markdown import Markdown
 from rich.text import Text
 
-from nekomata.ai.interpreter import InterpretationError, StreamChunk, get_interpreter
-from nekomata.ai.prompts import build_followup_prompt
-from nekomata.render.styles import C_OVERLAY0, C_TEXT
-from nekomata.i18n import lazy_strings as _s
+from nekomata.core.ai.interpreter import InterpretationError, StreamChunk, get_interpreter
+from nekomata.core.ai.prompts import build_followup_prompt
+from nekomata.core.render.styles import C_OVERLAY0, C_TEXT
+from nekomata.core.i18n import lazy_strings as _s
 
 
 class StreamHandler:
@@ -162,7 +162,7 @@ class StreamHandler:
             self._on_done()
 
     async def run(self, drawn_cards, question, cancelled_check) -> None:
-        from nekomata.ai.interpreter import build_messages, _DEFAULT_STYLE
+        from nekomata.core.ai.interpreter import build_messages, _DEFAULT_STYLE
 
         config = self._screen.app.config
         lang = config.lang

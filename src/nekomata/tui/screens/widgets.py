@@ -27,7 +27,7 @@ def focus_sibling(screen: Screen, widget_type: type, delta: int) -> None:
 
 def go_home(screen: Screen) -> None:
     """Pop screens until HomeScreen is on top, then reset its input."""
-    from nekomata.screens.home import HomeScreen
+    from nekomata.tui.screens.home import HomeScreen
 
     while len(screen.app.screen_stack) > 1 and not isinstance(
         screen.app.screen, HomeScreen

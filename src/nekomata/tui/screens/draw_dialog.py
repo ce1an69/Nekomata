@@ -5,8 +5,8 @@ from rich.text import Text
 from textual.css.scalar import ScalarOffset
 from textual.geometry import Offset
 
-from nekomata.render.styles import C_RED, EASE
-from nekomata.screens.stream_handler import StreamHandler
+from nekomata.core.render.styles import C_RED, EASE
+from nekomata.tui.screens.stream_handler import StreamHandler
 
 # Layout constants
 INTERP_PANEL_HEIGHT = "46%"  # CSS-only; runtime code uses _panel_height_cells()

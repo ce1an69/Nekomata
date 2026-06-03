@@ -8,9 +8,9 @@ import logging
 from textual.css.scalar import ScalarOffset
 from textual.geometry import Offset
 
-from nekomata.render.card_renderer import preload_all_async, preload_card_image_async
-from nekomata.render.styles import EASE, EASE_SPRING
-from nekomata.screens.draw_widgets import (
+from nekomata.core.render.card_renderer import preload_all_async, preload_card_image_async
+from nekomata.core.render.styles import EASE, EASE_SPRING
+from nekomata.tui.screens.draw_widgets import (
     PICK_COMPLETE_DELAY,
     SPREAD_SLOT_ENTRANCE_FADE,
     SPREAD_SLOT_ENTRANCE_STAGGER,
@@ -25,7 +25,7 @@ class PickMixin:
     """PICK phase methods extracted from DrawScreen."""
 
     async def on_deck_card_picked(self, event: DeckCard.Picked) -> None:
-        from nekomata.screens.draw import Phase
+        from nekomata.tui.screens.draw import Phase
 
         if self._phase != Phase.PICK:
             return
@@ -68,7 +68,7 @@ class PickMixin:
         await self._reveal_spread()
 
     async def _reveal_spread(self) -> None:
-        from nekomata.screens.draw import Phase
+        from nekomata.tui.screens.draw import Phase
 
         log.debug("Revealing spread and entering flip phase")
         await preload_all_async([(dc.card, dc.is_reversed) for dc in self._drawn_cards])

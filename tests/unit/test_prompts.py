@@ -1,6 +1,6 @@
 """Tests for AI prompt templates."""
 
-from nekomata.ai.prompts import load_system_prompt, load_spread_prompt, build_user_prompt
+from nekomata.core.ai.prompts import load_system_prompt, load_spread_prompt, build_user_prompt
 
 
 def test_system_prompt_has_style_placeholder():

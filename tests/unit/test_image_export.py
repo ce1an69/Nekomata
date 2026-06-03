@@ -1,8 +1,8 @@
 """Tests for interpretation image export."""
 
-from nekomata.card.data import load_all_cards
-from nekomata.card.types import DrawnCard, Position
-from nekomata.render.image_export import render_interp_image
+from nekomata.core.card.data import load_all_cards
+from nekomata.core.card.types import DrawnCard, Position
+from nekomata.core.render.image_export import render_interp_image
 
 
 def _drawn_cards(count: int = 3) -> list[DrawnCard]:

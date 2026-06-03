@@ -12,8 +12,8 @@ from textual.screen import Screen
 from textual.timer import Timer
 from textual.widgets import Input, Static
 
-from nekomata.render.animations import animate_entrance
-from nekomata.render.styles import (
+from nekomata.tui.render.animations import animate_entrance
+from nekomata.core.render.styles import (
     C_BASE,
     C_CRUST,
     C_MANTLE,
@@ -25,8 +25,8 @@ from nekomata.render.styles import (
     C_TEXT,
     EASE,
 )
-from nekomata.i18n import lazy_section
-from nekomata.i18n import ORNAMENT
+from nekomata.core.i18n import lazy_section
+from nekomata.core.i18n import ORNAMENT
 
 _STR = lazy_section("home")
 
@@ -250,12 +250,12 @@ class HomeScreen(Screen):
             self._hide_suggestions()
             cmd = cmd_entry[0]
             if cmd == "card_browser":
-                from nekomata.screens.card_browser import CardBrowserScreen
+                from nekomata.tui.screens.card_browser import CardBrowserScreen
 
                 self.app.push_screen(CardBrowserScreen())
                 return
             if cmd == "config":
-                from nekomata.screens.setup import SetupScreen
+                from nekomata.tui.screens.setup import SetupScreen
 
                 self.app.push_screen(
                     SetupScreen(self.app.config), callback=self._on_config_done
@@ -273,7 +273,7 @@ class HomeScreen(Screen):
         # Not a command — treat as a divination question
         self.query_one("#prompt-input", Input).value = ""
         self.app.question = value
-        from nekomata.screens.spread_select import SpreadSelectScreen
+        from nekomata.tui.screens.spread_select import SpreadSelectScreen
 
         self.app.push_screen(SpreadSelectScreen(), callback=self._on_spread_selected)
 
@@ -377,7 +377,7 @@ class HomeScreen(Screen):
 
     def _on_spread_selected(self, spread_key: str) -> None:
         """Callback when the user picks a spread — push the draw screen."""
-        from nekomata.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw import DrawScreen
 
         self.app.spread_key = spread_key
         self.app.push_screen(DrawScreen(spread_key, self.app.question, lang=self.app.config.lang))

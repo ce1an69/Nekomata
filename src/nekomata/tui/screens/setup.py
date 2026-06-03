@@ -7,9 +7,9 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import Input, Select, Static
 
-from nekomata.i18n import SUPPORTED_LANGS, set_lang
-from nekomata.render.animations import animate_entrance
-from nekomata.render.styles import (
+from nekomata.core.i18n import SUPPORTED_LANGS, set_lang
+from nekomata.tui.render.animations import animate_entrance
+from nekomata.core.render.styles import (
     C_BASE,
     C_MANTLE,
     C_MAUVE,
@@ -20,10 +20,10 @@ from nekomata.render.styles import (
     C_SURFACE1,
     C_TEXT,
 )
-from nekomata.i18n import lazy_section
-from nekomata.i18n import ORNAMENT
-from nekomata.screens.solid_static import SolidStatic
-from nekomata.storage.config import AppConfig
+from nekomata.core.i18n import lazy_section
+from nekomata.core.i18n import ORNAMENT
+from nekomata.tui.screens.solid_static import SolidStatic
+from nekomata.core.storage.config import AppConfig
 
 _STR = lazy_section("setup")
 

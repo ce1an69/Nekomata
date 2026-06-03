@@ -18,10 +18,9 @@ _USE_UPX = sys.platform != "win32"
 
 # --- Collect data files ---
 #
-# Keep this whitelist tight. Runtime bundles need locale/prompt data, web static
-# files, optimized card images, and fonts. README-only images and reference
-# photos under assets/brand, assets/screenshots, assets/cats, and icon source
-# images are intentionally excluded from packaged builds.
+# Only runtime assets live under src/nekomata/assets/ (cards, fonts, icons).
+# Non-runtime files (origin PNGs, brand images, screenshots, cat photos)
+# live in the top-level gallery/ directory and are not packaged.
 # Keep in sync with [tool.setuptools.exclude-package-data] in pyproject.toml.
 
 datas = [
@@ -29,14 +28,14 @@ datas = [
     (str(PKG_DIR / "web" / "static"), "static"),
 ]
 
-# Card images: include base PNG + _detail.png, exclude _origin.png and contact_sheet.
-# Mirrored in pyproject.toml [tool.setuptools.exclude-package-data].
+# Card images: _detail.png only. Origin PNGs and contact sheets live in
+# the top-level gallery/ directory and are not in the package tree.
 assets_cards = PKG_DIR / "assets" / "cards"
 for arcana_dir in sorted(assets_cards.iterdir()):
     if not arcana_dir.is_dir():
         continue
     for f in sorted(arcana_dir.iterdir()):
-        if f.suffix == ".png" and "_origin" not in f.name and "contact_sheet" not in f.name:
+        if f.suffix == ".png" and "contact_sheet" not in f.name:
             datas.append((str(f), f"assets/cards/{arcana_dir.name}"))
 
 # Font files (WOFF2 + TTF)
@@ -47,9 +46,9 @@ if assets_fonts.is_dir():
             datas.append((str(f), "assets/fonts"))
 
 _EXCLUDED_ASSET_PREFIXES = (
-    Path("assets/brand"),
-    Path("assets/screenshots"),
-    Path("assets/cats"),
+    Path("gallery/brand"),
+    Path("gallery/screenshots"),
+    Path("gallery/cats"),
 )
 for _src, _dest in datas:
     _dest_path = Path(_dest)
@@ -63,17 +62,22 @@ a = Analysis(
     datas=datas,
     hiddenimports=[
         "nekomata",
-        "nekomata._paths",
+        "nekomata.core._paths",
         "nekomata.desktop",
-        "nekomata.card.data",
-        "nekomata.card.types",
-        "nekomata.spread",
-        "nekomata.spread.base",
-        "nekomata.storage.config",
+        "nekomata.core.card.data",
+        "nekomata.core.card.types",
+        "nekomata.core.card.deck",
+        "nekomata.core.card.display",
+        "nekomata.core.spread",
+        "nekomata.core.spread.base",
+        "nekomata.core.storage.config",
+        "nekomata.core.i18n",
+        "nekomata.core.ai.interpreter",
+        "nekomata.core.ai.prompts",
+        "nekomata.core.render.styles",
+        "nekomata.core.render.card_renderer",
+        "nekomata.core.render.image_export",
         "nekomata.web.server",
-        "nekomata.ai.interpreter",
-        "nekomata.ai.prompts",
-        "nekomata.render.styles",
         "uvicorn.logging",
         "uvicorn.lifespan.on",
         "uvicorn.protocols.http.auto",

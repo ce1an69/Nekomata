@@ -12,18 +12,17 @@ from PIL import ImageDraw
 from rich.panel import Panel
 from rich.text import Text
 
-from nekomata.card.display import card_keywords, card_meaning, card_name, status_label
-from nekomata.card.types import Card, DrawnCard
-from nekomata.render.themes import get_theme
-from nekomata.i18n import ui_section as section
+from nekomata.core.card.display import card_keywords, card_meaning, card_name, status_label
+from nekomata.core.card.types import Card, DrawnCard
+from nekomata.core.render.themes import get_theme
+from nekomata.core.i18n import ui_section as section
 
-_ORIGIN_MAX_SIZE = (1024, 1536)
 _DETAIL_MAX_SIZE = (256, 384)
 
 # Intentional module-level mutable state: image caches are managed by clear_cache()
 # and keyed by card ID + reversal state. Safe for single-threaded TUI / CLI.
 _image_cache: dict[str, PILImage.Image] = {}
-_origin_cache: dict[str, PILImage.Image] = {}
+_detail_cache: dict[str, PILImage.Image] = {}
 
 # Intentional module-level mutable state: written once on first call.
 _CACHED_TUI_CLASS = None
@@ -47,24 +46,10 @@ def _get_tui_image_class():
     return _CACHED_TUI_CLASS
 
 
-def get_preview_path(card: Card) -> Path | None:
-    """Return the path to the detail preview PNG for a card, or None."""
-    if card.image_path is None:
-        return None
-    return card.image_path.with_name(card.image_path.stem + "_detail.png")
-
-
-def get_origin_path(card: Card) -> Path | None:
-    """Return the path to the origin PNG for a card, or None."""
-    if card.image_path is None:
-        return None
-    return card.image_path.with_name(card.image_path.stem + "_origin.png")
-
-
 def _load_image(
     path: Path | None,
     upside_down: bool = False,
-    max_size: tuple[int, int] = _ORIGIN_MAX_SIZE,
+    max_size: tuple[int, int] = _DETAIL_MAX_SIZE,
 ) -> PILImage.Image | None:
     """Load a PNG, optionally rotate for reversal, and thumbnail to max_size."""
     if path is None or not path.exists():
@@ -78,11 +63,8 @@ def _load_image(
 
 
 def _load_runtime_image(card: Card, upside_down: bool = False, *, rounded: bool = True) -> PILImage.Image | None:
-    """Load the smaller runtime image, falling back to capped origin if needed."""
-    img = _load_image(get_preview_path(card), upside_down, _DETAIL_MAX_SIZE)
-    if img is not None:
-        return _with_rounded_corners(img) if rounded else img
-    img = _load_image(get_origin_path(card), upside_down, _DETAIL_MAX_SIZE)
+    """Load the detail image for a card."""
+    img = _load_image(card.image_path, upside_down)
     if img is None:
         return None
     return _with_rounded_corners(img) if rounded else img
@@ -136,7 +118,7 @@ def get_cached_image(card: Card, is_reversed: bool = False) -> PILImage.Image | 
 def clear_cache() -> None:
     """Clear all image caches (e.g., on screen unmount)."""
     _image_cache.clear()
-    _origin_cache.clear()
+    _detail_cache.clear()
 
 
 # ── Widget-based API (textual-image) ─────────────────────────────────
@@ -156,24 +138,24 @@ def create_card_face_widget(drawn: DrawnCard):
     return TUIImage(img, classes="card-face")
 
 
-def create_card_origin_widget(drawn: DrawnCard, *, upright_image: bool = False):
-    """Return an Image widget for the origin detail image, or None if no PNG.
+def create_card_detail_widget(drawn: DrawnCard, *, upright_image: bool = False):
+    """Return an Image widget for the detail view, or None if no PNG.
 
     By default, respects the drawn card's reversed state to show the correct
     orientation. Pass upright_image=True when the detail view should keep the
     card art upright while still showing reversed text metadata.
     """
     is_reversed = drawn.is_reversed and not upright_image
-    key = _cache_key(drawn.card, is_reversed=is_reversed)
-    img = _origin_cache.get(key)
+    key = _cache_key(drawn.card, is_reversed)
+    img = _detail_cache.get(key)
     if img is None:
         img = _load_runtime_image(drawn.card, upside_down=is_reversed, rounded=False)
         if img is not None:
-            _origin_cache[key] = img
+            _detail_cache[key] = img
     if img is None:
         return None
     TUIImage = _get_tui_image_class()
-    return TUIImage(img, classes="card-origin")
+    return TUIImage(img, classes="card-detail")
 
 
 def _build_detail_text(drawn: DrawnCard, lang: str = "en", *, orientation_only: bool = False) -> Text:
@@ -219,7 +201,7 @@ def render_card_full_detail_widgets(
     upright_image: bool = False,
 ) -> tuple[object, Panel] | None:
     """Return (image_widget, text_panel) for the detail view, or None if no image."""
-    img_widget = create_card_origin_widget(drawn, upright_image=upright_image)
+    img_widget = create_card_detail_widget(drawn, upright_image=upright_image)
     if img_widget is None:
         return None
 

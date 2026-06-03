@@ -55,7 +55,7 @@ def _run_server(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="nekomata-desktop")
+    parser = argparse.ArgumentParser(prog="nekomata-tarot --desktop")
     parser.add_argument(
         "--debug", action="store_true", help="Enable debug mode with logs and devtools"
     )

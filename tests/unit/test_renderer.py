@@ -1,17 +1,16 @@
 from pathlib import Path
 
+import pytest
 from rich.panel import Panel
 
-from nekomata._paths import assets_dir
-from nekomata.card.types import Arcana, Card, DrawnCard, Position
-from nekomata.i18n import set_lang
-from nekomata.render.card_renderer import (
+from nekomata.core._paths import assets_dir
+from nekomata.core.card.types import Arcana, Card, DrawnCard, Position
+from nekomata.core.i18n import set_lang
+from nekomata.core.render.card_renderer import (
     render_card_text,
     render_card_detail,
-    get_preview_path,
-    get_origin_path,
     create_card_face_widget,
-    create_card_origin_widget,
+    create_card_detail_widget,
     _load_image,
     preload_card_image,
     get_cached_image,
@@ -98,38 +97,6 @@ def test_render_card_detail_uses_zh_locale_without_spread_name():
         set_lang("en")
 
 
-def test_get_preview_path():
-    card = Card(
-        id="major_00", name="The Fool", name_zh="愚者",
-        arcana=Arcana.MAJOR, number=0, element="air", astrology="Uranus",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
-        image_path=assets_dir() / "cards" / "major" / "major_00.png",
-    )
-    assert get_preview_path(card) == assets_dir() / "cards" / "major" / "major_00_detail.png"
-
-
-def test_get_preview_path_no_image():
-    card = Card(
-        id="major_00", name="The Fool", name_zh="愚者",
-        arcana=Arcana.MAJOR, number=0, element="air", astrology="Uranus",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
-    )
-    assert get_preview_path(card) is None
-
-
-def test_get_origin_path():
-    card = Card(
-        id="major_00", name="The Fool", name_zh="愚者",
-        arcana=Arcana.MAJOR, number=0, element="air", astrology="Uranus",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
-        image_path=assets_dir() / "cards" / "major" / "major_00.png",
-    )
-    assert get_origin_path(card) == assets_dir() / "cards" / "major" / "major_00_origin.png"
-
-
 def test_create_card_face_widget_no_image():
     """Cards without image_path should return None."""
     dc = make_drawn()
@@ -144,7 +111,7 @@ def test_create_card_face_widget_with_png():
         arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
         keywords_upright=("a",), keywords_reversed=("b",),
         meaning_upright="up", meaning_reversed="down",
-        image_path=assets_dir() / "cards" / "major" / "major_02.png",
+        image_path=assets_dir() / "cards" / "major" / "major_02_detail.png",
     )
     pos = Position(name="Test", name_zh="测试", description="test")
     dc = DrawnCard(card=card, position=pos, is_reversed=False)
@@ -160,54 +127,39 @@ def test_load_image_reversed_rotates():
         arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
         keywords_upright=("a",), keywords_reversed=("b",),
         meaning_upright="up", meaning_reversed="down",
-        image_path=assets_dir() / "cards" / "major" / "major_02.png",
+        image_path=assets_dir() / "cards" / "major" / "major_02_detail.png",
     )
-    origin_path = get_origin_path(card)
-    img_normal = _load_image(origin_path, upside_down=False)
-    img_reversed = _load_image(origin_path, upside_down=True)
+    detail_path = card.image_path
+    img_normal = _load_image(detail_path, upside_down=False)
+    img_reversed = _load_image(detail_path, upside_down=True)
     assert img_normal is not None
     assert img_reversed is not None
     assert img_normal.tobytes() != img_reversed.tobytes()
 
 
-def test_load_image_applies_size_cap():
-    """_load_image should cap dimensions."""
-    card = Card(
-        id="major_02", name="The High Priestess", name_zh="女祭司",
-        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
-        image_path=assets_dir() / "cards" / "major" / "major_02.png",
-    )
-    img = _load_image(get_origin_path(card))
-    assert img is not None
-    assert img.size[0] <= 1024
-    assert img.size[1] <= 1536
-
-
-def test_create_card_origin_widget_no_image():
-    """Cards without origin PNG should return None."""
+def test_create_card_detail_widget_no_image():
+    """Cards without detail PNG should return None."""
     dc = make_drawn()
-    assert create_card_origin_widget(dc) is None
+    assert create_card_detail_widget(dc) is None
 
 
-def test_create_card_origin_widget_with_png():
+def test_create_card_detail_widget_with_png():
     """Cards with a real PNG should return an Image widget."""
     card = Card(
         id="major_02", name="The High Priestess", name_zh="女祭司",
         arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
         keywords_upright=("a",), keywords_reversed=("b",),
         meaning_upright="up", meaning_reversed="down",
-        image_path=assets_dir() / "cards" / "major" / "major_02.png",
+        image_path=assets_dir() / "cards" / "major" / "major_02_detail.png",
     )
     pos = Position(name="Test", name_zh="测试", description="test")
     dc = DrawnCard(card=card, position=pos, is_reversed=False)
-    result = create_card_origin_widget(dc)
+    result = create_card_detail_widget(dc)
     assert result is not None
-    assert result.has_class("card-origin")
+    assert result.has_class("card-detail")
 
 
-def test_create_card_origin_widget_can_force_upright(monkeypatch):
+def test_create_card_detail_widget_can_force_upright(monkeypatch):
     """Detail panels can keep image art upright while text stays reversed."""
     clear_cache()
     calls = []
@@ -224,17 +176,17 @@ def test_create_card_origin_widget_can_force_upright(monkeypatch):
         return object()
 
     monkeypatch.setattr(
-        "nekomata.render.card_renderer._load_runtime_image", fake_load
+        "nekomata.core.render.card_renderer._load_runtime_image", fake_load
     )
     monkeypatch.setattr(
-        "nekomata.render.card_renderer._get_tui_image_class", lambda: DummyImage
+        "nekomata.core.render.card_renderer._get_tui_image_class", lambda: DummyImage
     )
 
     drawn = make_drawn(reversed=True)
-    result = create_card_origin_widget(drawn, upright_image=True)
+    result = create_card_detail_widget(drawn, upright_image=True)
 
     assert result is not None
-    assert result.has_class("card-origin")
+    assert result.has_class("card-detail")
     assert calls == [False]
 
     clear_cache()
@@ -248,7 +200,7 @@ def test_preload_and_cache():
         arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
         keywords_upright=("a",), keywords_reversed=("b",),
         meaning_upright="up", meaning_reversed="down",
-        image_path=assets_dir() / "cards" / "major" / "major_02.png",
+        image_path=assets_dir() / "cards" / "major" / "major_02_detail.png",
     )
     assert get_cached_image(card, is_reversed=False) is None
     preload_card_image(card, is_reversed=False)

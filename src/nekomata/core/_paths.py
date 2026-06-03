@@ -8,7 +8,7 @@ def base_dir() -> Path:
     """Package directory (src/nekomata/) in dev/pip mode, or sys._MEIPASS when frozen."""
     if getattr(sys, "frozen", False):
         return Path(sys._MEIPASS)
-    return Path(__file__).resolve().parent
+    return Path(__file__).resolve().parent.parent  # core/_paths.py → nekomata/
 
 
 def data_dir() -> Path:

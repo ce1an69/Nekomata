@@ -1,7 +1,7 @@
 import pytest
 
-from nekomata.app import NekomataApp
-from nekomata.screens.card_browser import CardBrowserScreen
+from nekomata.tui.app import NekomataApp
+from nekomata.tui.screens.card_browser import CardBrowserScreen
 
 
 @pytest.mark.asyncio
@@ -93,7 +93,7 @@ async def test_card_browser_back():
         assert isinstance(app.screen, CardBrowserScreen)
         await pilot.press("escape")
         await pilot.pause()
-        from nekomata.screens.home import HomeScreen
+        from nekomata.tui.screens.home import HomeScreen
         assert isinstance(app.screen, HomeScreen)
 
 
@@ -143,8 +143,8 @@ async def test_card_browser_detail_wraps_card_image_in_frame():
         await pilot.pause()
 
         detail = app.screen.query_one("#card-detail")
-        frame = detail.query_one(".card-origin-frame")
-        image = frame.query_one(".card-origin")
+        frame = detail.query_one(".card-detail-frame")
+        image = frame.query_one(".card-detail")
 
         assert frame is not None
         assert image is not None

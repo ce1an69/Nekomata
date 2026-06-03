@@ -1,4 +1,4 @@
-from nekomata.render.themes import get_theme, CardTheme, THEMES, set_default_theme
+from nekomata.core.render.themes import get_theme, CardTheme, THEMES, set_default_theme
 
 
 def test_default_theme():

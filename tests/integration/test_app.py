@@ -1,7 +1,7 @@
 import pytest
 from textual.widgets import Input
 
-from nekomata.app import NekomataApp
+from nekomata.tui.app import NekomataApp
 
 
 @pytest.mark.asyncio
@@ -84,7 +84,7 @@ async def test_home_screen_config_command():
         inp.value = "/config"
         await pilot.press("enter")
         await pilot.pause()
-        from nekomata.screens.setup import SetupScreen
+        from nekomata.tui.screens.setup import SetupScreen
         assert isinstance(app.screen, SetupScreen)
 
 
@@ -106,7 +106,7 @@ async def test_navigate_to_spread_select():
         inp.value = "test question"
         await pilot.press("enter")
         await pilot.pause()
-        from nekomata.screens.spread_select import SpreadSelectScreen
+        from nekomata.tui.screens.spread_select import SpreadSelectScreen
         assert isinstance(app.screen, SpreadSelectScreen)
 
 
@@ -134,8 +134,8 @@ async def test_draw_screen_shows_deck():
         await pilot.pause()
         await pilot.click("#spread-single")
         await pilot.pause()
-        from nekomata.screens.draw import DrawScreen
-        from nekomata.screens.draw_widgets import DeckCard, SpreadSlot
+        from nekomata.tui.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw_widgets import DeckCard, SpreadSlot
         assert isinstance(app.screen, DrawScreen)
         deck_cards = app.screen.query(DeckCard)
         assert len(deck_cards) > 0
@@ -153,8 +153,8 @@ async def test_draw_screen_has_spread_slots():
         await pilot.pause()
         await pilot.click("#spread-past_present_future")
         await pilot.pause()
-        from nekomata.screens.draw import DrawScreen
-        from nekomata.screens.draw_widgets import SpreadSlot
+        from nekomata.tui.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw_widgets import SpreadSlot
         assert isinstance(app.screen, DrawScreen)
         slots = app.screen.query(SpreadSlot)
         assert len(slots) == 3  # three card spread

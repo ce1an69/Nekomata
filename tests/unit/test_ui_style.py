@@ -3,9 +3,9 @@
 import inspect
 import re
 
-from nekomata.app import NekomataApp
-from nekomata.render.themes import THEMES
-from nekomata.render.styles import (
+from nekomata.tui.app import NekomataApp
+from nekomata.core.render.themes import THEMES
+from nekomata.core.render.styles import (
     C_CRUST,
     C_LAVENDER,
     C_MANTLE,
@@ -20,17 +20,17 @@ from nekomata.render.styles import (
     C_SURFACE2,
     C_TEXT,
 )
-from nekomata.screens.card_browser import CardBrowserScreen, CardListItem
-from nekomata.screens.draw import DrawScreen
-from nekomata.screens.draw_widgets import (
+from nekomata.tui.screens.card_browser import CardBrowserScreen, CardListItem
+from nekomata.tui.screens.draw import DrawScreen
+from nekomata.tui.screens.draw_widgets import (
     ConfirmExitInterpretation,
     DeckCard,
     SpreadSlot,
 )
-from nekomata.screens.home import HomeScreen
-from nekomata.screens.setup import SetupButton, SetupScreen
-from nekomata.screens.solid_static import SolidStatic
-from nekomata.screens.spread_select import SpreadSelectScreen
+from nekomata.tui.screens.home import HomeScreen
+from nekomata.tui.screens.setup import SetupButton, SetupScreen
+from nekomata.tui.screens.solid_static import SolidStatic
+from nekomata.tui.screens.spread_select import SpreadSelectScreen
 
 
 CSS_SOURCES = [
@@ -148,8 +148,8 @@ def test_card_browser_detail_reserves_scrollbar_gutter():
 def test_card_browser_detail_slots_have_stable_layout():
     css = CardBrowserScreen.DEFAULT_CSS
 
-    image_slot_css = css.split("CardBrowserScreen #card-detail .card-origin-frame {")[1].split("}")[0]
-    image_css = css.split("CardBrowserScreen #card-detail .card-origin {")[1].split("}")[0]
+    image_slot_css = css.split("CardBrowserScreen #card-detail .card-detail-frame {")[1].split("}")[0]
+    image_css = css.split("CardBrowserScreen #card-detail .card-detail {")[1].split("}")[0]
     assert "height: 26;" in image_slot_css
     assert "transition: opacity 160ms" in image_slot_css
     assert "height: 100%;" in image_css
@@ -186,7 +186,7 @@ def test_draw_interpretation_panel_fills_bottom_flow_space():
 
 
 def test_draw_interpretation_panel_width_tracks_detail_space():
-    from nekomata.screens.draw_dialog import InterpretationDialog
+    from nekomata.tui.screens.draw_dialog import InterpretationDialog
     source = inspect.getsource(InterpretationDialog.sync_layout)
 
     assert 'styles.width = "1fr"' in source
@@ -195,7 +195,7 @@ def test_draw_interpretation_panel_width_tracks_detail_space():
 
 
 def test_draw_interpretation_height_animation_starts_from_cell_height():
-    from nekomata.screens.draw_dialog import InterpretationDialog
+    from nekomata.tui.screens.draw_dialog import InterpretationDialog
 
     class FakeStyles:
         def __init__(self):
@@ -230,7 +230,7 @@ def test_draw_interpretation_height_animation_starts_from_cell_height():
 
 
 def test_draw_fullscreen_height_animation_uses_cell_heights():
-    from nekomata.screens.draw_dialog import InterpretationDialog
+    from nekomata.tui.screens.draw_dialog import InterpretationDialog
 
     source = inspect.getsource(InterpretationDialog.toggle_fullscreen)
 
@@ -239,7 +239,7 @@ def test_draw_fullscreen_height_animation_uses_cell_heights():
 
 
 def test_draw_hiding_fullscreen_interpretation_restores_layout_after_animation():
-    from nekomata.screens.draw_dialog import InterpretationDialog
+    from nekomata.tui.screens.draw_dialog import InterpretationDialog
 
     source = inspect.getsource(InterpretationDialog.hide)
 
@@ -250,7 +250,7 @@ def test_draw_hiding_fullscreen_interpretation_restores_layout_after_animation()
 
 
 def test_draw_hiding_detail_recenters_spread_area():
-    from nekomata.screens.draw_detail import DetailPanel
+    from nekomata.tui.screens.draw_detail import DetailPanel
     source = inspect.getsource(DetailPanel.hide)
     finish_source = inspect.getsource(DetailPanel._finish_hide)
 
@@ -259,7 +259,7 @@ def test_draw_hiding_detail_recenters_spread_area():
 
 
 def test_draw_stream_uses_app_thread_callback():
-    from nekomata.screens.stream_handler import StreamHandler
+    from nekomata.tui.screens.stream_handler import StreamHandler
     source = inspect.getsource(StreamHandler._run_stream)
 
     assert "call_from_thread" in source
@@ -290,7 +290,7 @@ def test_draw_followup_input_is_centered_above_footer():
 
 
 def test_draw_stream_content_renders_markdown():
-    from nekomata.screens.stream_handler import StreamHandler
+    from nekomata.tui.screens.stream_handler import StreamHandler
     source = inspect.getsource(StreamHandler._render)
 
     assert 'Markdown("".join(self._content_chars)' in source
@@ -308,8 +308,8 @@ def test_draw_export_image_includes_drawn_cards():
 
 
 def test_draw_loading_hint_rotates_cat_tarot_messages():
-    from nekomata.screens import stream_handler
-    from nekomata.i18n import ui_strings
+    from nekomata.tui.screens import stream_handler
+    from nekomata.core.i18n import ui_strings
 
     s = stream_handler._s()
     assert s["loading_message_interval_s"] == 2.0
