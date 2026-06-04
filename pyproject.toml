@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 license = {text = "MIT"}
 authors = [
-    {name = "Celan", email = "celan@example.com"},
+    {name = "Celan", email = "luojunxiong@qq.com"},
 ]
 keywords = ["tarot", "terminal", "tui", "cat", "pixel-art", "divination", "textual"]
 classifiers = [
@@ -66,6 +66,12 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = "--tb=short -q"
 
+[tool.coverage.run]
+source = ["nekomata"]
+
+[tool.coverage.report]
+fail_under = 69
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
@@ -73,7 +79,6 @@ where = ["src"]
 nekomata = [
     "data/**/*",
     "assets/cards/*/*.png",
-    "assets/fonts/*.ttf",
     "assets/fonts/*.woff2",
     "assets/icon/*.icns",
     "assets/icon/*.ico",

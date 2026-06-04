@@ -80,9 +80,9 @@ class _Block:
 
 def _bundled_font_path(*, bold: bool = False) -> str:
     name = (
-        "MapleMonoNormal-NF-CN-Bold.ttf"
+        "MapleMonoNormal-NF-CN-Bold.woff2"
         if bold
-        else "MapleMonoNormal-NF-CN-Regular.ttf"
+        else "MapleMonoNormal-NF-CN-Regular.woff2"
     )
     return str(assets_dir() / "fonts" / name)
 
@@ -106,7 +106,7 @@ def _find_font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont | Ima
     for path in _font_candidates(bold=bold):
         if not os.path.exists(path):
             continue
-        if path.endswith(".ttf") or path.endswith(".otf"):
+        if path.endswith(".ttf") or path.endswith(".otf") or path.endswith(".woff2"):
             indexes = (0,)
         elif path.endswith("PingFang.ttc"):
             indexes = (7, 3, 11, 0, 1, 2) if bold else (3, 0, 1, 2, 7)

@@ -10,6 +10,7 @@
 
 <p align="center">
   <a href="https://pypi.org/project/nekomata-tarot/"><img alt="PyPI" src="https://img.shields.io/pypi/v/nekomata-tarot?style=flat-square&color=89b4fa"></a>
+  <a href="https://github.com/ce1an69/Nekomata/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/ce1an69/Nekomata/ci.yml?style=flat-square&label=CI"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-cba6f7?style=flat-square"></a>
   <a href="LICENSE-ASSETS.md"><img alt="Assets" src="https://img.shields.io/badge/assets-CC_BY--NC--SA_4.0-f5c2e7?style=flat-square"></a>
   <img alt="Python" src="https://img.shields.io/badge/python-3.13%2B-89b4fa?style=flat-square">

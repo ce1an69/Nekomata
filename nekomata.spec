@@ -1,8 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
 """PyInstaller spec for Nekomata desktop app."""
 
+import re
 import sys
 from pathlib import Path
+
+_pyproject = (Path(SPECPATH) / "pyproject.toml").read_text(encoding="utf-8")
+_VERSION = re.search(r'^version\s*=\s*"([^"]+)"', _pyproject, re.MULTILINE).group(1)
 
 block_cipher = None
 
@@ -38,11 +42,11 @@ for arcana_dir in sorted(assets_cards.iterdir()):
         if f.suffix == ".png" and "contact_sheet" not in f.name:
             datas.append((str(f), f"assets/cards/{arcana_dir.name}"))
 
-# Font files (WOFF2 + TTF)
+# Font files (WOFF2 only)
 assets_fonts = PKG_DIR / "assets" / "fonts"
 if assets_fonts.is_dir():
     for f in sorted(assets_fonts.iterdir()):
-        if f.suffix in (".ttf", ".woff2"):
+        if f.suffix == ".woff2":
             datas.append((str(f), "assets/fonts"))
 
 _EXCLUDED_ASSET_PREFIXES = (
@@ -142,11 +146,11 @@ if sys.platform == "darwin":
         name="Nekomata.app",
         icon=str(ICON_ICNS),
         bundle_identifier="com.nekomata.app",
-        version="0.1.0",
+        version=_VERSION,
         info_plist={
             "CFBundleName": "Nekomata",
             "CFBundleDisplayName": "Nekomata",
-            "CFBundleShortVersionString": "0.1.0",
+            "CFBundleShortVersionString": _VERSION,
             "NSHighResolutionCapable": True,
             "LSMinimumSystemVersion": "11.0",
         },

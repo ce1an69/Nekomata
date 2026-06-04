@@ -32,7 +32,7 @@ _FOCUS_FIELDS = ("api-url-input", "api-key-input", "model-input", "lang-select",
 _LANG_OPTIONS = [("English", "en"), ("中文", "zh")]
 
 
-class NavSelect(Select, inherit_bindings=False):
+class NavSelect(Select, inherit_bindings=False):  # pyright: ignore[reportCallIssue, reportGeneralTypeIssues]
     """Select that only opens on Enter/Space, not on up/down arrow keys."""
 
     BINDINGS = [Binding("enter,space", "show_overlay", "Show menu", show=False)]
