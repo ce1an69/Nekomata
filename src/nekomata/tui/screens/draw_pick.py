@@ -41,9 +41,7 @@ class PickMixin:
         self._drawn_cards.append(dc)
 
         card_widget.add_class("picked")
-        self.run_worker(
-            preload_card_image_async(dc.card, dc.is_reversed), exclusive=False
-        )
+        self.run_worker(preload_card_image_async(dc.card, dc.is_reversed), exclusive=False)
 
         self._pick_index += 1
         self._update_phase_ui()
@@ -58,9 +56,7 @@ class PickMixin:
             await self._transition_to_flip()
 
     async def _transition_to_flip(self) -> None:
-        log.debug(
-            "Transitioning to flip phase with %s drawn card(s)", len(self._drawn_cards)
-        )
+        log.debug("Transitioning to flip phase with %s drawn card(s)", len(self._drawn_cards))
         if PICK_COMPLETE_DELAY:
             await asyncio.sleep(PICK_COMPLETE_DELAY)
         await self._reveal_spread()
@@ -90,11 +86,7 @@ class PickMixin:
                     0.05 + i * SPREAD_SLOT_ENTRANCE_STAGGER,
                     lambda s=slot: self._animate_slot_entrance(s),
                 )
-            total = (
-                0.05
-                + len(slots) * SPREAD_SLOT_ENTRANCE_STAGGER
-                + SPREAD_SLOT_ENTRANCE_FADE
-            )
+            total = 0.05 + len(slots) * SPREAD_SLOT_ENTRANCE_STAGGER + SPREAD_SLOT_ENTRANCE_FADE
             self.set_timer(total, self._focus_first_slot)
 
     def _focus_first_slot(self) -> None:
@@ -104,9 +96,7 @@ class PickMixin:
 
     @staticmethod
     def _animate_slot_entrance(slot: SpreadSlot) -> None:
-        slot.styles.animate(
-            "opacity", 1.0, duration=SPREAD_SLOT_ENTRANCE_FADE, easing=EASE
-        )
+        slot.styles.animate("opacity", 1.0, duration=SPREAD_SLOT_ENTRANCE_FADE, easing=EASE)
         slot.styles.animate(
             "offset",
             ScalarOffset.from_offset(Offset(0, 0)),

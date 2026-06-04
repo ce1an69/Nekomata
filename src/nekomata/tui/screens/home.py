@@ -12,7 +12,7 @@ from textual.screen import Screen
 from textual.timer import Timer
 from textual.widgets import Input, Static
 
-from nekomata.tui.render.animations import animate_entrance
+from nekomata.core.i18n import ORNAMENT, lazy_section
 from nekomata.core.render.styles import (
     C_BASE,
     C_CRUST,
@@ -25,8 +25,7 @@ from nekomata.core.render.styles import (
     C_TEXT,
     EASE,
 )
-from nekomata.core.i18n import lazy_section
-from nekomata.core.i18n import ORNAMENT
+from nekomata.tui.render.animations import animate_entrance
 
 _STR = lazy_section("home")
 
@@ -256,17 +255,13 @@ class HomeScreen(Screen):
             if cmd == "config":
                 from nekomata.tui.screens.setup import SetupScreen
 
-                self.app.push_screen(
-                    SetupScreen(self.app.config), callback=self._on_config_done
-                )
+                self.app.push_screen(SetupScreen(self.app.config), callback=self._on_config_done)
                 return
             if cmd == "quit":
                 self.app.exit()
                 return
         elif value.startswith("/"):
-            self._show_suggestions(
-                f"[command-highlight]{_STR['unknown_command']}[/]  {value}"
-            )
+            self._show_suggestions(f"[command-highlight]{_STR['unknown_command']}[/]  {value}")
             return
 
         # Not a command — treat as a divination question
@@ -311,9 +306,7 @@ class HomeScreen(Screen):
         # Pad all lines to the same visible width so the highlight background
         # covers the full row instead of just the text characters.
         visible_widths = [
-            2 + len(cmd) + 2 + len(desc)
-            for cmd in self._suggestion_matches
-            for (_, desc) in [SLASH_COMMANDS[cmd]]
+            2 + len(cmd) + 2 + len(desc) for cmd in self._suggestion_matches for (_, desc) in [SLASH_COMMANDS[cmd]]
         ]
         max_width = max(visible_widths) if visible_widths else 0
         lines = []
@@ -322,15 +315,11 @@ class HomeScreen(Screen):
             plain = f"  {cmd}  {desc}"
             padding = " " * (max_width - len(plain))
             if i == self._suggestion_idx:
-                lines.append(
-                    f"[{C_MAUVE} bold on {C_SURFACE0}]{plain}{padding}[/]"
-                )
+                lines.append(f"[{C_MAUVE} bold on {C_SURFACE0}]{plain}{padding}[/]")
             else:
                 typed = cmd[:prefix_len]
                 rest = cmd[prefix_len:]
-                lines.append(
-                    f"  [bold {C_MAUVE}]{typed}[/]{rest}  {desc}{padding}"
-                )
+                lines.append(f"  [bold {C_MAUVE}]{typed}[/]{rest}  {desc}{padding}")
         suggestions.update("\n".join(lines))
 
     def _hide_suggestions(self) -> None:
@@ -352,9 +341,7 @@ class HomeScreen(Screen):
             duration=0.12,
             easing=EASE,
         )
-        self._suggestions_hide_timer = self.set_timer(
-            0.13, self._finish_hide_suggestions
-        )
+        self._suggestions_hide_timer = self.set_timer(0.13, self._finish_hide_suggestions)
 
     def _finish_hide_suggestions(self) -> None:
         suggestions = self.query_one("#command-suggestions", Static)
@@ -369,9 +356,7 @@ class HomeScreen(Screen):
         if not value.startswith("/"):
             return None
         lower = value.lower()
-        matches = [
-            cmd for cmd in SLASH_COMMANDS if cmd.startswith(lower) and cmd != lower
-        ]
+        matches = [cmd for cmd in SLASH_COMMANDS if cmd.startswith(lower) and cmd != lower]
         return matches[0] if matches else None
 
     def _on_spread_selected(self, spread_key: str) -> None:

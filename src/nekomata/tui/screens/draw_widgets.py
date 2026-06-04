@@ -5,7 +5,6 @@ import asyncio
 from rich.console import Group
 from rich.panel import Panel
 from rich.text import Text
-
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
@@ -19,7 +18,7 @@ from textual.widgets import Static
 
 from nekomata.core.card.display import status_label as _status_label
 from nekomata.core.card.types import DrawnCard
-from nekomata.tui.render.animations import animate_entrance
+from nekomata.core.i18n import lazy_section
 from nekomata.core.render.card_renderer import create_card_face_widget
 from nekomata.core.render.styles import (
     C_CRUST,
@@ -36,7 +35,7 @@ from nekomata.core.render.styles import (
     EASE,
     EASE_OUT,
 )
-from nekomata.core.i18n import lazy_section
+from nekomata.tui.render.animations import animate_entrance
 from nekomata.tui.screens.draw_constants import (
     DECK_CARD_HEIGHT,
     DECK_CARD_WIDTH,

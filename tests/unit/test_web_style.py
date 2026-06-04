@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-
 STATIC_DIR = Path(__file__).parents[2] / "src" / "nekomata" / "web" / "static"
 STYLE_FILES = [
     "base.css",

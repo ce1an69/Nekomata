@@ -88,8 +88,6 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(prog="nekomata-tarot --desktop")
-    parser.add_argument(
-        "--debug", action="store_true", help="Enable debug mode with logs and devtools"
-    )
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode with logs and devtools")
     args = parser.parse_args()
     main(debug=args.debug)

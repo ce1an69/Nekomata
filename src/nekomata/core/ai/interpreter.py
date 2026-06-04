@@ -8,9 +8,10 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Generator, Protocol, runtime_checkable
 
-from nekomata.core.card.types import DrawnCard
-from nekomata.core.card.display import card_keywords, card_meaning, card_name, status_label as _status_label
 from nekomata.core.ai.prompts import build_user_prompt, load_spread_prompt, load_system_prompt
+from nekomata.core.card.display import card_keywords, card_meaning, card_name
+from nekomata.core.card.display import status_label as _status_label
+from nekomata.core.card.types import DrawnCard
 from nekomata.core.storage.config import AppConfig
 
 log = logging.getLogger(__name__)
@@ -43,9 +44,7 @@ class AIInterpreter(Protocol):
         self, drawn_cards: list[DrawnCard], question: str, spread_key: str = "", lang: str = "en"
     ) -> Generator[StreamChunk, None, None]: ...
 
-    def stream_raw(
-        self, messages: list[dict], *, thinking: bool = True
-    ) -> Generator[StreamChunk, None, None]: ...
+    def stream_raw(self, messages: list[dict], *, thinking: bool = True) -> Generator[StreamChunk, None, None]: ...
 
 
 def _cards_info(drawn_cards: list[DrawnCard], lang: str) -> str:
@@ -58,19 +57,15 @@ def _cards_info(drawn_cards: list[DrawnCard], lang: str) -> str:
         kw = ", ".join(card_keywords(dc.card, dc.is_reversed, lang))
         meaning = card_meaning(dc.card, dc.is_reversed, lang)
         if lang == "en":
-            lines.append(
-                f"[{dc.position.name}]{desc} {name} ({slbl})"
-                f" — keywords: {kw}, meaning: {meaning}"
-            )
+            lines.append(f"[{dc.position.name}]{desc} {name} ({slbl}) — keywords: {kw}, meaning: {meaning}")
         else:
-            lines.append(
-                f"【{dc.position.name}】{desc}{name}（{slbl}）"
-                f" — keywords: {kw}, meaning: {meaning}"
-            )
+            lines.append(f"【{dc.position.name}】{desc}{name}（{slbl}） — keywords: {kw}, meaning: {meaning}")
     return "\n".join(lines)
 
 
-def build_messages(style: str, question: str, drawn_cards: list[DrawnCard], spread_key: str = "", lang: str = "en") -> list[dict]:
+def build_messages(
+    style: str, question: str, drawn_cards: list[DrawnCard], spread_key: str = "", lang: str = "en"
+) -> list[dict]:
     """Build the system + user message list for the OpenAI chat API."""
     system_content = load_system_prompt().format(style=style)
     spread_prompt = load_spread_prompt(spread_key) if spread_key else ""
@@ -89,8 +84,7 @@ _DEFAULT_STYLE = "mystical"
 class OpenAIInterpreter:
     """Interpret via OpenAI-compatible remote API."""
 
-    def __init__(self, model: str, base_url: str = "https://api.openai.com/v1",
-                 api_key: str | None = None) -> None:
+    def __init__(self, model: str, base_url: str = "https://api.openai.com/v1", api_key: str | None = None) -> None:
         self._model = model
         self._url = f"{base_url.rstrip('/')}/chat/completions"
         self._api_key = api_key
@@ -110,11 +104,13 @@ class OpenAIInterpreter:
 
     def interpret(self, drawn_cards: list[DrawnCard], question: str, spread_key: str = "", lang: str = "en") -> str:
         """Send cards and question to the API and return the interpretation."""
-        req = self._make_request({
-            "model": self._model,
-            "messages": build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key, lang),
-            "stream": False,
-        })
+        req = self._make_request(
+            {
+                "model": self._model,
+                "messages": build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key, lang),
+                "stream": False,
+            }
+        )
         try:
             with urllib.request.urlopen(req, timeout=_DEFAULT_TIMEOUT) as resp:
                 data = json.loads(resp.read())
@@ -138,9 +134,7 @@ class OpenAIInterpreter:
         messages = build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key, lang)
         yield from self.stream_raw(messages)
 
-    def stream_raw(
-        self, messages: list[dict], *, thinking: bool = True
-    ) -> Generator[StreamChunk, None, None]:
+    def stream_raw(self, messages: list[dict], *, thinking: bool = True) -> Generator[StreamChunk, None, None]:
         """Yield text chunks from pre-built messages (for follow-up conversations).
 
         Parses Server-Sent Events line by line. Each event is "data: {json}".
@@ -202,8 +196,7 @@ def get_interpreter(config: AppConfig) -> AIInterpreter:
     """
     if not config.api_key:
         raise InterpretationError(
-            "API key not configured. "
-            "Set api_key in .neko/settings.json to enable interpretation.",
+            "API key not configured. Set api_key in .neko/settings.json to enable interpretation.",
             retryable=False,
             config_error=True,
         )

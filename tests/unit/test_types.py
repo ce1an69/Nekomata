@@ -1,11 +1,9 @@
+from nekomata.core.card.display import card_keywords, card_meaning, card_name, status_label
 from nekomata.core.card.types import Arcana, Card, DrawnCard, Position
-from nekomata.core.card.display import card_name, card_keywords, card_meaning, status_label
 
 
 def test_arcana_values():
-    assert set(Arcana) == {
-        Arcana.MAJOR, Arcana.CUPS, Arcana.WANDS, Arcana.SWORDS, Arcana.PENTACLES
-    }
+    assert set(Arcana) == {Arcana.MAJOR, Arcana.CUPS, Arcana.WANDS, Arcana.SWORDS, Arcana.PENTACLES}
 
 
 def test_arcana_is_str():
@@ -15,8 +13,13 @@ def test_arcana_is_str():
 
 def test_card_creation():
     card = Card(
-        id="major_00", name="The Fool", name_zh="愚者",
-        arcana=Arcana.MAJOR, number=0, element="air", astrology="Uranus",
+        id="major_00",
+        name="The Fool",
+        name_zh="愚者",
+        arcana=Arcana.MAJOR,
+        number=0,
+        element="air",
+        astrology="Uranus",
         keywords_upright=("新开始", "天真", "冒险"),
         keywords_reversed=("鲁莽", "冒失", "停滞"),
         meaning_upright="一段新旅程的开始。",
@@ -29,10 +32,17 @@ def test_card_creation():
 
 def test_card_frozen():
     card = Card(
-        id="test", name="Test", name_zh="测试", arcana=Arcana.MAJOR,
-        number=0, element="air", astrology="Uranus",
-        keywords_upright=(), keywords_reversed=(),
-        meaning_upright="up", meaning_reversed="down",
+        id="test",
+        name="Test",
+        name_zh="测试",
+        arcana=Arcana.MAJOR,
+        number=0,
+        element="air",
+        astrology="Uranus",
+        keywords_upright=(),
+        keywords_reversed=(),
+        meaning_upright="up",
+        meaning_reversed="down",
     )
     try:
         card.name = "changed"
@@ -48,10 +58,17 @@ def test_position():
 
 def test_drawn_card():
     card = Card(
-        id="test", name="Test", name_zh="测试", arcana=Arcana.CUPS,
-        number=1, element="water", astrology="Cancer",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
+        id="test",
+        name="Test",
+        name_zh="测试",
+        arcana=Arcana.CUPS,
+        number=1,
+        element="water",
+        astrology="Cancer",
+        keywords_upright=("a",),
+        keywords_reversed=("b",),
+        meaning_upright="up",
+        meaning_reversed="down",
     )
     pos = Position(name="Past", name_zh="过去", description="过去的影响")
     dc = DrawnCard(card=card, position=pos, is_reversed=True)
@@ -67,10 +84,17 @@ def test_status_label():
 
 def test_card_keywords_and_meaning():
     card = Card(
-        id="test", name="Test", name_zh="测试", arcana=Arcana.CUPS,
-        number=1, element="water", astrology="Cancer",
-        keywords_upright=("正位关键词",), keywords_reversed=("逆位关键词",),
-        meaning_upright="正位含义", meaning_reversed="逆位含义",
+        id="test",
+        name="Test",
+        name_zh="测试",
+        arcana=Arcana.CUPS,
+        number=1,
+        element="water",
+        astrology="Cancer",
+        keywords_upright=("正位关键词",),
+        keywords_reversed=("逆位关键词",),
+        meaning_upright="正位含义",
+        meaning_reversed="逆位含义",
     )
     assert card_keywords(card, False, "en") == ("正位关键词",)
     assert card_meaning(card, False, "en") == "正位含义"

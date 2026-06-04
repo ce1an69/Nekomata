@@ -7,8 +7,7 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import Input, Select, Static
 
-from nekomata.core.i18n import SUPPORTED_LANGS, set_lang
-from nekomata.tui.render.animations import animate_entrance
+from nekomata.core.i18n import ORNAMENT, SUPPORTED_LANGS, lazy_section, set_lang
 from nekomata.core.render.styles import (
     C_BASE,
     C_MANTLE,
@@ -20,10 +19,9 @@ from nekomata.core.render.styles import (
     C_SURFACE1,
     C_TEXT,
 )
-from nekomata.core.i18n import lazy_section
-from nekomata.core.i18n import ORNAMENT
-from nekomata.tui.screens.solid_static import SolidStatic
 from nekomata.core.storage.config import AppConfig
+from nekomata.tui.render.animations import animate_entrance
+from nekomata.tui.screens.solid_static import SolidStatic
 
 _STR = lazy_section("setup")
 
@@ -41,9 +39,7 @@ class NavSelect(Select, inherit_bindings=False):  # pyright: ignore[reportCallIs
 if SUPPORTED_LANGS != ("en", "zh"):
     _LANG_OPTIONS = [
         (
-            code.upper()
-            if code not in ("en", "zh")
-            else ("English" if code == "en" else "中文"),
+            code.upper() if code not in ("en", "zh") else ("English" if code == "en" else "中文"),
             code,
         )
         for code in SUPPORTED_LANGS
@@ -223,9 +219,7 @@ class SetupScreen(Screen):
             yield SolidStatic(ORNAMENT, align="center", id="setup-ornament-top")
             yield Static(_STR["field_api_url"], classes="field-label")
             yield Input(
-                value=cfg.api_url
-                if cfg and cfg.api_url
-                else "https://api.openai.com/v1",
+                value=cfg.api_url if cfg and cfg.api_url else "https://api.openai.com/v1",
                 placeholder="https://api.openai.com/v1",
                 id="api-url-input",
                 classes="setup-input",

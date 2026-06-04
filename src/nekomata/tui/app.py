@@ -4,6 +4,7 @@ from textual.app import App
 from textual.binding import Binding
 from textual.events import Resize
 
+from nekomata.core.i18n import set_lang
 from nekomata.core.render.styles import (
     C_BASE,
     C_CRUST,
@@ -17,9 +18,8 @@ from nekomata.core.render.styles import (
 )
 from nekomata.core.render.terminal import get_render_mode
 from nekomata.core.render.themes import set_default_theme
-from nekomata.tui.screens.home import HomeScreen
-from nekomata.core.i18n import set_lang
 from nekomata.core.storage.config import AppConfig
+from nekomata.tui.screens.home import HomeScreen
 
 
 class NekomataApp(App):

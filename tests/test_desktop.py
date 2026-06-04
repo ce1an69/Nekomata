@@ -1,7 +1,7 @@
 """Tests for desktop entry point."""
 
-import sys
 import queue
+import sys
 from unittest.mock import MagicMock, patch
 
 import pytest

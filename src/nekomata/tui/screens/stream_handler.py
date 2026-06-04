@@ -9,8 +9,8 @@ from rich.text import Text
 
 from nekomata.core.ai.interpreter import InterpretationError, StreamChunk, get_interpreter
 from nekomata.core.ai.prompts import build_followup_prompt
-from nekomata.core.render.styles import C_OVERLAY0, C_TEXT
 from nekomata.core.i18n import lazy_strings as _s
+from nekomata.core.render.styles import C_OVERLAY0, C_TEXT
 
 
 class StreamHandler:
@@ -65,9 +65,7 @@ class StreamHandler:
         s = _s()
         self._loading_frame = 0
         self._tick_loading()
-        self._loading_timer = self._screen.set_interval(
-            s["loading_interval_ms"] / 1000.0, self._tick_loading
-        )
+        self._loading_timer = self._screen.set_interval(s["loading_interval_ms"] / 1000.0, self._tick_loading)
 
     def _stop_loading(self) -> None:
         if self._loading_timer is not None:
@@ -83,9 +81,7 @@ class StreamHandler:
         frame = frames[self._loading_frame % len(frames)]
         msg_idx = int(self._loading_frame * interval / msg_interval) % len(msgs)
         self._loading_frame += 1
-        self._render_hints(
-            Text(f"{frame} {msgs[msg_idx]}", style=C_OVERLAY0)
-        )
+        self._render_hints(Text(f"{frame} {msgs[msg_idx]}", style=C_OVERLAY0))
 
     def stop(self, stop_loading: bool = True) -> None:
         if stop_loading:
@@ -160,7 +156,7 @@ class StreamHandler:
             self._on_done()
 
     async def run(self, drawn_cards, question, cancelled_check) -> None:
-        from nekomata.core.ai.interpreter import build_messages, _DEFAULT_STYLE
+        from nekomata.core.ai.interpreter import _DEFAULT_STYLE, build_messages
 
         config = self._screen.app.config
         lang = config.lang
@@ -170,9 +166,7 @@ class StreamHandler:
             cancelled_check,
         )
 
-    async def run_followup(
-        self, messages_history: list[dict], question: str, cancelled_check
-    ) -> None:
+    async def run_followup(self, messages_history: list[dict], question: str, cancelled_check) -> None:
         """Stream a follow-up interpretation using conversation history."""
         config = self._screen.app.config
         followup_msg = build_followup_prompt(question, lang=config.lang)
@@ -208,7 +202,17 @@ class StreamHandler:
                 return
             msg = str(exc).lower()
             errors = _s()["errors"]
-            is_config = any(s in msg for s in ("api_key", "unauthorized", "nodename", "name or service", "connection refused", "unknown url type"))
+            is_config = any(
+                s in msg
+                for s in (
+                    "api_key",
+                    "unauthorized",
+                    "nodename",
+                    "name or service",
+                    "connection refused",
+                    "unknown url type",
+                )
+            )
             if "api_key" in msg or "unauthorized" in msg:
                 self._show_error(errors["api_key_missing"], config_error=True)
             else:

@@ -22,18 +22,18 @@ if TYPE_CHECKING:
 from nekomata.core.i18n import ORNAMENT, lazy_section
 from nekomata.core.render.card_renderer import clear_cache
 from nekomata.core.render.styles import C_MAUVE, C_SUBTEXT0, EASE
+from nekomata.core.spread import get_spread
 from nekomata.tui.screens.box_manager import BoxManager
 from nekomata.tui.screens.draw_constants import DECK_ROW_COUNT, NUM_DECK_CARDS
-from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_css import DRAW_SCREEN_CSS
 from nekomata.tui.screens.draw_deck_anim import DeckAnimMixin
 from nekomata.tui.screens.draw_detail import DetailPanel
 from nekomata.tui.screens.draw_dialog import InterpretationDialog
 from nekomata.tui.screens.draw_interpret import InterpretMixin
+from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_pick import PickMixin
 from nekomata.tui.screens.draw_widgets import DeckCard, SpreadSlot
 from nekomata.tui.screens.stream_handler import StreamHandler
-from nekomata.core.spread import get_spread
 
 _STR = lazy_section("draw")
 log = logging.getLogger(__name__)
@@ -65,9 +65,7 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         self._dealing = False
         self._n_positions = len(self._spread.positions)
         self._display_order = self._spread.display_order
-        self._ordered_positions = [
-            self._spread.positions[i] for i in self._display_order
-        ]
+        self._ordered_positions = [self._spread.positions[i] for i in self._display_order]
 
         # Follow-up state
         self._followup_remaining: int = self._n_positions
@@ -138,9 +136,7 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         yield Static("", id="draw-footer")
 
         with Vertical(id="followup-section"):
-            yield Input(
-                placeholder=_STR["followup_placeholder"], id="followup-input"
-            )
+            yield Input(placeholder=_STR["followup_placeholder"], id="followup-input")
 
     # -- Mount / Unmount --
 
@@ -180,12 +176,8 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         if self._planned_cards:
             return
         for position in self._spread.positions:
-            card, is_reversed = self._deck.draw(
-                cast("NekomataApp", self.app).reversal_prob
-            )
-            self._planned_cards.append(
-                DrawnCard(card=card, position=position, is_reversed=is_reversed)
-            )
+            card, is_reversed = self._deck.draw(cast("NekomataApp", self.app).reversal_prob)
+            self._planned_cards.append(DrawnCard(card=card, position=position, is_reversed=is_reversed))
 
     def on_unmount(self) -> None:
         self._cancelled = True

@@ -3,8 +3,6 @@
 import inspect
 import re
 
-from nekomata.tui.app import NekomataApp
-from nekomata.core.render.themes import THEMES
 from nekomata.core.render.styles import (
     C_CRUST,
     C_LAVENDER,
@@ -20,6 +18,8 @@ from nekomata.core.render.styles import (
     C_SURFACE2,
     C_TEXT,
 )
+from nekomata.core.render.themes import THEMES
+from nekomata.tui.app import NekomataApp
 from nekomata.tui.screens.card_browser import CardBrowserScreen, CardListItem
 from nekomata.tui.screens.draw import DrawScreen
 from nekomata.tui.screens.draw_widgets import (
@@ -31,7 +31,6 @@ from nekomata.tui.screens.home import HomeScreen
 from nekomata.tui.screens.setup import SetupButton, SetupScreen
 from nekomata.tui.screens.solid_static import SolidStatic
 from nekomata.tui.screens.spread_select import SpreadSelectScreen
-
 
 CSS_SOURCES = [
     NekomataApp.DEFAULT_CSS,
@@ -66,11 +65,7 @@ CATPPUCCIN_MOCHA = {
 
 
 def test_ui_css_uses_only_catppuccin_mocha_colors():
-    colors = {
-        color.lower()
-        for css in CSS_SOURCES
-        for color in re.findall(r"#[0-9a-fA-F]{6}", css)
-    }
+    colors = {color.lower() for css in CSS_SOURCES for color in re.findall(r"#[0-9a-fA-F]{6}", css)}
 
     assert colors <= CATPPUCCIN_MOCHA
 
@@ -100,8 +95,8 @@ def test_setup_and_spread_static_headers_use_solid_static_lines():
     spread_source = inspect.getsource(SpreadSelectScreen.compose)
 
     assert "SolidStatic" in setup_source
-    assert "id=\"setup-title\"" in setup_source
-    assert "SetupButton(_STR[\"save_label\"]" in setup_source
+    assert 'id="setup-title"' in setup_source
+    assert 'SetupButton(_STR["save_label"]' in setup_source
     assert "SolidStatic(question" in spread_source
 
 
@@ -187,6 +182,7 @@ def test_draw_interpretation_panel_fills_bottom_flow_space():
 
 def test_draw_interpretation_panel_width_tracks_detail_space():
     from nekomata.tui.screens.draw_dialog import InterpretationDialog
+
     source = inspect.getsource(InterpretationDialog.sync_layout)
 
     assert 'styles.width = "1fr"' in source
@@ -235,7 +231,7 @@ def test_draw_fullscreen_height_animation_uses_cell_heights():
     source = inspect.getsource(InterpretationDialog.toggle_fullscreen)
 
     assert "self._panel_height_cells()" in source
-    assert 'INTERP_PANEL_HEIGHT,' not in source
+    assert "INTERP_PANEL_HEIGHT," not in source
 
 
 def test_draw_fullscreen_exit_restores_layout_before_height_animation():
@@ -244,9 +240,7 @@ def test_draw_fullscreen_exit_restores_layout_before_height_animation():
     source = inspect.getsource(InterpretationDialog.toggle_fullscreen)
 
     assert "current_height = self._w_interp.region.height" in source
-    assert source.index("self._restore_fullscreen_layout(") < source.index(
-        "self._animate_interp_height("
-    )
+    assert source.index("self._restore_fullscreen_layout(") < source.index("self._animate_interp_height(")
     assert "on_complete=self._finish_fullscreen_exit" in source
 
 
@@ -273,6 +267,7 @@ def test_draw_hiding_interpretation_animates_down_without_height_collapse():
 
 def test_draw_hiding_detail_recenters_spread_area():
     from nekomata.tui.screens.draw_detail import DetailPanel
+
     source = inspect.getsource(DetailPanel.hide)
     finish_source = inspect.getsource(DetailPanel._finish_hide)
 
@@ -282,6 +277,7 @@ def test_draw_hiding_detail_recenters_spread_area():
 
 def test_draw_stream_uses_app_thread_callback():
     from nekomata.tui.screens.stream_handler import StreamHandler
+
     source = inspect.getsource(StreamHandler._run_stream)
 
     assert "call_from_thread" in source
@@ -313,6 +309,7 @@ def test_draw_followup_input_is_centered_above_footer():
 
 def test_draw_stream_content_renders_markdown():
     from nekomata.tui.screens.stream_handler import StreamHandler
+
     source = inspect.getsource(StreamHandler._render)
 
     assert 'Markdown("".join(self._content_chars)' in source
@@ -330,8 +327,8 @@ def test_draw_export_image_includes_drawn_cards():
 
 
 def test_draw_loading_hint_rotates_cat_tarot_messages():
-    from nekomata.tui.screens import stream_handler
     from nekomata.core.i18n import ui_strings
+    from nekomata.tui.screens import stream_handler
 
     s = stream_handler._s()
     assert s["loading_message_interval_s"] == 2.0

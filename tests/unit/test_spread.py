@@ -1,16 +1,23 @@
 from nekomata.core.card.deck import Deck
-from nekomata.core.card.types import Card, Arcana
-from nekomata.core.spread import get_spread, SPREAD_REGISTRY
+from nekomata.core.card.types import Arcana, Card
+from nekomata.core.spread import SPREAD_REGISTRY, get_spread
 from nekomata.core.spread.base import Spread
 
 
 def make_deck(n: int = 10) -> Deck:
     cards = [
         Card(
-            id=f"s_{i:02d}", name=f"S{i}", name_zh=f"牌{i}",
-            arcana=Arcana.MAJOR, number=i, element="air", astrology="Uranus",
-            keywords_upright=("a",), keywords_reversed=("b",),
-            meaning_upright="up", meaning_reversed="down",
+            id=f"s_{i:02d}",
+            name=f"S{i}",
+            name_zh=f"牌{i}",
+            arcana=Arcana.MAJOR,
+            number=i,
+            element="air",
+            astrology="Uranus",
+            keywords_upright=("a",),
+            keywords_reversed=("b",),
+            meaning_upright="up",
+            meaning_reversed="down",
         )
         for i in range(n)
     ]
@@ -88,7 +95,11 @@ class TestFiveCardCross:
 
     def test_position_names(self):
         assert [p.name for p in get_spread("five_card_cross").positions] == [
-            "Present", "Challenge", "Foundation", "Past", "Guidance"
+            "Present",
+            "Challenge",
+            "Foundation",
+            "Past",
+            "Guidance",
         ]
 
     def test_display_order(self):
@@ -105,6 +116,7 @@ class TestSpreadRegistry:
 
     def test_get_spread_raises_for_unknown_key(self):
         import pytest
+
         with pytest.raises(KeyError):
             get_spread("nonexistent")
 
@@ -116,6 +128,7 @@ class TestSpreadRegistry:
 def test_draw_raises_when_deck_too_small():
     """Spread.draw raises IndexError if deck has fewer cards than positions."""
     import pytest
+
     spread = get_spread("five_card_cross")
     deck = make_deck(3)
     with pytest.raises(IndexError, match="Need 5 cards"):

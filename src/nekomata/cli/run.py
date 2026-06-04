@@ -9,8 +9,9 @@ from rich.console import Console
 from rich.table import Table
 
 from nekomata.core.ai.interpreter import InterpretationError, get_interpreter
-from nekomata.core.card.display import card_keywords, status_label as _status_label
 from nekomata.core.card.deck import Deck
+from nekomata.core.card.display import card_keywords
+from nekomata.core.card.display import status_label as _status_label
 from nekomata.core.card.types import DrawnCard
 from nekomata.core.i18n import set_lang, ui_strings
 from nekomata.core.spread import SPREAD_REGISTRY, get_spread
@@ -56,9 +57,7 @@ def _prompt_choice(question: str, options: list[str], default_idx: int = 0) -> s
     return options[default_idx]
 
 
-def _draw_cards(
-    spread_key: str, seed: int, reversal_prob: float = 0.5
-) -> tuple[list[DrawnCard], object]:
+def _draw_cards(spread_key: str, seed: int, reversal_prob: float = 0.5) -> tuple[list[DrawnCard], object]:
     """Shuffle and draw cards for the given spread."""
     random.seed(seed)
     spread = get_spread(spread_key)
@@ -165,9 +164,7 @@ def run_cli(args: argparse.Namespace) -> None:
 
     if not config.api_key or not config.api_url:
         console.print("[red]Error:[/red] API not configured.")
-        console.print(
-            "[dim]Run the TUI first (just `nekomata-tarot`) to set up your API key,"
-        )
+        console.print("[dim]Run the TUI first (just `nekomata-tarot`) to set up your API key,")
         console.print("[dim]or edit .neko/settings.json manually.[/dim]")
         return
 
@@ -191,11 +188,7 @@ def run_cli(args: argparse.Namespace) -> None:
             return
 
     if seed is None:
-        seed = (
-            random.randint(1, 9999)
-            if args.yes
-            else _prompt_int("Random seed", random.randint(1, 9999))
-        )
+        seed = random.randint(1, 9999) if args.yes else _prompt_int("Random seed", random.randint(1, 9999))
 
     if not spread_key:
         if args.yes:

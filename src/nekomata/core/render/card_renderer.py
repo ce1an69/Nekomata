@@ -7,15 +7,14 @@ import os
 from pathlib import Path
 
 from PIL import Image as PILImage
-from PIL import ImageChops
-from PIL import ImageDraw
+from PIL import ImageChops, ImageDraw
 from rich.panel import Panel
 from rich.text import Text
 
 from nekomata.core.card.display import card_keywords, card_meaning, card_name, status_label
 from nekomata.core.card.types import Card, DrawnCard
-from nekomata.core.render.themes import get_theme
 from nekomata.core.i18n import ui_section as section
+from nekomata.core.render.themes import get_theme
 
 _DETAIL_MAX_SIZE = (256, 384)
 
@@ -36,7 +35,8 @@ def _get_tui_image_class():
     global _CACHED_TUI_CLASS
     if _CACHED_TUI_CLASS is not None:
         return _CACHED_TUI_CLASS
-    from textual_image.widget import Image as AutoImage, TGPImage
+    from textual_image.widget import Image as AutoImage
+    from textual_image.widget import TGPImage
 
     term_program = os.environ.get("TERM_PROGRAM", "").lower()
     if term_program in _TGP_TERMINALS or os.environ.get("KITTY_WINDOW_ID"):

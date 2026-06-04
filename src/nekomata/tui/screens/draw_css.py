@@ -1,11 +1,25 @@
 """TCSS stylesheet for the draw screen (extracted for readability)."""
 
 from nekomata.core.render.styles import (
-    C_CRUST, C_LAVENDER, C_MANTLE, C_MAUVE, C_OVERLAY0,
-    C_PINK, C_SUBTEXT0, C_SURFACE0, C_SURFACE1, C_SURFACE2, C_TEXT,
+    C_CRUST,
+    C_LAVENDER,
+    C_MANTLE,
+    C_MAUVE,
+    C_OVERLAY0,
+    C_PINK,
+    C_SUBTEXT0,
+    C_SURFACE0,
+    C_SURFACE1,
+    C_SURFACE2,
+    C_TEXT,
     EASE_OUT,
 )
-from nekomata.tui.screens.draw_constants import DETAIL_PANEL_WIDTH, INTERP_PANEL_HEIGHT, INTERP_MIN_HEIGHT, INTERP_MAX_HEIGHT
+from nekomata.tui.screens.draw_constants import (
+    DETAIL_PANEL_WIDTH,
+    INTERP_MAX_HEIGHT,
+    INTERP_MIN_HEIGHT,
+    INTERP_PANEL_HEIGHT,
+)
 
 DRAW_SCREEN_CSS = f"""
 DrawScreen {{

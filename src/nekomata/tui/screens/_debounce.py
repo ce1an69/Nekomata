@@ -18,9 +18,7 @@ class DebouncedCall:
         debouncer.cancel()               # stops pending invocation
     """
 
-    def __init__(
-        self, screen: Screen, delay: float, callback: Callable[..., None]
-    ) -> None:
+    def __init__(self, screen: Screen, delay: float, callback: Callable[..., None]) -> None:
         self._screen = screen
         self._delay = delay
         self._callback = callback

@@ -12,7 +12,8 @@ from typing import TYPE_CHECKING
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from nekomata.core._paths import assets_dir
-from nekomata.core.card.display import card_name as _card_name, status_label as _status_label
+from nekomata.core.card.display import card_name as _card_name
+from nekomata.core.card.display import status_label as _status_label
 from nekomata.core.render.styles import (
     C_LAVENDER,
     C_MANTLE,
@@ -79,26 +80,28 @@ class _Block:
 
 
 def _bundled_font_path(*, bold: bool = False) -> str:
-    name = (
-        "MapleMonoNormal-NF-CN-Bold.woff2"
-        if bold
-        else "MapleMonoNormal-NF-CN-Regular.woff2"
-    )
+    name = "MapleMonoNormal-NF-CN-Bold.woff2" if bold else "MapleMonoNormal-NF-CN-Regular.woff2"
     return str(assets_dir() / "fonts" / name)
 
 
 def _font_candidates(*, bold: bool = False) -> tuple[str, ...]:
-    pingfang_assets = tuple(sorted(glob("/System/Library/AssetsV2/com_apple_MobileAsset_Font8/*/AssetData/PingFang.ttc")))
-    return (_bundled_font_path(bold=bold),) + pingfang_assets + (
-        "/System/Library/Fonts/PingFang.ttc",
-        "/System/Library/Fonts/Hiragino Sans GB.ttc",
-        "/System/Library/Fonts/STHeiti Light.ttc",
-        "/System/Library/Fonts/STHeiti Medium.ttc",
-        "/Library/Fonts/Hiragino Sans GB.ttc",
-        "/Library/Fonts/Arial Unicode.ttf",
-        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    pingfang_assets = tuple(
+        sorted(glob("/System/Library/AssetsV2/com_apple_MobileAsset_Font8/*/AssetData/PingFang.ttc"))
+    )
+    return (
+        (_bundled_font_path(bold=bold),)
+        + pingfang_assets
+        + (
+            "/System/Library/Fonts/PingFang.ttc",
+            "/System/Library/Fonts/Hiragino Sans GB.ttc",
+            "/System/Library/Fonts/STHeiti Light.ttc",
+            "/System/Library/Fonts/STHeiti Medium.ttc",
+            "/Library/Fonts/Hiragino Sans GB.ttc",
+            "/Library/Fonts/Arial Unicode.ttf",
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        )
     )
 
 
@@ -142,7 +145,6 @@ _FONT_QUESTION = _find_font(29, bold=True)
 _FONT_EMOJI = _find_emoji_font()
 
 
-
 def _font_for(kind: str):
     if kind == "bold":
         return _FONT_BOLD
@@ -175,11 +177,7 @@ def _color_for(kind: str):
 
 def _is_emoji_char(ch: str) -> bool:
     cp = ord(ch)
-    return (
-        0x1F000 <= cp <= 0x1FAFF
-        or 0x2600 <= cp <= 0x27BF
-        or cp in {0xFE0F, 0x200D}
-    )
+    return 0x1F000 <= cp <= 0x1FAFF or 0x2600 <= cp <= 0x27BF or cp in {0xFE0F, 0x200D}
 
 
 def _split_emoji_runs(text: str, kind: str) -> list[_Run]:
@@ -245,7 +243,7 @@ def _parse_inline(text: str, default_kind: str = "body") -> list[_Run]:
     pos = 0
     for match in pattern.finditer(text):
         if match.start() > pos:
-            runs.extend(_split_emoji_runs(text[pos:match.start()], default_kind))
+            runs.extend(_split_emoji_runs(text[pos : match.start()], default_kind))
         token = match.group(0)
         if token.startswith("**"):
             kind = default_kind if default_kind.startswith("h") else "bold"
@@ -459,7 +457,7 @@ def _draw_cards(
     label_h = 62
 
     for row in range(rows):
-        row_cards = drawn_cards[row * per_row:(row + 1) * per_row]
+        row_cards = drawn_cards[row * per_row : (row + 1) * per_row]
         row_w = len(row_cards) * _CARD_W + max(0, len(row_cards) - 1) * gap
         x = area_x + (area_w - row_w) // 2
         for drawn in row_cards:
@@ -521,12 +519,18 @@ def _draw_window_shadow(
 ) -> None:
     x1, y1, x2, y2 = rect
     _blur_rect(
-        img, (x1, y1 + 18, x2, y2 + 18),
-        blur_radius=28, fill=(18, 22, 25, 86), rounded_radius=radius,
+        img,
+        (x1, y1 + 18, x2, y2 + 18),
+        blur_radius=28,
+        fill=(18, 22, 25, 86),
+        rounded_radius=radius,
     )
     _blur_rect(
-        img, (x1 + 18, y2 - 6, x2 - 18, y2 + 22),
-        blur_radius=14, fill=(18, 22, 25, 44), rounded_radius=18,
+        img,
+        (x1 + 18, y2 - 6, x2 - 18, y2 + 22),
+        blur_radius=14,
+        fill=(18, 22, 25, 44),
+        rounded_radius=18,
     )
 
 

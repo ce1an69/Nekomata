@@ -10,9 +10,8 @@ from rich.console import Group
 from rich.markdown import Markdown
 from rich.rule import Rule
 from rich.text import Text
-
-from textual.css.scalar import ScalarOffset
 from textual.css.query import NoMatches
+from textual.css.scalar import ScalarOffset
 from textual.events import Key
 from textual.geometry import Offset
 from textual.widgets import Input
@@ -23,7 +22,8 @@ from nekomata.core.card.display import status_label as _status_label
 from nekomata.core.clipboard import copy_image as _copy_image_to_clipboard
 from nekomata.core.clipboard import copy_text as _copy_text_to_clipboard
 from nekomata.core.i18n import lazy_section
-from nekomata.core.render.image_export import render_interp_image, save_image as _save_tmp_image
+from nekomata.core.render.image_export import render_interp_image
+from nekomata.core.render.image_export import save_image as _save_tmp_image
 from nekomata.core.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_TEXT, EASE
 from nekomata.tui.screens.draw_constants import SCROLL_NEAR_BOTTOM_THRESHOLD
 from nekomata.tui.screens.draw_phase import Phase
@@ -33,9 +33,7 @@ from nekomata.tui.screens.widgets import go_home
 _STR = lazy_section("draw")
 
 
-def _compose_copy_text(
-    question: str, drawn_cards: list, interp: str, lang: str
-) -> str:
+def _compose_copy_text(question: str, drawn_cards: list, interp: str, lang: str) -> str:
     """Build the full text to copy: question heading + card list + interpretation."""
     parts: list[str] = []
     if question:
@@ -92,9 +90,7 @@ class InterpretMixin:
             message,
             self._update_phase_ui,
             sync_layout=self._sync_interp_layout,
-            fit_height=lambda: self._dialog.fit_height(
-                self._w_main_area, self._detail.visible
-            ),
+            fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
         )
         if config_error:
             from nekomata.tui.screens.setup import SetupScreen
@@ -107,20 +103,14 @@ class InterpretMixin:
         new_content = "".join(self._stream._content_chars)
 
         if self._followup_active:
-            self._prev_interp_content += (
-                f"\n\n---\n\n> {self._followup_question}\n\n---\n\n{new_content}"
-            )
+            self._prev_interp_content += f"\n\n---\n\n> {self._followup_question}\n\n---\n\n{new_content}"
             self._followup_active = False
-            self._w_interp_content.update(
-                Markdown(self._prev_interp_content, style=C_TEXT)
-            )
+            self._w_interp_content.update(Markdown(self._prev_interp_content, style=C_TEXT))
             self._messages_history.append({"role": "assistant", "content": new_content})
         else:
             self._prev_interp_content = new_content
             self._initial_interp_content = new_content
-            self._messages_history = list(self._stream.messages) + [
-                {"role": "assistant", "content": new_content}
-            ]
+            self._messages_history = list(self._stream.messages) + [{"role": "assistant", "content": new_content}]
             self._first_interp_done = True
 
         self._dialog.set_streaming(False)
@@ -193,9 +183,7 @@ class InterpretMixin:
         )
         i_hint = "" if self._dialog.is_visible else _STR["hint_interpret"]
         parts = [d_hint, h_hint, f_hint, c_hint, e_hint, i_hint, _STR["hint_back"]]
-        self._w_footer.update(
-            Text("  ".join(p for p in parts if p), style=C_OVERLAY0)
-        )
+        self._w_footer.update(Text("  ".join(p for p in parts if p), style=C_OVERLAY0))
 
     def _update_phase_ui(self) -> None:
         lbl = f"bold {C_LAVENDER}"
@@ -205,17 +193,13 @@ class InterpretMixin:
             if self._pick_index < self._n_positions:
                 pos_name = self._spread.positions[self._pick_index].name
                 remaining = self._n_positions - self._pick_index
-                spread_text = _STR["pick_next"].format(
-                    remaining=remaining, name=pos_name
-                )
+                spread_text = _STR["pick_next"].format(remaining=remaining, name=pos_name)
             else:
                 spread_text = _STR["pick_done"]
             self._w_spread_label.update(Text(spread_text, style=lbl))
             self._w_deck_label.update(
                 Text(
-                    _STR["pick_label"].format(
-                        picked=self._pick_index, total=self._n_positions
-                    ),
+                    _STR["pick_label"].format(picked=self._pick_index, total=self._n_positions),
                     style=lbl,
                 )
             )
@@ -223,9 +207,7 @@ class InterpretMixin:
             self._w_deck_section.display = True
         elif self._phase == Phase.FLIP:
             unrevealed = sum(1 for s in self.query(SpreadSlot) if not s.is_revealed)
-            self._w_spread_label.update(
-                Text(_STR["flip_label"].format(unrevealed=unrevealed), style=lbl)
-            )
+            self._w_spread_label.update(Text(_STR["flip_label"].format(unrevealed=unrevealed), style=lbl))
             self._w_footer.update(Text(_STR["hint_flip"], style=C_OVERLAY0))
         elif self._phase == Phase.DONE:
             self._w_deck_section.display = False
@@ -242,10 +224,7 @@ class InterpretMixin:
         event.stop()
 
         # Focus next unrevealed slot immediately so rapid flipping isn't blocked
-        next_unrevealed = [
-            s for s in self.query(SpreadSlot)
-            if not s.is_revealed and s is not event.slot
-        ]
+        next_unrevealed = [s for s in self.query(SpreadSlot) if not s.is_revealed and s is not event.slot]
         if next_unrevealed:
             next_unrevealed[0].focus()
 
@@ -266,9 +245,7 @@ class InterpretMixin:
             self._detail.show(
                 slots[0] if slots else None,
                 sync_interp=self._sync_interp_layout,
-                fit_height=lambda: self._dialog.fit_height(
-                    self._w_main_area, self._detail.visible
-                ),
+                fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
             )
             self._update_phase_ui()
             for s in slots:
@@ -311,18 +288,12 @@ class InterpretMixin:
                 self._box.active_box = "interp" if self._dialog.fullscreen else "spread"
                 self._box.update_highlights()
                 self._box.focus_widget()
-            center_spread = (
-                None if self._dialog.fullscreen else self._center_spread_area
-            )
-            self._detail.hide(
-                sync_interp=self._sync_interp_layout, center_spread=center_spread
-            )
+            center_spread = None if self._dialog.fullscreen else self._center_spread_area
+            self._detail.hide(sync_interp=self._sync_interp_layout, center_spread=center_spread)
         else:
             self._detail.show(
                 sync_interp=self._sync_interp_layout,
-                fit_height=lambda: self._dialog.fit_height(
-                    self._w_main_area, self._detail.visible
-                ),
+                fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
             )
             slots = list(self.query(SpreadSlot))
             if slots:
@@ -367,9 +338,7 @@ class InterpretMixin:
         template = _STR.get("followup_placeholder_remaining")
         if not template:
             template = _STR["followup_placeholder"]
-        self._w_followup_input.placeholder = template.format(
-            remaining=self._followup_remaining
-        )
+        self._w_followup_input.placeholder = template.format(remaining=self._followup_remaining)
 
     def _show_followup(self) -> None:
         self._followup_visible = True
@@ -383,9 +352,7 @@ class InterpretMixin:
         self._sync_interp_layout()
         self._sync_detail_height_after_refresh()
         if self.app.animation_enabled:
-            self._w_followup_section.styles.animate(
-                "opacity", 1.0, duration=0.24, easing=EASE
-            )
+            self._w_followup_section.styles.animate("opacity", 1.0, duration=0.24, easing=EASE)
             self._w_followup_section.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 0)),
@@ -399,9 +366,7 @@ class InterpretMixin:
         self._sync_interp_layout()
         self._sync_detail_height_after_refresh()
         if self.app.animation_enabled:
-            self._w_followup_section.styles.animate(
-                "opacity", 0.0, duration=0.18, easing=EASE
-            )
+            self._w_followup_section.styles.animate("opacity", 0.0, duration=0.18, easing=EASE)
             self._w_followup_section.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 1)),
@@ -434,9 +399,7 @@ class InterpretMixin:
         self._stream.reset(append=True)
         self._dialog.fit_height(self._w_main_area, self._detail.visible)
         self.run_worker(
-            self._stream.run_followup(
-                self._messages_history, question, lambda: self._cancelled
-            ),
+            self._stream.run_followup(self._messages_history, question, lambda: self._cancelled),
             exclusive=True,
         )
 
@@ -461,11 +424,7 @@ class InterpretMixin:
     def key_c(self, event: Key) -> None:
         from nekomata.tui.screens.draw import Phase
 
-        if (
-            self._phase != Phase.DONE
-            or not self._first_interp_done
-            or self._dialog.is_streaming
-        ):
+        if self._phase != Phase.DONE or not self._first_interp_done or self._dialog.is_streaming:
             return
         if not self._dialog.is_visible:
             return
@@ -482,11 +441,7 @@ class InterpretMixin:
     def key_e(self, event: Key) -> None:
         from nekomata.tui.screens.draw import Phase
 
-        if (
-            self._phase != Phase.DONE
-            or not self._first_interp_done
-            or self._dialog.is_streaming
-        ):
+        if self._phase != Phase.DONE or not self._first_interp_done or self._dialog.is_streaming:
             return
         if not self._dialog.is_visible:
             return
@@ -526,9 +481,7 @@ class InterpretMixin:
             self._cancelled = False
             self._dialog.show(
                 sync_layout=self._sync_interp_layout,
-                fit_height=lambda: self._dialog.fit_height(
-                    self._w_main_area, self._detail.visible
-                ),
+                fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
             )
             self._sync_interp_hints()
             self._update_footer_fullscreen()

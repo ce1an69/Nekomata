@@ -17,9 +17,9 @@ class DetailPanel:
         self._visible = False
         self._last_preview_id: str | None = None
         self._pending_center_spread = None
-        # 详情渲染防抖：快速移动焦点时只渲染最终停留的那一张
+        # 详情渲染防抖: 快速移动焦点时只渲染最终停留的那一张
         self._update_debounce = DebouncedCall(screen, 0.08, self._on_update_debounce)
-        # _apply_update 内部的动画定时器句柄（用于取消孤立定时器）
+        # _apply_update 内部的动画定时器句柄(用于取消孤立定时器)
         self._render_timer = None
         self._fadein_timer = None
         # Widget reference (set after mount)
@@ -141,9 +141,7 @@ class DetailPanel:
             self._fadein_timer = None
         if self._screen.app.animation_enabled and self._w_preview.children:
             self._w_preview.styles.animate("opacity", 0.0, duration=0.14, easing=EASE)
-            self._render_timer = self._screen.set_timer(
-                0.14, lambda: self._render_slot(dc)
-            )
+            self._render_timer = self._screen.set_timer(0.14, lambda: self._render_slot(dc))
             self._fadein_timer = self._screen.set_timer(0.16, self._fade_in_preview)
         else:
             self._render_slot(dc)
@@ -157,6 +155,7 @@ class DetailPanel:
             result = render_card_full_detail_widgets(dc, lang, upright_image=True)
             if result is not None:
                 from textual.containers import Horizontal
+
                 img_widget, text_panel = result
                 self._w_preview.mount(Horizontal(img_widget, classes="card-detail-frame"))
                 self._w_preview.mount(Static(text_panel))

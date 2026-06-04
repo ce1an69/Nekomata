@@ -94,6 +94,7 @@ async def test_card_browser_back():
         await pilot.press("escape")
         await pilot.pause()
         from nekomata.tui.screens.home import HomeScreen
+
         assert isinstance(app.screen, HomeScreen)
 
 
@@ -279,6 +280,7 @@ async def test_card_browser_tab_cycles_all_panels():
         await pilot.press("tab")
         await pilot.pause()
         from textual.widgets import Button
+
         assert isinstance(app.screen.focused, Button)
         assert app.screen.focused.id == "filter-all"
 

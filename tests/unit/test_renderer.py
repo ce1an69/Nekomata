@@ -7,21 +7,26 @@ from nekomata.core._paths import assets_dir
 from nekomata.core.card.types import Arcana, Card, DrawnCard, Position
 from nekomata.core.i18n import set_lang
 from nekomata.core.render.card_renderer import (
-    render_card_text,
-    render_card_detail,
-    create_card_face_widget,
-    create_card_detail_widget,
     _load_image,
-    preload_card_image,
-    get_cached_image,
     clear_cache,
+    create_card_detail_widget,
+    create_card_face_widget,
+    get_cached_image,
+    preload_card_image,
+    render_card_detail,
+    render_card_text,
 )
 
 
 def make_drawn(reversed: bool = False) -> DrawnCard:
     card = Card(
-        id="major_00", name="The Fool", name_zh="愚者",
-        arcana=Arcana.MAJOR, number=0, element="air", astrology="Uranus",
+        id="major_00",
+        name="The Fool",
+        name_zh="愚者",
+        arcana=Arcana.MAJOR,
+        number=0,
+        element="air",
+        astrology="Uranus",
         keywords_upright=("新开始", "天真", "冒险"),
         keywords_reversed=("鲁莽", "冒失", "停滞"),
         meaning_upright="一段新旅程的开始。",
@@ -107,10 +112,17 @@ def test_create_card_face_widget_no_image():
 def test_create_card_face_widget_with_png():
     """Cards with a real PNG should return an Image widget."""
     card = Card(
-        id="major_02", name="The High Priestess", name_zh="女祭司",
-        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
+        id="major_02",
+        name="The High Priestess",
+        name_zh="女祭司",
+        arcana=Arcana.MAJOR,
+        number=2,
+        element="water",
+        astrology="Moon",
+        keywords_upright=("a",),
+        keywords_reversed=("b",),
+        meaning_upright="up",
+        meaning_reversed="down",
         image_path=assets_dir() / "cards" / "major" / "major_02_detail.png",
     )
     pos = Position(name="Test", name_zh="测试", description="test")
@@ -123,10 +135,17 @@ def test_create_card_face_widget_with_png():
 def test_load_image_reversed_rotates():
     """Reversed card should have rotated image."""
     card = Card(
-        id="major_02", name="The High Priestess", name_zh="女祭司",
-        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
+        id="major_02",
+        name="The High Priestess",
+        name_zh="女祭司",
+        arcana=Arcana.MAJOR,
+        number=2,
+        element="water",
+        astrology="Moon",
+        keywords_upright=("a",),
+        keywords_reversed=("b",),
+        meaning_upright="up",
+        meaning_reversed="down",
         image_path=assets_dir() / "cards" / "major" / "major_02_detail.png",
     )
     detail_path = card.image_path
@@ -146,10 +165,17 @@ def test_create_card_detail_widget_no_image():
 def test_create_card_detail_widget_with_png():
     """Cards with a real PNG should return an Image widget."""
     card = Card(
-        id="major_02", name="The High Priestess", name_zh="女祭司",
-        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
+        id="major_02",
+        name="The High Priestess",
+        name_zh="女祭司",
+        arcana=Arcana.MAJOR,
+        number=2,
+        element="water",
+        astrology="Moon",
+        keywords_upright=("a",),
+        keywords_reversed=("b",),
+        meaning_upright="up",
+        meaning_reversed="down",
         image_path=assets_dir() / "cards" / "major" / "major_02_detail.png",
     )
     pos = Position(name="Test", name_zh="测试", description="test")
@@ -175,12 +201,8 @@ def test_create_card_detail_widget_can_force_upright(monkeypatch):
         calls.append(upside_down)
         return object()
 
-    monkeypatch.setattr(
-        "nekomata.core.render.card_renderer._load_runtime_image", fake_load
-    )
-    monkeypatch.setattr(
-        "nekomata.core.render.card_renderer._get_tui_image_class", lambda: DummyImage
-    )
+    monkeypatch.setattr("nekomata.core.render.card_renderer._load_runtime_image", fake_load)
+    monkeypatch.setattr("nekomata.core.render.card_renderer._get_tui_image_class", lambda: DummyImage)
 
     drawn = make_drawn(reversed=True)
     result = create_card_detail_widget(drawn, upright_image=True)
@@ -196,10 +218,17 @@ def test_preload_and_cache():
     """preload_card_image should populate the cache."""
     clear_cache()
     card = Card(
-        id="major_02", name="The High Priestess", name_zh="女祭司",
-        arcana=Arcana.MAJOR, number=2, element="water", astrology="Moon",
-        keywords_upright=("a",), keywords_reversed=("b",),
-        meaning_upright="up", meaning_reversed="down",
+        id="major_02",
+        name="The High Priestess",
+        name_zh="女祭司",
+        arcana=Arcana.MAJOR,
+        number=2,
+        element="water",
+        astrology="Moon",
+        keywords_upright=("a",),
+        keywords_reversed=("b",),
+        meaning_upright="up",
+        meaning_reversed="down",
         image_path=assets_dir() / "cards" / "major" / "major_02_detail.png",
     )
     assert get_cached_image(card, is_reversed=False) is None

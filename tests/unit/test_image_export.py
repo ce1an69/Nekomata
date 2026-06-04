@@ -5,21 +5,19 @@ from PIL import Image
 from nekomata.core.card.data import load_all_cards
 from nekomata.core.card.types import DrawnCard, Position
 from nekomata.core.render.image_export import (
-    render_interp_image,
-    save_image,
+    _FONT_BODY,
+    _WIDTH,
+    _hex_to_rgb,
+    _line_h,
     _parse_blocks,
     _parse_inline,
-    _split_emoji_runs,
-    _wrap_runs,
-    _tokenize,
-    _hex_to_rgb,
-    _text_w,
-    _line_h,
     _Run,
-    _WIDTH,
-    _CARD_W,
-    _CARD_H,
-    _FONT_BODY,
+    _split_emoji_runs,
+    _text_w,
+    _tokenize,
+    _wrap_runs,
+    render_interp_image,
+    save_image,
 )
 
 
@@ -245,4 +243,5 @@ def test_save_image_creates_file(tmp_path):
     assert path.endswith(".png")
     assert Image.open(path).size == (100, 100)
     import os
+
     os.unlink(path)

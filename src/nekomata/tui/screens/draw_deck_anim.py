@@ -23,9 +23,7 @@ class DeckAnimMixin:
     def _animate_deck_exit(self) -> None:
         """Fade out the deck section, then hide it from layout."""
         if self.app.animation_enabled:
-            self._w_deck_section.styles.animate(
-                "opacity", 0.0, duration=DECK_HIDE_DELAY, easing=EASE
-            )
+            self._w_deck_section.styles.animate("opacity", 0.0, duration=DECK_HIDE_DELAY, easing=EASE)
             self.set_timer(DECK_HIDE_DELAY, self._hide_deck)
         else:
             self._w_deck_section.display = False

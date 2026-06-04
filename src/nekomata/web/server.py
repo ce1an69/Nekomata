@@ -9,7 +9,8 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
-from nekomata.core.ai.interpreter import InterpretationError, _DEFAULT_STYLE, build_messages, get_interpreter
+from nekomata.core._paths import assets_dir, static_dir
+from nekomata.core.ai.interpreter import _DEFAULT_STYLE, InterpretationError, build_messages, get_interpreter
 from nekomata.core.ai.prompts import build_followup_prompt
 from nekomata.core.card.data import load_all_cards
 from nekomata.core.card.types import Card, DrawnCard, Position
@@ -30,7 +31,6 @@ from nekomata.core.render.styles import (
     C_SURFACE2,
     C_TEXT,
 )
-from nekomata.core._paths import assets_dir, static_dir
 from nekomata.core.spread import SPREAD_REGISTRY
 from nekomata.core.storage.config import AppConfig
 
@@ -112,10 +112,7 @@ def _spreads_to_list(lang: str | None = None) -> list[dict]:
                 "description": spread.description,
                 "suitable_for": spread.suitable_for,
                 "name": spread.name,
-                "positions": [
-                    {"name": p.name, "description": p.description}
-                    for p in spread.positions
-                ],
+                "positions": [{"name": p.name, "description": p.description} for p in spread.positions],
                 "card_count": len(spread.positions),
             }
         )
@@ -181,9 +178,7 @@ class ExportImagePayload(BaseModel):
     question: str = ""
 
 
-def _resolve_drawn_cards(
-    cards_payload: list[DrawnCardPayload], cards_by_id: dict[str, Card]
-) -> list[DrawnCard]:
+def _resolve_drawn_cards(cards_payload: list[DrawnCardPayload], cards_by_id: dict[str, Card]) -> list[DrawnCard]:
     """Validate card IDs and build DrawnCard list from a request payload."""
     invalid_ids = [dc.card_id for dc in cards_payload if dc.card_id not in cards_by_id]
     if invalid_ids:
@@ -286,9 +281,7 @@ def create_app() -> FastAPI:
         drawn = _resolve_drawn_cards(req.cards, cards_by_id)
 
         if not drawn:
-            return StreamingResponse(
-                _sse_error("No valid cards provided"), media_type="text/event-stream"
-            )
+            return StreamingResponse(_sse_error("No valid cards provided"), media_type="text/event-stream")
 
         try:
             interp = get_interpreter(config)
@@ -361,6 +354,7 @@ def create_app() -> FastAPI:
         from io import BytesIO
 
         from fastapi.responses import Response
+
         from nekomata.core.render.image_export import render_interp_image
 
         config = AppConfig.load()
@@ -373,9 +367,7 @@ def create_app() -> FastAPI:
         return Response(
             content=buf.getvalue(),
             media_type="image/png",
-            headers={
-                "Content-Disposition": "attachment; filename=nekomata-reading.png"
-            },
+            headers={"Content-Disposition": "attachment; filename=nekomata-reading.png"},
         )
 
     # Mount static files last (catch-all)

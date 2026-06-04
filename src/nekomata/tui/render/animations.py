@@ -5,7 +5,6 @@ from __future__ import annotations
 from textual.css.scalar import ScalarOffset
 from textual.geometry import Offset
 
-
 _OFFSET_ZERO = ScalarOffset.from_offset(Offset(0, 0))
 
 
@@ -25,7 +24,10 @@ def animate_entrance(
     widget.styles.offset = Offset(0, dy)
     widget.styles.animate("opacity", 1.0, duration=duration, easing=easing)
     widget.styles.animate(
-        "offset", _OFFSET_ZERO, duration=duration, easing=easing,
+        "offset",
+        _OFFSET_ZERO,
+        duration=duration,
+        easing=easing,
     )
 
 

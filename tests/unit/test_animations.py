@@ -3,8 +3,8 @@ from time import perf_counter
 import pytest
 from textual.css.query import NoMatches
 
-from nekomata.tui.app import NekomataApp
 from nekomata.core.card.types import Arcana, Card, DrawnCard, Position
+from nekomata.tui.app import NekomataApp
 from nekomata.tui.screens.draw_constants import (
     DECK_HIDE_DELAY,
     NUM_DECK_CARDS,
@@ -54,6 +54,7 @@ async def test_draw_screen_mounts_deck():
         await pilot.pause()
         from nekomata.tui.screens.draw import DrawScreen
         from nekomata.tui.screens.draw_widgets import DeckCard, SpreadSlot
+
         assert isinstance(app.screen, DrawScreen)
         deck_rows = app.screen.query(".deck-row-line")
         assert len(deck_rows) == 4
@@ -109,6 +110,7 @@ def test_spread_slot_has_room_for_complete_face_preview():
 def test_spread_grid_uses_compact_columns():
     """Spread cards should sit close together instead of stretching across the row."""
     from nekomata.tui.screens.draw import DrawScreen
+
     css = DrawScreen.DEFAULT_CSS
 
     assert "grid-columns: 1fr 1fr 1fr;" not in css
@@ -128,6 +130,7 @@ def test_deck_cards_have_light_spacing():
 def test_deck_section_has_room_for_three_rows():
     """The candidate deck area should comfortably fit three rows."""
     from nekomata.tui.screens.draw import DrawScreen
+
     css = DrawScreen.DEFAULT_CSS
 
     min_height = int(css.split("#deck-section {")[1].split("min-height: ")[1].split(";")[0])
@@ -142,6 +145,7 @@ def test_draw_screen_offers_more_candidate_cards():
 def test_pick_complete_transition_is_gentle():
     """Finishing selection should move briskly into the flip phase."""
     from nekomata.tui.screens.draw import DrawScreen
+
     css = DrawScreen.DEFAULT_CSS
 
     assert "transition: opacity 420ms" in css
@@ -153,6 +157,7 @@ def test_pick_complete_transition_is_gentle():
 def test_main_area_keeps_offset_transition_for_centering():
     """Hiding the detail panel glides the spread back to center via #main-area offset."""
     from nekomata.tui.screens.draw import DrawScreen
+
     css = DrawScreen.DEFAULT_CSS
 
     main_area_css = css.split("#main-area {")[1].split("}")[0]
@@ -217,6 +222,7 @@ def test_spread_slot_reveal_only_ignores_missing_slot_content(monkeypatch):
 def test_done_phase_does_not_wait_for_completion_shimmer():
     """The detail panel should appear immediately after the final flip."""
     from nekomata.tui.screens.draw import DrawScreen
+
     names = DrawScreen.on_spread_slot_flipped.__code__.co_names
 
     assert "run_worker" in names
@@ -226,6 +232,7 @@ def test_done_phase_does_not_wait_for_completion_shimmer():
 def test_completion_shimmer_avoids_zero_delay_timer():
     """The first completion pulse should not use Textual's zero-second timer path."""
     from nekomata.tui.screens.draw import DrawScreen
+
     constants = DrawScreen._completion_shimmer.__code__.co_consts
 
     assert 0.01 in constants

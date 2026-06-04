@@ -1,7 +1,6 @@
 """Interpretation dialog manager for the draw screen."""
 
 from rich.text import Text
-
 from textual.css.scalar import ScalarOffset
 from textual.geometry import Offset
 
@@ -128,9 +127,7 @@ class InterpretationDialog:
             ),
         )
 
-    def _animate_interp_height(
-        self, from_height: int, to_height: int, on_complete=None
-    ) -> None:
+    def _animate_interp_height(self, from_height: int, to_height: int, on_complete=None) -> None:
         """Animate interp dialog height using Textual's native animation."""
         self._cancel_height_anim()
         if not self._screen.app.animation_enabled:
@@ -140,9 +137,7 @@ class InterpretationDialog:
             return
         self._w_interp.styles.height = from_height
         duration = 0.28
-        self._w_interp.styles.animate(
-            "height", to_height, duration=duration, easing="out_cubic"
-        )
+        self._w_interp.styles.animate("height", to_height, duration=duration, easing="out_cubic")
         if on_complete:
             timer = self._screen.set_timer(duration + 0.01, on_complete)
             self._height_timers.append(timer)
@@ -212,9 +207,7 @@ class InterpretationDialog:
             self._w_interp.remove_class("visible")
             if was_fullscreen:
                 self._w_interp.remove_class("fullscreen")
-                self._screen.query_one(
-                    "#main-area"
-                ).display = self._prev_main_area_display
+                self._screen.query_one("#main-area").display = self._prev_main_area_display
                 self._w_status.display = self._prev_status_display
             self._w_interp.styles.height = self._panel_height_cells()
             if sync_layout:

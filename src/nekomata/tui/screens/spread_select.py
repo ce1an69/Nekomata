@@ -6,7 +6,7 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import Static
 
-from nekomata.tui.render.animations import animate_entrance
+from nekomata.core.i18n import lazy_section
 from nekomata.core.render.styles import (
     C_BASE,
     C_CRUST,
@@ -17,9 +17,9 @@ from nekomata.core.render.styles import (
     C_SURFACE0,
     C_TEXT,
 )
-from nekomata.core.i18n import lazy_section
-from nekomata.tui.screens.solid_static import SolidStatic
 from nekomata.core.spread import SPREAD_REGISTRY, get_spread
+from nekomata.tui.render.animations import animate_entrance
+from nekomata.tui.screens.solid_static import SolidStatic
 
 _STR = lazy_section("spread_select")
 
@@ -196,9 +196,7 @@ class SpreadSelectScreen(Screen):
         for key, cls in SPREAD_REGISTRY:
             if btn_id == f"spread-{key}":
                 spread = get_spread(key)
-                positions = "\n".join(
-                    f"{position.name}" for position in spread.positions
-                )
+                positions = "\n".join(f"{position.name}" for position in spread.positions)
                 title.update(spread.name)
                 desc_text.update(spread.description)
                 positions_text.update(positions)

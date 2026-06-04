@@ -10,7 +10,6 @@ from textual.widgets import Button, Static
 from nekomata.core.card.data import load_all_cards
 from nekomata.core.card.types import ROMAN, Arcana, Card, DrawnCard, Position
 from nekomata.core.i18n import arcana_label, lazy_section, ui_section
-from nekomata.tui.render.animations import animate_entrance
 from nekomata.core.render.card_renderer import (
     build_detail_text,
     create_card_detail_widget,
@@ -23,8 +22,8 @@ from nekomata.core.render.styles import (
     C_OVERLAY0,
     C_SURFACE0,
     C_SURFACE1,
-    C_TEXT,
 )
+from nekomata.tui.render.animations import animate_entrance
 from nekomata.tui.screens._debounce import DebouncedCall
 
 _STR = lazy_section("card_browser")
@@ -236,16 +235,9 @@ class CardBrowserScreen(Screen):
     def _update_card_count_display(self) -> None:
         """Update the card count line to reflect current filter and reversal state."""
         count = self.query_one("#card-count", Static)
-        filtered = [
-            c
-            for c in self._cards
-            if self._active_arcana is None or c.arcana == self._active_arcana
-        ]
+        filtered = [c for c in self._cards if self._active_arcana is None or c.arcana == self._active_arcana]
         rev_label = _STR["reversed_preview"] if self._reversed_preview else ""
-        count.update(
-            _STR["card_count"].format(filtered=len(filtered), total=len(self._cards))
-            + rev_label
-        )
+        count.update(_STR["card_count"].format(filtered=len(filtered), total=len(self._cards)) + rev_label)
 
     def key_down(self) -> None:
         if isinstance(self.focused, CardListItem):
@@ -365,11 +357,7 @@ class CardListItem(Static):
     def __init__(self, card: Card) -> None:
         self._card = card
         suit = arcana_label(card.arcana.value)
-        num = (
-            ROMAN[card.number]
-            if card.arcana == Arcana.MAJOR and card.number < len(ROMAN)
-            else str(card.number)
-        )
+        num = ROMAN[card.number] if card.arcana == Arcana.MAJOR and card.number < len(ROMAN) else str(card.number)
         super().__init__(f"{num:>3s}  {card.name} [{suit}]")
 
     def on_click(self) -> None:
@@ -397,9 +385,7 @@ class CardListItem(Static):
     def _render_detail(self) -> None:
         """Render this card's detail preview in the side panel."""
         is_reversed = self.screen._reversed_preview
-        drawn = DrawnCard(
-            card=self._card, position=_BROWSER_POS, is_reversed=is_reversed
-        )
+        drawn = DrawnCard(card=self._card, position=_BROWSER_POS, is_reversed=is_reversed)
         preview_id = f"{drawn.card.id}:{drawn.is_reversed}"
         if self.screen._detail_preview_id == preview_id:
             return
