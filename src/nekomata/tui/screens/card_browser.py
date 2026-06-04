@@ -25,6 +25,7 @@ from nekomata.core.render.styles import (
     C_SURFACE1,
     C_TEXT,
 )
+from nekomata.tui.screens._debounce import DebouncedCall
 
 _STR = lazy_section("card_browser")
 
@@ -148,6 +149,16 @@ class CardBrowserScreen(Screen):
         self._reversed_preview = False
         self._active_arcana: Arcana | None = None
         self._detail_preview_id: str | None = None
+        # 详情渲染防抖：上下快速翻牌时只渲染最终停留的那一张
+        self._detail_debounce = DebouncedCall(self, 0.08, self._on_detail_debounce)
+
+    def _schedule_detail(self, item: "CardListItem") -> None:
+        """防抖地请求渲染某张牌的详情（焦点移动时调用）。"""
+        self._detail_debounce.schedule(item)
+
+    def _on_detail_debounce(self, item: "CardListItem") -> None:
+        if item.is_mounted:
+            item._render_detail()
 
     def compose(self) -> ComposeResult:
         labels = ui_section("arcana_labels")
@@ -365,16 +376,26 @@ class CardListItem(Static):
         self._show_detail()
 
     def on_focus(self) -> None:
-        self._show_detail()
+        # 高亮立即生效，重型的详情渲染走防抖
+        self._select()
+        self.screen._schedule_detail(self)
 
     def key_enter(self) -> None:
         self._show_detail()
 
-    def _show_detail(self) -> None:
-        """Render this card's detail preview in the side panel."""
+    def _select(self) -> None:
+        """Mark this item as the selected row (cheap, immediate)."""
         for item in self.screen.query(CardListItem):
             item.remove_class("selected")
         self.add_class("selected")
+
+    def _show_detail(self) -> None:
+        """Immediately select and render this card's detail preview."""
+        self._select()
+        self._render_detail()
+
+    def _render_detail(self) -> None:
+        """Render this card's detail preview in the side panel."""
         is_reversed = self.screen._reversed_preview
         drawn = DrawnCard(
             card=self._card, position=_BROWSER_POS, is_reversed=is_reversed

@@ -6,6 +6,7 @@ from textual.widgets import Static
 
 from nekomata.core.render.card_renderer import render_card_detail, render_card_full_detail_widgets
 from nekomata.core.render.styles import EASE
+from nekomata.tui.screens._debounce import DebouncedCall
 
 
 class DetailPanel:
@@ -16,6 +17,11 @@ class DetailPanel:
         self._visible = False
         self._last_preview_id: str | None = None
         self._pending_center_spread = None
+        # 详情渲染防抖：快速移动焦点时只渲染最终停留的那一张
+        self._update_debounce = DebouncedCall(screen, 0.08, self._on_update_debounce)
+        # _apply_update 内部的动画定时器句柄（用于取消孤立定时器）
+        self._render_timer = None
+        self._fadein_timer = None
         # Widget reference (set after mount)
         self._w_preview = None
 
@@ -47,16 +53,17 @@ class DetailPanel:
             self._w_preview.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 0)),
-                duration=0.34,
+                duration=0.28,
                 easing=EASE,
             )
         self._last_preview_id = None
         if slot is not None:
-            self.update(slot)
+            self.update(slot, immediate=True)
 
     def hide(self, sync_interp=None, center_spread=None) -> None:
         """Hide the detail panel with exit animation."""
         self._visible = False
+        self._cancel_pending()
         self._pending_center_spread = center_spread
         if sync_interp:
             sync_interp()
@@ -65,10 +72,10 @@ class DetailPanel:
             self._w_preview.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(4, 0)),
-                duration=0.30,
+                duration=0.22,
                 easing=EASE,
             )
-            self._screen.set_timer(0.30, self._finish_hide)
+            self._screen.set_timer(0.22, self._finish_hide)
         else:
             self._finish_hide()
 
@@ -90,20 +97,54 @@ class DetailPanel:
 
     # -- Content --
 
-    def update(self, slot) -> None:
-        """Update the detail panel content for the given spread slot."""
+    def update(self, slot, *, immediate: bool = False) -> None:
+        """Update the detail panel content for the given spread slot.
+
+        immediate=False（默认）会防抖：键盘快速移动焦点时仅渲染最终停留的牌，
+        避免每次焦点变化都重建图片控件导致卡顿。
+        """
         if not self._visible or not slot.drawn_card:
             return
         dc = slot.drawn_card
         preview_id = f"{dc.card.id}:{dc.is_reversed}"
         if self._last_preview_id == preview_id:
+            self._cancel_pending()
             return
-        self._last_preview_id = preview_id
 
+        self._cancel_pending()
+        if immediate:
+            self._apply_update(dc, preview_id)
+        else:
+            self._update_debounce.schedule(dc, preview_id)
+
+    def _cancel_pending(self) -> None:
+        self._update_debounce.cancel()
+        if self._render_timer is not None:
+            self._render_timer.stop()
+            self._render_timer = None
+        if self._fadein_timer is not None:
+            self._fadein_timer.stop()
+            self._fadein_timer = None
+
+    def _on_update_debounce(self, dc, preview_id: str) -> None:
+        if self._visible:
+            self._apply_update(dc, preview_id)
+
+    def _apply_update(self, dc, preview_id: str) -> None:
+        self._last_preview_id = preview_id
+        # Cancel any leftover render/fadein timers from a previous update
+        if self._render_timer is not None:
+            self._render_timer.stop()
+            self._render_timer = None
+        if self._fadein_timer is not None:
+            self._fadein_timer.stop()
+            self._fadein_timer = None
         if self._screen.app.animation_enabled and self._w_preview.children:
             self._w_preview.styles.animate("opacity", 0.0, duration=0.14, easing=EASE)
-            self._screen.set_timer(0.14, lambda: self._render_slot(dc))
-            self._screen.set_timer(0.16, self._fade_in_preview)
+            self._render_timer = self._screen.set_timer(
+                0.14, lambda: self._render_slot(dc)
+            )
+            self._fadein_timer = self._screen.set_timer(0.16, self._fade_in_preview)
         else:
             self._render_slot(dc)
 

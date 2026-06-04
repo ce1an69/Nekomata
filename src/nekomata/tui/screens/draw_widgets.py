@@ -34,7 +34,6 @@ from nekomata.core.render.styles import (
     C_SURFACE2,
     C_TEXT,
     EASE,
-    EASE_SPRING,
     EASE_OUT,
 )
 from nekomata.core.i18n import lazy_section
@@ -125,7 +124,7 @@ class DeckCard(Static):
         content-align: center middle;
         padding: 0 0;
         margin: 0 1;
-        transition: offset 300ms {EASE_OUT}, border 260ms {EASE_OUT}, background 260ms {EASE_OUT}, opacity 320ms {EASE_OUT};
+        transition: offset 140ms {EASE_OUT}, border 160ms {EASE_OUT}, background 160ms {EASE_OUT}, opacity 320ms {EASE_OUT};
     }}
     DeckCard:focus {{
         border: round {C_MAUVE};
@@ -187,7 +186,7 @@ class SpreadSlot(Widget):
         content-align: center middle;
         padding: 0 0;
         margin: 0 1;
-        transition: opacity 280ms {EASE_OUT}, offset 220ms {EASE_SPRING}, border 260ms {EASE_OUT}, background 260ms {EASE_OUT};
+        transition: opacity 280ms {EASE_OUT}, offset 220ms {EASE_OUT}, border 260ms {EASE_OUT}, background 260ms {EASE_OUT};
     }}
     SpreadSlot:focus {{
         border: round {C_PINK};
@@ -380,8 +379,8 @@ class SpreadSlot(Widget):
         self.styles.animate(
             "offset",
             ScalarOffset.from_offset(Offset(0, 0)),
-            duration=SLOT_FLIP_FADE_IN + 0.08,
-            easing=EASE_SPRING,
+            duration=SLOT_FLIP_FADE_IN,
+            easing=EASE,
         )
         self.add_class("glow")
 

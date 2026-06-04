@@ -9,7 +9,7 @@ from textual.css.scalar import ScalarOffset
 from textual.geometry import Offset
 
 from nekomata.core.render.card_renderer import preload_card_image_async
-from nekomata.core.render.styles import EASE, EASE_SPRING
+from nekomata.core.render.styles import EASE
 from nekomata.tui.screens.draw_constants import (
     PICK_COMPLETE_DELAY,
     SPREAD_SLOT_ENTRANCE_FADE,
@@ -67,14 +67,13 @@ class PickMixin:
 
     async def _reveal_spread(self) -> None:
         log.debug("Revealing spread and entering flip phase")
-        self._w_deck_section.display = False
+        self._animate_deck_exit()
         self._w_main_area.display = True
 
         slots = list(self.query(SpreadSlot))
         for i, dc in enumerate(self._drawn_cards):
             slots[self._display_order[i]].place_card(dc)
 
-        self._deck_exit_started = True
         self._phase = Phase.FLIP
         self._box.active_box = "spread"
         self._box.update_highlights()
@@ -112,5 +111,5 @@ class PickMixin:
             "offset",
             ScalarOffset.from_offset(Offset(0, 0)),
             duration=SPREAD_SLOT_ENTRANCE_FADE,
-            easing=EASE_SPRING,
+            easing=EASE,
         )

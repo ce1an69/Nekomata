@@ -84,11 +84,6 @@ class SpreadSelectScreen(Screen):
         ("escape", "go_back", "Back"),
     ]
 
-    def on_key(self, event) -> None:
-        if not self._ready:
-            event.stop()
-            return
-
     DEFAULT_CSS = f"""
     SpreadSelectScreen {{
         align: center middle;
@@ -132,7 +127,6 @@ class SpreadSelectScreen(Screen):
         border: round {C_SURFACE0};
         background: {C_CRUST};
         padding: 1 2;
-        transition: opacity 250ms out_quint;
     }}
     SpreadSelectScreen #preview-title {{
         background: {C_CRUST};
@@ -182,7 +176,6 @@ class SpreadSelectScreen(Screen):
 
     def on_mount(self) -> None:
         """Auto-focus the first spread button, show preview, and animate entrance."""
-        self._ready = False
         options = list(self.query(SpreadOption))
         if options:
             options[0].focus()
@@ -194,18 +187,9 @@ class SpreadSelectScreen(Screen):
                 max(i * 0.05, 0.001),
                 lambda o=opt: animate_entrance(o, duration=0.28),
             )
-        # Block Enter until the last option's entrance animation finishes
-        last_anim_end = (len(options) - 1) * 0.05 + 0.28 + 0.05
-        self.set_timer(last_anim_end, self._mark_ready)
-
-    def _mark_ready(self) -> None:
-        self._ready = True
 
     def _update_preview(self, btn_id: str) -> None:
         """Show position breakdown for the focused spread button."""
-        preview = self.query_one("#spread-preview")
-        if self.app.animation_enabled:
-            preview.styles.opacity = 0.3
         title = self.query_one("#preview-title", Static)
         desc_text = self.query_one("#preview-desc", Static)
         positions_text = self.query_one("#preview-positions", Static)
@@ -218,13 +202,6 @@ class SpreadSelectScreen(Screen):
                 title.update(spread.name)
                 desc_text.update(spread.description)
                 positions_text.update(positions)
-                if self.app.animation_enabled:
-                    self.set_timer(
-                        0.06,
-                        lambda: preview.styles.animate(
-                            "opacity", 1.0, duration=0.2, easing="out_quint"
-                        ),
-                    )
                 return
         title.update("Back")
         desc_text.update(_STR["back_desc"])
@@ -232,8 +209,6 @@ class SpreadSelectScreen(Screen):
 
     def on_spread_option_selected(self, event: SpreadOption.Selected) -> None:
         """Dispatch when a spread option is clicked or Enter-pressed."""
-        if not self._ready:
-            return
         self._activate_option(event.option_id)
 
     def action_go_back(self) -> None:
@@ -246,8 +221,6 @@ class SpreadSelectScreen(Screen):
 
     def _select_by_index(self, index: int) -> None:
         """Dismiss this screen with the spread at the given registry index."""
-        if not self._ready:
-            return
         if 0 <= index < len(SPREAD_REGISTRY):
             self.dismiss(SPREAD_REGISTRY[index][0])
 

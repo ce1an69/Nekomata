@@ -3,7 +3,6 @@
 # Easing curves
 EASE = "out_cubic"
 EASE_OUT = "out_quint"
-EASE_SPRING = "out_back"
 EASE_GENTLE = "in_out_cubic"
 
 # Catppuccin Mocha

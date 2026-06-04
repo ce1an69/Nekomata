@@ -39,7 +39,6 @@ class StreamHandler:
         self._show_error = show_error
         self._on_done = on_done
 
-        self.streaming = False
         self._thinking_chars: list[str] = []
         self._content_chars: list[str] = []
         self._queue: deque[StreamChunk] = deque()
@@ -157,7 +156,6 @@ class StreamHandler:
 
     def _finish(self) -> None:
         self.stop()
-        self.streaming = False
         if self._on_done:
             self._on_done()
 

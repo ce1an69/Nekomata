@@ -122,7 +122,7 @@ async def test_card_browser_detail_updates_on_focus():
         items = app.screen.query("CardListItem")
         assert len(items) > 0
         items[0].focus()
-        await pilot.pause()
+        await pilot.pause(0.12)
         detail = app.screen.query_one("#card-detail")
         # Detail panel should have content (not the placeholder)
         children = list(detail.children)
@@ -140,7 +140,7 @@ async def test_card_browser_detail_wraps_card_image_in_frame():
         await pilot.pause()
         items = app.screen.query("CardListItem")
         items[0].focus()
-        await pilot.pause()
+        await pilot.pause(0.12)
 
         detail = app.screen.query_one("#card-detail")
         frame = detail.query_one(".card-detail-frame")
@@ -161,7 +161,7 @@ async def test_card_browser_ignores_duplicate_detail_refresh():
         await pilot.pause()
         items = app.screen.query("CardListItem")
         items[0].focus()
-        await pilot.pause()
+        await pilot.pause(0.12)
 
         detail = app.screen.query_one("#card-detail")
         children = tuple(detail.children)
@@ -182,7 +182,7 @@ async def test_card_browser_reversal_refreshes_detail():
         await pilot.pause()
         items = app.screen.query("CardListItem")
         items[0].focus()
-        await pilot.pause()
+        await pilot.pause(0.12)
 
         detail_text = app.screen.query_one("#detail-text-slot")
         before = str(detail_text.render())
@@ -203,7 +203,7 @@ async def test_card_browser_detail_slots_stay_stable_between_cards():
         await pilot.pause()
         items = app.screen.query("CardListItem")
         items[0].focus()
-        await pilot.pause()
+        await pilot.pause(0.12)
 
         detail = app.screen.query_one("#card-detail")
         image_slot = app.screen.query_one("#detail-image-slot")
@@ -214,7 +214,7 @@ async def test_card_browser_detail_slots_stay_stable_between_cards():
         first_text = str(text_slot.render())
 
         items[1].focus()
-        await pilot.pause()
+        await pilot.pause(0.12)
 
         assert tuple(detail.children) == detail_children
         assert image_slot.region == image_region

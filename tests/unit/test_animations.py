@@ -13,8 +13,6 @@ from nekomata.tui.screens.draw_constants import (
     SLOT_FLIP_FADE_OUT,
     SLOT_FLIP_GLOW_HOLD,
     SLOT_FLIP_SWAP_PAUSE,
-    SPREAD_RECENTER_DURATION,
-    SPREAD_RECENTER_OFFSET,
     SPREAD_SLOT_HEIGHT,
     SPREAD_SLOT_WIDTH,
 )
@@ -80,7 +78,7 @@ def test_deck_card_motion_stays_subtle():
     """Pick/focus movement should feel like a glide, and picked cards stay visible."""
     css = DeckCard.DEFAULT_CSS
 
-    assert "offset 300ms" in css
+    assert "offset 140ms" in css
     assert "DeckCard:focus" in css
     assert "offset: 0 -1;" in css
     assert "DeckCard.picked" in css
@@ -152,15 +150,13 @@ def test_pick_complete_transition_is_gentle():
     assert PICK_COMPLETE_DELAY == pytest.approx(0.0)
 
 
-def test_spread_recenters_with_motion_after_deck_exit():
-    """When the deck disappears, the spread should glide into its centered layout."""
+def test_main_area_keeps_offset_transition_for_centering():
+    """Hiding the detail panel glides the spread back to center via #main-area offset."""
     from nekomata.tui.screens.draw import DrawScreen
     css = DrawScreen.DEFAULT_CSS
 
     main_area_css = css.split("#main-area {")[1].split("}")[0]
     assert "transition: offset 280ms" in main_area_css
-    assert SPREAD_RECENTER_OFFSET == 4
-    assert SPREAD_RECENTER_DURATION == pytest.approx(0.28)
 
 
 def test_spread_slot_flip_uses_smooth_two_phase_motion():

@@ -48,6 +48,10 @@ class InterpretationDialog:
     def is_streaming(self) -> bool:
         return self._streaming
 
+    def set_streaming(self, value: bool) -> None:
+        """流式状态的唯一写入口（外部不直接改 _streaming 字段）。"""
+        self._streaming = value
+
     # -- Layout --
 
     @property
@@ -170,7 +174,7 @@ class InterpretationDialog:
 
     def show(self, sync_layout=None, fit_height=None) -> None:
         """Display the interpretation dialog with entrance animation."""
-        self._streaming = True
+        self.set_streaming(True)
         self._box.active_box = "interp"
         self._box.update_highlights()
         if sync_layout:
@@ -195,7 +199,7 @@ class InterpretationDialog:
 
     def hide(self, update_phase_ui, sync_layout=None, fit_height=None) -> None:
         """Hide the dialog with exit animation, then update phase UI."""
-        self._streaming = False
+        self.set_streaming(False)
         self._stream.stop()
         was_fullscreen = self._fullscreen
         if self._fullscreen:
@@ -240,7 +244,7 @@ class InterpretationDialog:
 
     def stop(self) -> None:
         self._stream.stop()
-        self._streaming = False
+        self.set_streaming(False)
 
     def show_error(self, message: str, update_phase_ui, sync_layout=None, fit_height=None) -> None:
         """Hide dialog and display an error message."""

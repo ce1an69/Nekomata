@@ -24,7 +24,7 @@ from nekomata.core.clipboard import copy_image as _copy_image_to_clipboard
 from nekomata.core.clipboard import copy_text as _copy_text_to_clipboard
 from nekomata.core.i18n import lazy_section
 from nekomata.core.render.image_export import render_interp_image, save_image as _save_tmp_image
-from nekomata.core.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_TEXT, EASE, EASE_SPRING
+from nekomata.core.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_TEXT, EASE
 from nekomata.tui.screens.draw_constants import SCROLL_NEAR_BOTTOM_THRESHOLD
 from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_widgets import ConfirmExitInterpretation, SpreadSlot
@@ -123,7 +123,7 @@ class InterpretMixin:
             ]
             self._first_interp_done = True
 
-        self._dialog._streaming = False
+        self._dialog.set_streaming(False)
         self._update_followup_hints()
 
     @property
@@ -200,7 +200,6 @@ class InterpretMixin:
     def _update_phase_ui(self) -> None:
         lbl = f"bold {C_LAVENDER}"
         if self._phase == Phase.PICK:
-            self._deck_exit_started = False
             self._w_deck_section.styles.opacity = 1.0
             self._w_deck_section.styles.offset = (0, 0)
             if self._pick_index < self._n_positions:
@@ -223,9 +222,6 @@ class InterpretMixin:
             self._w_footer.update(Text(_STR["hint_pick"], style=C_OVERLAY0))
             self._w_deck_section.display = True
         elif self._phase == Phase.FLIP:
-            if not self._deck_exit_started:
-                self._deck_exit_started = True
-                self._animate_deck_exit()
             unrevealed = sum(1 for s in self.query(SpreadSlot) if not s.is_revealed)
             self._w_spread_label.update(
                 Text(_STR["flip_label"].format(unrevealed=unrevealed), style=lbl)
@@ -330,7 +326,7 @@ class InterpretMixin:
             )
             slots = list(self.query(SpreadSlot))
             if slots:
-                self._detail.update(slots[0])
+                self._detail.update(slots[0], immediate=True)
                 if not self._dialog.fullscreen:
                     slots[0].focus()
             if self._dialog.fullscreen:
@@ -393,8 +389,8 @@ class InterpretMixin:
             self._w_followup_section.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 0)),
-                duration=0.30,
-                easing=EASE_SPRING,
+                duration=0.24,
+                easing=EASE,
             )
         self._w_followup_input.focus()
 
@@ -409,10 +405,10 @@ class InterpretMixin:
             self._w_followup_section.styles.animate(
                 "offset",
                 ScalarOffset.from_offset(Offset(0, 1)),
-                duration=0.24,
+                duration=0.18,
                 easing=EASE,
             )
-            self.set_timer(0.24, self._finish_followup_hide)
+            self.set_timer(0.18, self._finish_followup_hide)
         else:
             self._finish_followup_hide()
 
@@ -434,8 +430,7 @@ class InterpretMixin:
     def _start_followup(self, question: str) -> None:
         self._followup_question = question
         self._followup_active = True
-        self._dialog._streaming = True
-        self._stream.streaming = True
+        self._dialog.set_streaming(True)
         self._stream.reset(append=True)
         self._dialog.fit_height(self._w_main_area, self._detail.visible)
         self.run_worker(

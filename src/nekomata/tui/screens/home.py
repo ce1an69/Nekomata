@@ -72,7 +72,6 @@ class HomeScreen(Screen):
         border: round {C_SURFACE0};
         background: {C_MANTLE};
         padding: 1 2;
-        transition: opacity 300ms out_quint;
     }}
     HomeScreen #title {{
         margin-bottom: 1;

@@ -3,7 +3,7 @@
 from nekomata.core.render.styles import (
     C_CRUST, C_LAVENDER, C_MANTLE, C_MAUVE, C_OVERLAY0,
     C_PINK, C_SUBTEXT0, C_SURFACE0, C_SURFACE1, C_SURFACE2, C_TEXT,
-    EASE_OUT, EASE_SPRING,
+    EASE_OUT,
 )
 from nekomata.tui.screens.draw_constants import DETAIL_PANEL_WIDTH, INTERP_PANEL_HEIGHT, INTERP_MIN_HEIGHT, INTERP_MAX_HEIGHT
 
@@ -63,7 +63,7 @@ DrawScreen {{
 #main-area {{
     height: 1fr;
     margin-top: 0;
-    transition: offset 280ms {EASE_SPRING};
+    transition: offset 280ms {EASE_OUT};
 }}
 #reading-area {{
     height: 1fr;
@@ -126,7 +126,7 @@ DrawScreen {{
     opacity: 0;
     display: none;
     offset: 4 0;
-    transition: opacity 280ms {EASE_OUT}, offset 340ms {EASE_SPRING}, border 180ms {EASE_OUT};
+    transition: opacity 280ms {EASE_OUT}, offset 340ms {EASE_OUT}, border 180ms {EASE_OUT};
 }}
 #card-preview.box-active {{
     border: round {C_MAUVE};
@@ -211,7 +211,7 @@ DrawScreen {{
     opacity: 0;
     offset: 0 1;
     align: center middle;
-    transition: opacity 240ms {EASE_OUT}, offset 300ms {EASE_SPRING};
+    transition: opacity 240ms {EASE_OUT}, offset 300ms {EASE_OUT};
 }}
 #followup-section.visible {{
     display: block;

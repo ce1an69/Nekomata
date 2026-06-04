@@ -1,4 +1,4 @@
-"""Deck entrance/exit/spread-recenter animations for DrawScreen."""
+"""Deck entrance/exit animations for DrawScreen."""
 
 from __future__ import annotations
 
@@ -18,40 +18,22 @@ from nekomata.tui.screens.draw_widgets import DeckCard
 class DeckAnimMixin:
     """Deck animation methods extracted from DrawScreen."""
 
-    def _hide_deck(self) -> None:
-        self._w_deck_section.display = False
-        self._animate_spread_recenter()
-
-    def _animate_spread_recenter(self) -> None:
-        from nekomata.tui.screens.draw_constants import SPREAD_RECENTER_DURATION, SPREAD_RECENTER_OFFSET
-
-        self._w_main_area.styles.offset = (0, SPREAD_RECENTER_OFFSET)
-        if not self.app.animation_enabled:
-            self._w_main_area.styles.offset = (0, 0)
-            return
-        self._w_main_area.styles.animate(
-            "offset",
-            ScalarOffset.from_offset(Offset(0, 0)),
-            duration=SPREAD_RECENTER_DURATION,
-            easing=EASE,
-        )
+    # -- Exit --
 
     def _animate_deck_exit(self) -> None:
+        """Fade out the deck section, then hide it from layout."""
         if self.app.animation_enabled:
             self._w_deck_section.styles.animate(
-                "opacity", 0.0, duration=0.22, easing=EASE
+                "opacity", 0.0, duration=DECK_HIDE_DELAY, easing=EASE
             )
-            self._w_deck_section.styles.animate(
-                "offset",
-                ScalarOffset.from_offset(Offset(0, -2)),
-                duration=0.28,
-                easing=EASE,
-            )
-        for i, card in enumerate(
-            c for c in self.query(DeckCard) if not c.has_class("picked")
-        ):
-            self.set_timer(0.01 + i * 0.008, lambda c=card: c.add_class("exiting"))
-        self.set_timer(DECK_HIDE_DELAY, self._hide_deck)
+            self.set_timer(DECK_HIDE_DELAY, self._hide_deck)
+        else:
+            self._w_deck_section.display = False
+
+    def _hide_deck(self) -> None:
+        self._w_deck_section.display = False
+
+    # -- Entrance --
 
     def _animate_deck_entrance(self) -> None:
         if not self.app.animation_enabled:
