@@ -1,5 +1,16 @@
 """Nekomata entry point — dispatches CLI, TUI, or Desktop mode."""
 
+import os
+import sys
+
+
+def _apply_tui_env_fixes() -> None:
+    """Apply terminal-specific workarounds before Textual imports."""
+    # Kitty keyboard protocol breaks macOS CJK IME input (garbled characters).
+    # Disable it so IME composition events are handled normally.
+    if sys.platform == "darwin" and os.environ.get("TERM") == "xterm-kitty":
+        os.environ.setdefault("TEXTUAL_DISABLE_KITTY_KEY", "1")
+
 
 def main() -> None:
     import argparse
@@ -36,6 +47,7 @@ def main() -> None:
 
         desktop_main(debug=args.debug)
     else:
+        _apply_tui_env_fixes()
         from nekomata.tui.app import NekomataApp
 
         app = NekomataApp()
