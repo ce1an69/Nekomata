@@ -15,6 +15,7 @@ from nekomata.tui.screens.draw_constants import (
     SPREAD_SLOT_ENTRANCE_FADE,
     SPREAD_SLOT_ENTRANCE_STAGGER,
 )
+from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_widgets import DeckCard, SpreadSlot
 
 log = logging.getLogger(__name__)
@@ -24,8 +25,6 @@ class PickMixin:
     """PICK phase methods extracted from DrawScreen."""
 
     async def on_deck_card_picked(self, event: DeckCard.Picked) -> None:
-        from nekomata.tui.screens.draw import Phase
-
         if self._phase != Phase.PICK:
             return
         event.stop()
@@ -67,8 +66,6 @@ class PickMixin:
         await self._reveal_spread()
 
     async def _reveal_spread(self) -> None:
-        from nekomata.tui.screens.draw import Phase
-
         log.debug("Revealing spread and entering flip phase")
         await preload_all_async([(dc.card, dc.is_reversed) for dc in self._drawn_cards])
         self._w_deck_section.display = False

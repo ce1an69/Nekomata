@@ -11,6 +11,7 @@ from nekomata.tui.screens.draw_constants import (
     DECK_ENTRANCE_STAGGER,
     DECK_HIDE_DELAY,
 )
+from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_widgets import DeckCard
 
 
@@ -78,8 +79,6 @@ class DeckAnimMixin:
         )
 
     def _enable_deck_selection(self) -> None:
-        from nekomata.tui.screens.draw import Phase
-
         self._dealing = False
         if self._phase != Phase.PICK:
             return

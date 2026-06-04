@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
-from nekomata.core.ai.interpreter import InterpretationError, build_messages, get_interpreter
+from nekomata.core.ai.interpreter import InterpretationError, _DEFAULT_STYLE, build_messages, get_interpreter
 from nekomata.core.ai.prompts import build_followup_prompt
 from nekomata.core.card.data import load_all_cards
 from nekomata.core.card.types import Card, DrawnCard, Position
@@ -300,7 +300,7 @@ def create_app() -> FastAPI:
         async def _stream():
             loop = asyncio.get_running_loop()
             try:
-                msgs = build_messages("mystical", req.question, drawn, req.spread_key, lang=config.lang)
+                msgs = build_messages(_DEFAULT_STYLE, req.question, drawn, req.spread_key, lang=config.lang)
                 yield f"data: {json.dumps({'messages': msgs})}\n\n"
                 gen = interp.interpret_stream(drawn, req.question, req.spread_key, lang=config.lang)
                 while True:

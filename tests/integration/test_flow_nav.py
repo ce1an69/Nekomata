@@ -270,7 +270,8 @@ async def test_draw_screen_enters_flip_immediately_after_final_pick():
         await pilot.click("#spread-single")
         await pilot.pause()
 
-        from nekomata.tui.screens.draw import DrawScreen, Phase
+        from nekomata.tui.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw_phase import Phase
         from nekomata.tui.screens.draw_widgets import SpreadSlot
 
         assert isinstance(app.screen, DrawScreen)
@@ -295,7 +296,8 @@ async def test_draw_screen_accepts_final_pick_during_deck_entrance():
         await pilot.click("#spread-single")
         await pilot.pause(0.05)
 
-        from nekomata.tui.screens.draw import DrawScreen, Phase
+        from nekomata.tui.screens.draw import DrawScreen
+        from nekomata.tui.screens.draw_phase import Phase
         from nekomata.tui.screens.draw_widgets import SpreadSlot
 
         assert isinstance(app.screen, DrawScreen)

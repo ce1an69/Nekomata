@@ -1,7 +1,6 @@
 """Draw screen — pick cards from a face-down deck, then flip to reveal."""
 
 import logging
-from enum import Enum, auto
 from typing import TYPE_CHECKING, cast
 
 from rich.text import Text
@@ -25,6 +24,7 @@ from nekomata.core.render.card_renderer import clear_cache
 from nekomata.core.render.styles import C_MAUVE, C_SUBTEXT0, EASE
 from nekomata.tui.screens.box_manager import BoxManager
 from nekomata.tui.screens.draw_constants import DECK_ROW_COUNT, NUM_DECK_CARDS
+from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_css import DRAW_SCREEN_CSS
 from nekomata.tui.screens.draw_deck_anim import DeckAnimMixin
 from nekomata.tui.screens.draw_detail import DetailPanel
@@ -37,14 +37,6 @@ from nekomata.core.spread import get_spread
 
 _STR = lazy_section("draw")
 log = logging.getLogger(__name__)
-
-
-class Phase(Enum):
-    """Draw screen state machine: PICK -> FLIP -> DONE."""
-
-    PICK = auto()
-    FLIP = auto()
-    DONE = auto()
 
 
 class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):

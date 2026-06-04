@@ -121,10 +121,13 @@ uv run pytest --cov=nekomata   # coverage
 
 ## Documentation
 
-| Document             | English                       | 中文                          |
-| -------------------- | ----------------------------- | ----------------------------- |
-| Installation Guide   | [EN](docs/en/INSTALLATION.md) | [ZH](docs/zh/INSTALLATION.md) |
-| Building Desktop App | [EN](docs/en/PACKAGE.md)      | [ZH](docs/zh/PACKAGE.md)      |
+| Document             | English                         | 中文                            |
+| -------------------- | ------------------------------- | ------------------------------- |
+| Installation Guide   | [EN](docs/en/INSTALLATION.md)   | [ZH](docs/zh/INSTALLATION.md)   |
+| Building Desktop App | [EN](docs/en/PACKAGE.md)        | [ZH](docs/zh/PACKAGE.md)        |
+| Changelog            | [EN](docs/en/CHANGELOG.md)      | [ZH](docs/zh/CHANGELOG.md)      |
+| Contributing         | [EN](docs/en/CONTRIBUTING.md)   | [ZH](docs/zh/CONTRIBUTING.md)   |
+| Security Policy      | [EN](docs/en/SECURITY.md)       | [ZH](docs/zh/SECURITY.md)       |
 
 ## License
 

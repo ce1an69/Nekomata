@@ -34,8 +34,9 @@ htmlcov/
 # Environments
 .env
 
-# User settings (contains API keys)
-.neko/settings.json
+# User settings (contains API keys, but keep .example files)
+.neko/*
+!.neko/*.example
 
 # IDE
 .idea/
@@ -54,5 +55,4 @@ htmlcov/
 skills-lock.json
 docs/superpowers/
 
-dist/
 node_modules/

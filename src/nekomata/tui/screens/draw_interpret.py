@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 
 from rich.console import Group
@@ -24,6 +25,7 @@ from nekomata.core.clipboard import copy_text as _copy_text_to_clipboard
 from nekomata.core.i18n import lazy_section
 from nekomata.core.render.image_export import render_interp_image, save_image as _save_tmp_image
 from nekomata.core.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_TEXT, EASE, EASE_SPRING
+from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_widgets import ConfirmExitInterpretation, SpreadSlot
 from nekomata.tui.screens.widgets import go_home
 
@@ -46,6 +48,9 @@ def _compose_copy_text(
     parts.append("")
     parts.append(interp)
     return "\n".join(parts)
+
+
+log = logging.getLogger(__name__)
 
 
 class InterpretMixin:
@@ -188,9 +193,6 @@ class InterpretMixin:
         )
 
     def _update_phase_ui(self) -> None:
-        from nekomata.tui.screens.draw import Phase
-        from nekomata.core.render.styles import C_LAVENDER
-
         lbl = f"bold {C_LAVENDER}"
         if self._phase == Phase.PICK:
             self._deck_exit_started = False
@@ -495,6 +497,7 @@ class InterpretMixin:
             tmp_path = _save_tmp_image(img)
             ok = _copy_image_to_clipboard(tmp_path)
         except Exception:
+            log.exception("Image export failed")
             ok = False
         if tmp_path:
             try:

@@ -150,10 +150,13 @@ uv run pytest --cov=nekomata
 
 ## 文档
 
-| 文档         | 中文                            | English                       |
-| ------------ | ------------------------------- | ----------------------------- |
-| 安装指南     | [中文](docs/zh/INSTALLATION.md) | [EN](docs/en/INSTALLATION.md) |
-| 构建桌面应用 | [中文](docs/zh/PACKAGE.md)      | [EN](docs/en/PACKAGE.md)      |
+| 文档         | 中文                               | English                          |
+| ------------ | ---------------------------------- | -------------------------------- |
+| 安装指南     | [中文](docs/zh/INSTALLATION.md)    | [EN](docs/en/INSTALLATION.md)    |
+| 构建桌面应用 | [中文](docs/zh/PACKAGE.md)         | [EN](docs/en/PACKAGE.md)         |
+| 更新日志     | [中文](docs/zh/CHANGELOG.md)       | [EN](docs/en/CHANGELOG.md)       |
+| 贡献指南     | [中文](docs/zh/CONTRIBUTING.md)    | [EN](docs/en/CONTRIBUTING.md)    |
+| 安全策略     | [中文](docs/zh/SECURITY.md)        | [EN](docs/en/SECURITY.md)        |
 
 ## 许可证
 

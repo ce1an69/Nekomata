@@ -3,6 +3,7 @@
 from textual.css.query import NoMatches
 
 from nekomata.tui.screens.draw_constants import DECK_ROW_COUNT, NUM_DECK_CARDS
+from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_widgets import DeckCard, SpreadSlot
 
 _BOX_SELECTORS = {
@@ -77,8 +78,6 @@ class BoxManager:
             self._screen.query_one("#interp-dialog").focus()
 
     def focus_neighbor(self, direction: str, phase) -> None:
-        from nekomata.tui.screens.draw import Phase
-
         if phase == Phase.PICK:
             widgets = list(self._screen.query(DeckCard))
             row_width = NUM_DECK_CARDS // DECK_ROW_COUNT
