@@ -25,6 +25,7 @@ from nekomata.core.clipboard import copy_text as _copy_text_to_clipboard
 from nekomata.core.i18n import lazy_section
 from nekomata.core.render.image_export import render_interp_image, save_image as _save_tmp_image
 from nekomata.core.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_TEXT, EASE, EASE_SPRING
+from nekomata.tui.screens.draw_constants import SCROLL_NEAR_BOTTOM_THRESHOLD
 from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_widgets import ConfirmExitInterpretation, SpreadSlot
 from nekomata.tui.screens.widgets import go_home
@@ -78,7 +79,11 @@ class InterpretMixin:
 
     def _on_stream_scroll(self) -> None:
         try:
-            self._w_interp.scroll_end(animate=False)
+            w = self._w_interp
+            # Only auto-scroll if the user is near the bottom.
+            # This lets the user scroll up to read earlier text during streaming.
+            if w.max_scroll_y - w.scroll_y <= SCROLL_NEAR_BOTTOM_THRESHOLD:
+                w.scroll_end(animate=False)
         except NoMatches:
             pass
 
@@ -239,7 +244,20 @@ class InterpretMixin:
         if self._phase != Phase.FLIP:
             return
         event.stop()
+
+        # Focus next unrevealed slot immediately so rapid flipping isn't blocked
+        next_unrevealed = [
+            s for s in self.query(SpreadSlot)
+            if not s.is_revealed and s is not event.slot
+        ]
+        if next_unrevealed:
+            next_unrevealed[0].focus()
+
         await event.slot.flip()
+
+        # Re-check phase — a concurrent flip may have completed the spread
+        if self._phase != Phase.FLIP:
+            return
         self._update_phase_ui()
 
         slots = list(self.query(SpreadSlot))
@@ -261,10 +279,6 @@ class InterpretMixin:
                 s.remove_class("selected")
             slots[0].add_class("selected")
             slots[0].focus()
-        else:
-            unrevealed = [s for s in slots if not s.is_revealed]
-            if unrevealed:
-                unrevealed[0].focus()
 
     async def on_spread_slot_selected(self, event: SpreadSlot.Selected) -> None:
         from nekomata.tui.screens.draw import Phase

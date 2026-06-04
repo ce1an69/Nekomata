@@ -8,7 +8,7 @@ import logging
 from textual.css.scalar import ScalarOffset
 from textual.geometry import Offset
 
-from nekomata.core.render.card_renderer import preload_all_async, preload_card_image_async
+from nekomata.core.render.card_renderer import preload_card_image_async
 from nekomata.core.render.styles import EASE, EASE_SPRING
 from nekomata.tui.screens.draw_constants import (
     PICK_COMPLETE_DELAY,
@@ -67,7 +67,6 @@ class PickMixin:
 
     async def _reveal_spread(self) -> None:
         log.debug("Revealing spread and entering flip phase")
-        await preload_all_async([(dc.card, dc.is_reversed) for dc in self._drawn_cards])
         self._w_deck_section.display = False
         self._w_main_area.display = True
 

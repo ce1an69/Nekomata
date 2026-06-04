@@ -172,10 +172,9 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         self._w_main_area.display = False
         self._update_phase_ui()
         self._animate_deck_entrance()
-        if not self._dealing:
-            deck_cards = list(self.query(DeckCard))
-            if deck_cards:
-                deck_cards[0].focus()
+        deck_cards = list(self.query(DeckCard))
+        if deck_cards:
+            deck_cards[0].focus()
         self._box.active_box = "deck"
         self._box.update_highlights()
 
