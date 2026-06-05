@@ -94,15 +94,18 @@ class InterpretMixin:
 
     @on(StreamError)
     def _on_stream_error_message(self, message: StreamError) -> None:
-        self._dialog.hide(self._update_phase_ui, sync_layout=self._sync_interp_layout)
-        self.app.notify(message.message, severity="error", timeout=10)
-        _copy_text_to_clipboard(message.message)
         if message.config_error:
+            # Config error: skip exit animation (screen is about to be popped)
+            # and navigate directly — avoids _finish_hide callback on unmounted screen.
+            self._dialog.stop()
             from nekomata.tui.screens.setup import SetupScreen
 
             app = self.app
             go_home(self)
             app.push_screen(SetupScreen(app.config))
+        else:
+            self._dialog.hide(self._update_phase_ui, sync_layout=self._sync_interp_layout)
+        self.app.notify(message.message, severity="error", timeout=10)
 
     @on(StreamDone)
     def _on_stream_done_message(self, message: StreamDone) -> None:
@@ -122,9 +125,14 @@ class InterpretMixin:
         self._dialog.set_streaming(False)
         self._update_followup_hints()
 
-        # Ensure final scroll position after layout reflow from content update
-        if self._w_interp.max_scroll_y - self._w_interp.scroll_y <= SCROLL_NEAR_BOTTOM_THRESHOLD:
-            self.call_after_refresh(self._w_interp.scroll_end)
+        # Ensure final scroll position after layout reflow from content update.
+        # Guard must read max_scroll_y AFTER reflow (stale value before reflow
+        # could cause wrong auto-scroll decision).
+        def _scroll_if_near_bottom():
+            if self._w_interp.max_scroll_y - self._w_interp.scroll_y <= SCROLL_NEAR_BOTTOM_THRESHOLD:
+                self._w_interp.scroll_end(animate=False)
+
+        self.call_after_refresh(_scroll_if_near_bottom)
 
     @property
     def _loading_timer(self):
