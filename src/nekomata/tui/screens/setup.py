@@ -8,17 +8,7 @@ from textual.screen import Screen
 from textual.widgets import Input, Select, Static
 
 from nekomata.core.i18n import ORNAMENT, SUPPORTED_LANGS, lazy_section, set_lang
-from nekomata.core.render.styles import (
-    C_BASE,
-    C_MANTLE,
-    C_MAUVE,
-    C_OVERLAY0,
-    C_RED,
-    C_SUBTEXT0,
-    C_SURFACE0,
-    C_SURFACE1,
-    C_TEXT,
-)
+from nekomata.core.render.styles import C_RED
 from nekomata.core.storage.config import AppConfig
 from nekomata.tui.render.animations import animate_entrance
 from nekomata.tui.screens.solid_static import SolidStatic
@@ -72,139 +62,139 @@ class SetupScreen(Screen):
         super().__init__()
         self._existing = existing_config
 
-    DEFAULT_CSS = f"""
-    SetupScreen {{
+    DEFAULT_CSS = """
+    SetupScreen {
         align: center middle;
-    }}
-    SetupScreen #setup-stack {{
+    }
+    SetupScreen #setup-stack {
         width: 60;
         height: auto;
         align: center middle;
-        border: round {C_SURFACE0};
-        background: {C_MANTLE};
+        border: round $surface0;
+        background: $mantle;
         padding: 1 2;
-    }}
-    SetupScreen #setup-title {{
+    }
+    SetupScreen #setup-title {
         margin-bottom: 0;
         width: 100%;
-        background: {C_MANTLE};
-        color: {C_MAUVE};
+        background: $mantle;
+        color: $mauve;
         text-align: center;
         text-style: bold;
-    }}
-    SetupScreen #setup-subtitle {{
+    }
+    SetupScreen #setup-subtitle {
         width: 100%;
         height: auto;
-        background: {C_MANTLE};
-        color: {C_SUBTEXT0};
+        background: $mantle;
+        color: $subtext0;
         text-align: center;
         margin-bottom: 1;
-    }}
-    SetupScreen #setup-ornament-top {{
-        background: {C_MANTLE};
-        color: {C_SURFACE1};
+    }
+    SetupScreen #setup-ornament-top {
+        background: $mantle;
+        color: $surface1;
         text-align: center;
         height: 1;
         margin-bottom: 1;
-    }}
-    SetupScreen #setup-ornament-bottom {{
-        background: {C_MANTLE};
-        color: {C_SURFACE1};
+    }
+    SetupScreen #setup-ornament-bottom {
+        background: $mantle;
+        color: $surface1;
         text-align: center;
         height: 1;
         margin-bottom: 1;
-    }}
-    SetupScreen .field-label {{
+    }
+    SetupScreen .field-label {
         width: 100%;
         height: auto;
-        background: {C_MANTLE};
-        color: {C_SUBTEXT0};
+        background: $mantle;
+        color: $subtext0;
         margin-bottom: 0;
-    }}
-    SetupScreen .setup-input {{
+    }
+    SetupScreen .setup-input {
         width: 100%;
         height: 3;
         margin-bottom: 1;
-        border: round {C_SURFACE1};
-        background: {C_BASE};
-        color: {C_TEXT};
+        border: round $surface1;
+        background: $base;
+        color: $text;
         padding: 0 1;
-    }}
-    SetupScreen .setup-input:focus {{
-        border: round {C_MAUVE};
-        background: {C_MANTLE};
-    }}
-    SetupScreen #lang-select {{
+    }
+    SetupScreen .setup-input:focus {
+        border: round $mauve;
+        background: $mantle;
+    }
+    SetupScreen #lang-select {
         width: 100%;
         height: 3;
         margin-bottom: 1;
-        background: {C_BASE};
-        color: {C_TEXT};
-    }}
-    SetupScreen #lang-select > SelectCurrent {{
+        background: $base;
+        color: $text;
+    }
+    SetupScreen #lang-select > SelectCurrent {
         height: 3;
-        border: round {C_SURFACE1};
-        background: {C_BASE};
-        color: {C_TEXT};
+        border: round $surface1;
+        background: $base;
+        color: $text;
         padding: 0 1;
-    }}
-    SetupScreen #lang-select:focus > SelectCurrent {{
-        border: round {C_MAUVE};
-        background: {C_MANTLE};
-    }}
-    SetupScreen #lang-select > SelectOverlay {{
-        border: round {C_MAUVE};
-        background: {C_BASE};
-        color: {C_TEXT};
+    }
+    SetupScreen #lang-select:focus > SelectCurrent {
+        border: round $mauve;
+        background: $mantle;
+    }
+    SetupScreen #lang-select > SelectOverlay {
+        border: round $mauve;
+        background: $base;
+        color: $text;
         padding: 0 1;
         max-height: 4;
-    }}
-    SetupScreen #lang-select > SelectOverlay > .option-list--option {{
-        background: {C_BASE};
-        color: {C_TEXT};
+    }
+    SetupScreen #lang-select > SelectOverlay > .option-list--option {
+        background: $base;
+        color: $text;
         padding: 0 1;
-    }}
-    SetupScreen #lang-select > SelectOverlay > .option-list--option-highlighted {{
-        background: {C_MAUVE};
-        color: {C_BASE};
+    }
+    SetupScreen #lang-select > SelectOverlay > .option-list--option-highlighted {
+        background: $mauve;
+        color: $base;
         text-style: bold;
-    }}
-    SetupButton {{
+    }
+    SetupButton {
         width: 12;
         height: 3;
         margin-top: 1;
         padding: 0 2;
-        background: {C_BASE};
-        border: round {C_MAUVE};
-        color: {C_MAUVE};
+        background: $base;
+        border: round $mauve;
+        color: $mauve;
         content-align: center middle;
-    }}
-    SetupButton:hover {{
-        background: {C_SURFACE0};
-        color: {C_TEXT};
-    }}
-    SetupButton:focus {{
-        background: {C_SURFACE0};
-        border: round {C_MAUVE};
-        color: {C_TEXT};
+    }
+    SetupButton:hover {
+        background: $surface0;
+        color: $text;
+    }
+    SetupButton:focus {
+        background: $surface0;
+        border: round $mauve;
+        color: $text;
         text-style: bold;
-    }}
-    SetupScreen #setup-error {{
+    }
+    SetupScreen #setup-error {
         display: none;
-        background: {C_MANTLE};
-        color: {C_RED};
+        background: $mantle;
+        color: $red;
         text-align: center;
         height: auto;
         margin-top: 1;
-    }}
-    SetupScreen #setup-hints {{
+    }
+    SetupScreen #setup-hints {
         width: 100%;
         height: auto;
-        background: {C_MANTLE};
-        color: {C_OVERLAY0};
+        background: $mantle;
+        color: $overlay0;
         text-align: center;
         margin-top: 1;
-    }}
+    }
     """
 
     def compose(self) -> ComposeResult:

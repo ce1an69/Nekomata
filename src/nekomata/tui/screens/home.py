@@ -5,9 +5,7 @@ from rich.style import Style
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.css.scalar import ScalarOffset
 from textual.events import Key
-from textual.geometry import Offset
 from textual.screen import Screen
 from textual.timer import Timer
 from textual.widgets import Input, Static
@@ -16,16 +14,13 @@ from nekomata.core.i18n import ORNAMENT, lazy_section
 from nekomata.core.render.styles import (
     C_BASE,
     C_CRUST,
-    C_MANTLE,
     C_MAUVE,
     C_OVERLAY0,
-    C_SUBTEXT0,
     C_SURFACE0,
-    C_SURFACE1,
     C_TEXT,
     EASE,
 )
-from nekomata.tui.render.animations import animate_entrance
+from nekomata.tui.render.animations import animate_entrance, animate_exit
 
 _STR = lazy_section("home")
 
@@ -60,74 +55,74 @@ class HomeScreen(Screen):
 
     BINDINGS = []
 
-    DEFAULT_CSS = f"""
-    HomeScreen {{
+    DEFAULT_CSS = """
+    HomeScreen {
         align: center middle;
-    }}
-    HomeScreen #home-stack {{
+    }
+    HomeScreen #home-stack {
         width: 72;
         height: auto;
         align: center middle;
-        border: round {C_SURFACE0};
-        background: {C_MANTLE};
+        border: round $surface0;
+        background: $mantle;
         padding: 1 2;
-    }}
-    HomeScreen #title {{
+    }
+    HomeScreen #title {
         margin-bottom: 1;
         width: 100%;
-        background: {C_MANTLE};
-        color: {C_MAUVE};
+        background: $mantle;
+        color: $mauve;
         text-align: center;
         text-style: bold;
-    }}
-    HomeScreen #ornament, HomeScreen #ornament-bottom {{
+    }
+    HomeScreen #ornament, HomeScreen #ornament-bottom {
         display: none;
-    }}
-    HomeScreen #ornament {{
+    }
+    HomeScreen #ornament {
         margin-bottom: 1;
-    }}
-    HomeScreen #ornament-bottom {{
+    }
+    HomeScreen #ornament-bottom {
         margin-top: 1;
-    }}
-    HomeScreen #input-area {{
+    }
+    HomeScreen #input-area {
         width: 100%;
         height: auto;
         align: center top;
-        background: {C_MANTLE};
-    }}
-    HomeScreen #prompt-input {{
+        background: $mantle;
+    }
+    HomeScreen #prompt-input {
         width: 100%;
         height: 3;
-        border: round {C_SURFACE1};
-        background: {C_BASE};
+        border: round $surface1;
+        background: $base;
         padding: 0 1;
-    }}
-    HomeScreen #prompt-input:focus {{
-        border: round {C_MAUVE};
-        background: {C_MANTLE};
-    }}
-    HomeScreen #command-suggestions {{
+    }
+    HomeScreen #prompt-input:focus {
+        border: round $mauve;
+        background: $mantle;
+    }
+    HomeScreen #command-suggestions {
         width: auto;
         height: auto;
         margin-top: 1;
         padding: 0 1;
-        border: round {C_SURFACE0};
-        color: {C_SUBTEXT0};
-        background: {C_CRUST};
+        border: round $surface0;
+        color: $subtext0;
+        background: $crust;
         transition: opacity 250ms out_quint, offset 250ms out_quint;
-    }}
-    HomeScreen .command-highlight {{
-        color: {C_MAUVE};
+    }
+    HomeScreen .command-highlight {
+        color: $mauve;
         text-style: bold;
-    }}
-    HomeScreen #hints {{
+    }
+    HomeScreen #hints {
         width: 100%;
         height: auto;
-        background: {C_MANTLE};
-        color: {C_OVERLAY0};
+        background: $mantle;
+        color: $overlay0;
         text-align: center;
         margin-top: 1;
-    }}
+    }
     """
 
     def __init__(self) -> None:
@@ -334,14 +329,13 @@ class HomeScreen(Screen):
             suggestions.display = False
             suggestions.update("")
             return
-        suggestions.styles.animate("opacity", 0.0, duration=0.12, easing=EASE)
-        suggestions.styles.animate(
-            "offset",
-            ScalarOffset.from_offset(Offset(0, -1)),
+        self._suggestions_hide_timer = animate_exit(
+            suggestions,
             duration=0.12,
+            dy=-1,
             easing=EASE,
+            callback=self._finish_hide_suggestions,
         )
-        self._suggestions_hide_timer = self.set_timer(0.13, self._finish_hide_suggestions)
 
     def _finish_hide_suggestions(self) -> None:
         suggestions = self.query_one("#command-suggestions", Static)

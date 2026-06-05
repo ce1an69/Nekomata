@@ -14,15 +14,6 @@ from nekomata.core.render.card_renderer import (
     build_detail_text,
     create_card_detail_widget,
 )
-from nekomata.core.render.styles import (
-    C_BASE,
-    C_CRUST,
-    C_MANTLE,
-    C_MAUVE,
-    C_OVERLAY0,
-    C_SURFACE0,
-    C_SURFACE1,
-)
 from nekomata.tui.render.animations import animate_entrance
 from nekomata.tui.screens._debounce import DebouncedCall
 
@@ -50,96 +41,96 @@ class CardBrowserScreen(Screen):
         ("escape", "go_back", "Back"),
     ]
 
-    DEFAULT_CSS = f"""
-    CardBrowserScreen {{
+    DEFAULT_CSS = """
+    CardBrowserScreen {
         align: center top;
-    }}
-    CardBrowserScreen #filter-bar {{
+    }
+    CardBrowserScreen #filter-bar {
         align: center middle;
         height: auto;
         margin: 0 0 1 0;
-        border: round {C_SURFACE0};
-        background: {C_MANTLE};
+        border: round $surface0;
+        background: $mantle;
         padding: 0 1;
         transition: opacity 300ms out_quint, offset 300ms out_quint;
-    }}
-    CardBrowserScreen #filter-bar Button {{
+    }
+    CardBrowserScreen #filter-bar Button {
         width: auto;
         min-width: 10;
         margin: 0 1;
-        background: {C_SURFACE0};
-        border: round {C_SURFACE0};
-        color: {C_OVERLAY0};
-    }}
-    CardBrowserScreen #filter-bar Button:focus {{
-        background: {C_SURFACE1};
-        border: round {C_MAUVE};
-        color: {C_MAUVE};
-    }}
-    CardBrowserScreen #filter-bar Button.active-filter {{
-        background: {C_MANTLE};
-        border: round {C_MAUVE};
-        color: {C_MAUVE};
+        background: $surface0;
+        border: round $surface0;
+        color: $overlay0;
+    }
+    CardBrowserScreen #filter-bar Button:focus {
+        background: $surface1;
+        border: round $mauve;
+        color: $mauve;
+    }
+    CardBrowserScreen #filter-bar Button.active-filter {
+        background: $mantle;
+        border: round $mauve;
+        color: $mauve;
         text-style: bold;
-    }}
-    CardBrowserScreen #card-count {{
+    }
+    CardBrowserScreen #card-count {
         width: 100%;
         height: auto;
-        color: {C_OVERLAY0};
+        color: $overlay0;
         text-align: center;
         margin-bottom: 0;
-    }}
-    CardBrowserScreen #browser-area {{
+    }
+    CardBrowserScreen #browser-area {
         height: 1fr;
         transition: opacity 300ms out_quint, offset 300ms out_quint;
-    }}
-    CardBrowserScreen #card-list {{
+    }
+    CardBrowserScreen #card-list {
         width: 1fr;
         height: 1fr;
-        border: round {C_SURFACE0};
-        background: {C_CRUST};
+        border: round $surface0;
+        background: $crust;
         padding: 1 1;
         transition: opacity 220ms out_quint;
-    }}
-    CardBrowserScreen #card-detail {{
+    }
+    CardBrowserScreen #card-detail {
         width: 1fr;
         height: 1fr;
-        border: round {C_SURFACE1};
-        background: {C_MANTLE};
+        border: round $surface1;
+        background: $mantle;
         padding: 1 2;
         margin-left: 1;
         align: center top;
         scrollbar-gutter: stable;
-    }}
-    CardBrowserScreen #card-detail .card-detail-frame {{
+    }
+    CardBrowserScreen #card-detail .card-detail-frame {
         width: 100%;
         height: 26;
         align: center middle;
-        background: {C_CRUST};
-        border: round {C_SURFACE1};
+        background: $crust;
+        border: round $surface1;
         padding: 1 1;
         transition: opacity 160ms out_quint;
-    }}
-    CardBrowserScreen #card-detail .card-detail {{
+    }
+    CardBrowserScreen #card-detail .card-detail {
         width: auto;
         height: 100%;
-        background: {C_CRUST};
-    }}
-    CardBrowserScreen #detail-text-slot {{
+        background: $crust;
+    }
+    CardBrowserScreen #detail-text-slot {
         width: 100%;
         height: auto;
         transition: opacity 160ms out_quint;
-    }}
-    CardBrowserScreen #card-detail Static {{
-        background: {C_MANTLE};
-    }}
-    CardBrowserScreen #hints {{
+    }
+    CardBrowserScreen #card-detail Static {
+        background: $mantle;
+    }
+    CardBrowserScreen #hints {
         width: 100%;
         height: auto;
-        color: {C_OVERLAY0};
+        color: $overlay0;
         text-align: center;
         margin-top: 1;
-    }}
+    }
     """
 
     def __init__(self) -> None:
@@ -326,32 +317,32 @@ class CardListItem(Static):
 
     can_focus = True
 
-    DEFAULT_CSS = f"""
-    CardListItem {{
+    DEFAULT_CSS = """
+    CardListItem {
         padding: 0 1;
         height: auto;
-        border: round {C_CRUST};
-        background: {C_CRUST};
+        border: round $crust;
+        background: $crust;
         transition: background 180ms, border 180ms, color 180ms, opacity 250ms out_quint;
-    }}
-    CardListItem:focus {{
-        background: {C_BASE};
-        color: {C_MAUVE};
+    }
+    CardListItem:focus {
+        background: $base;
+        color: $mauve;
         text-style: bold;
-        border: round {C_MAUVE};
-    }}
-    CardListItem:hover {{
-        background: {C_BASE};
-    }}
-    CardListItem.selected {{
-        background: {C_MANTLE};
-        border: round {C_MAUVE};
-    }}
-    CardListItem.selected:focus {{
-        background: {C_BASE};
-        color: {C_MAUVE};
+        border: round $mauve;
+    }
+    CardListItem:hover {
+        background: $base;
+    }
+    CardListItem.selected {
+        background: $mantle;
+        border: round $mauve;
+    }
+    CardListItem.selected:focus {
+        background: $base;
+        color: $mauve;
         text-style: bold;
-    }}
+    }
     """
 
     def __init__(self, card: Card) -> None:

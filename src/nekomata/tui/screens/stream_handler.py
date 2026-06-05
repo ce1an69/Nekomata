@@ -1,6 +1,5 @@
 """Stream handler for AI interpretation with typewriter effect."""
 
-import asyncio
 from collections import deque
 from typing import Callable
 
@@ -161,7 +160,7 @@ class StreamHandler:
         config = self._screen.app.config
         lang = config.lang
         self.messages = build_messages(_DEFAULT_STYLE, question, drawn_cards, lang=lang)
-        await self._run_stream(
+        self._start_stream(
             lambda: get_interpreter(config).interpret_stream(drawn_cards, question, lang=lang),
             cancelled_check,
         )
@@ -172,52 +171,73 @@ class StreamHandler:
         followup_msg = build_followup_prompt(question, lang=config.lang)
         messages = list(messages_history) + [{"role": "user", "content": followup_msg}]
         self.messages = list(messages)
-        await self._run_stream(
+        self._start_stream(
             lambda: get_interpreter(config).stream_raw(messages, thinking=False),
             cancelled_check,
         )
 
-    async def _run_stream(self, stream_fn_factory, cancelled_check) -> None:
-        """Shared streaming runner with unified error handling."""
+    def _start_stream(self, stream_fn_factory, cancelled_check) -> None:
+        """Launch the blocking stream consumer in a Textual thread worker."""
         try:
             stream_fn = stream_fn_factory()
-            loop = asyncio.get_running_loop()
-
-            def _consume():
-                for chunk in stream_fn:
-                    if cancelled_check():
-                        return
-                    if isinstance(chunk, str):
-                        chunk = StreamChunk(chunk, "content")
-                    self._screen.app.call_from_thread(self.append_chunk, chunk)
-
-            await loop.run_in_executor(None, _consume)
         except InterpretationError as exc:
-            if not self._screen.is_mounted or cancelled_check():
-                return
-            self._show_error(_s()["errors"]["interp_failed"].format(error=exc), config_error=exc.config_error)
+            if self._screen.is_mounted and not cancelled_check():
+                self._show_error(
+                    _s()["errors"]["interp_failed"].format(error=exc),
+                    config_error=exc.config_error,
+                )
             return
         except Exception as exc:
-            if not self._screen.is_mounted or cancelled_check():
-                return
-            msg = str(exc).lower()
-            errors = _s()["errors"]
-            is_config = any(
-                s in msg
-                for s in (
-                    "api_key",
-                    "unauthorized",
-                    "nodename",
-                    "name or service",
-                    "connection refused",
-                    "unknown url type",
+            if self._screen.is_mounted and not cancelled_check():
+                self._handle_stream_error(exc, cancelled_check)
+            return
+
+        self._screen.run_worker(
+            self._consume_stream(stream_fn, cancelled_check),
+            thread=True,
+            exclusive=True,
+        )
+
+    def _consume_stream(self, stream_fn, cancelled_check) -> None:
+        """Blocking thread worker: consume stream chunks and post to main thread."""
+        try:
+            for chunk in stream_fn:
+                if cancelled_check():
+                    return
+                if isinstance(chunk, str):
+                    chunk = StreamChunk(chunk, "content")
+                self._screen.app.call_from_thread(self.append_chunk, chunk)
+        except InterpretationError as exc:
+            if self._screen.is_mounted and not cancelled_check():
+                self._screen.app.call_from_thread(
+                    self._show_error,
+                    _s()["errors"]["interp_failed"].format(error=exc),
+                    exc.config_error,
                 )
+            return
+        except Exception as exc:
+            if self._screen.is_mounted and not cancelled_check():
+                self._screen.app.call_from_thread(self._handle_stream_error, exc, cancelled_check)
+            return
+        if self._screen.is_mounted and not cancelled_check():
+            self._screen.app.call_from_thread(self.on_done)
+
+    def _handle_stream_error(self, exc: Exception, cancelled_check) -> None:
+        """Map common stream errors to user-facing messages."""
+        msg = str(exc).lower()
+        errors = _s()["errors"]
+        is_config = any(
+            s in msg
+            for s in (
+                "api_key",
+                "unauthorized",
+                "nodename",
+                "name or service",
+                "connection refused",
+                "unknown url type",
             )
-            if "api_key" in msg or "unauthorized" in msg:
-                self._show_error(errors["api_key_missing"], config_error=True)
-            else:
-                self._show_error(errors["interp_failed"].format(error=exc), config_error=is_config)
-            return
-        if not self._screen.is_mounted or cancelled_check():
-            return
-        self.on_done()
+        )
+        if "api_key" in msg or "unauthorized" in msg:
+            self._show_error(errors["api_key_missing"], config_error=True)
+        else:
+            self._show_error(errors["interp_failed"].format(error=exc), config_error=is_config)

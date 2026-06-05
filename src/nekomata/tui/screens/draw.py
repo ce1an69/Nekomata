@@ -12,6 +12,7 @@ from textual.events import DescendantFocus, Key, Resize
 from textual.geometry import Offset
 from textual.screen import Screen
 from textual.widgets import Input, Static
+from textual.reactive import reactive
 
 from nekomata.core.card.deck import Deck
 from nekomata.core.card.types import DrawnCard
@@ -42,6 +43,9 @@ log = logging.getLogger(__name__)
 class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
     """Card drawing screen: pick from deck -> flip to reveal -> detail + interpret."""
 
+    # Reactive phase — watcher auto-updates UI on phase transitions.
+    phase: reactive[Phase] = reactive(Phase.PICK, repaint=False)
+
     BINDINGS = [
         Binding("escape", "handle_back", "Back"),
         Binding("i", "interpret", "Interpret", show=False),
@@ -60,7 +64,6 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         self._planned_cards: list[DrawnCard] = []
         self._drawn_cards: list[DrawnCard] = []
         self._pick_index = 0
-        self._phase = Phase.PICK
         self._cancelled = False
         self._dealing = False
         self._n_positions = len(self._spread.positions)
@@ -184,6 +187,12 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         self._stream.stop()
         clear_cache()
 
+    # -- Reactive watchers --
+
+    def watch_phase(self, old_phase: Phase, new_phase: Phase) -> None:
+        """Auto-update UI when phase transitions."""
+        self._update_phase_ui()
+
     # -- Layout helpers --
 
     def _sync_interp_layout(self) -> None:
@@ -206,7 +215,6 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
     def on_resize(self, event: Resize) -> None:
         if self._detail.visible:
             self._detail._fit_height()
-        self._dialog.fit_height(self._w_main_area, self._detail.visible)
         self._sync_interp_layout()
 
     # -- Focus navigation --
@@ -224,11 +232,11 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
 
     def key_left(self) -> None:
         if self._box.active_box not in ("detail", "interp"):
-            self._box.focus_neighbor("left", self._phase)
+            self._box.focus_neighbor("left", self.phase)
 
     def key_right(self) -> None:
         if self._box.active_box not in ("detail", "interp"):
-            self._box.focus_neighbor("right", self._phase)
+            self._box.focus_neighbor("right", self.phase)
 
     def key_up(self) -> None:
         if self._box.active_box == "interp":
@@ -236,7 +244,7 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         elif self._box.active_box == "detail":
             self.query_one("#card-preview").scroll_up(animate=True)
         else:
-            self._box.focus_neighbor("up", self._phase)
+            self._box.focus_neighbor("up", self.phase)
 
     def key_down(self) -> None:
         if self._box.active_box == "interp":
@@ -244,7 +252,7 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         elif self._box.active_box == "detail":
             self.query_one("#card-preview").scroll_down(animate=True)
         else:
-            self._box.focus_neighbor("down", self._phase)
+            self._box.focus_neighbor("down", self.phase)
 
     def on_descendant_focus(self, event: DescendantFocus) -> None:
         self._box.on_focus_change(event.widget)

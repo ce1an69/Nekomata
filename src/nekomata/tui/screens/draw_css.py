@@ -1,19 +1,6 @@
 """TCSS stylesheet for the draw screen (extracted for readability)."""
 
-from nekomata.core.render.styles import (
-    C_CRUST,
-    C_LAVENDER,
-    C_MANTLE,
-    C_MAUVE,
-    C_OVERLAY0,
-    C_PINK,
-    C_SUBTEXT0,
-    C_SURFACE0,
-    C_SURFACE1,
-    C_SURFACE2,
-    C_TEXT,
-    EASE_OUT,
-)
+from nekomata.core.render.styles import EASE_OUT
 from nekomata.tui.screens.draw_constants import (
     DETAIL_PANEL_WIDTH,
     INTERP_MAX_HEIGHT,
@@ -31,17 +18,17 @@ DrawScreen {{
     margin-bottom: 0;
 }}
 #draw-divider {{
-    color: {C_SURFACE2};
+    color: $surface2;
     text-align: center;
     height: 1;
 }}
 #draw-title {{
-    color: {C_MAUVE};
+    color: $mauve;
     text-style: bold;
     text-align: center;
 }}
 #draw-question {{
-    color: {C_SUBTEXT0};
+    color: $subtext0;
     text-align: center;
 }}
 #deck-section {{
@@ -50,16 +37,16 @@ DrawScreen {{
     padding: 0 1;
     margin: 0 0;
     border: round transparent;
-    border-bottom: round {C_SURFACE0};
-    background: {C_CRUST};
+    border-bottom: round $surface0;
+    background: $crust;
     transition: opacity 420ms {EASE_OUT}, offset 420ms {EASE_OUT}, border 180ms {EASE_OUT};
 }}
 #deck-section.box-active {{
-    border-bottom: round {C_MAUVE};
+    border-bottom: round $mauve;
 }}
 #deck-label {{
-    background: {C_CRUST};
-    color: {C_LAVENDER};
+    background: $crust;
+    color: $lavender;
     text-style: bold;
     text-align: center;
     margin: 0 0 1 0;
@@ -96,10 +83,10 @@ DrawScreen {{
     transition: border 180ms {EASE_OUT};
 }}
 #spread-area.box-active {{
-    border: round {C_MAUVE};
+    border: round $mauve;
 }}
 #spread-label {{
-    color: {C_LAVENDER};
+    color: $lavender;
     text-style: bold;
     text-align: center;
     margin: 0 0 1 0;
@@ -133,8 +120,8 @@ DrawScreen {{
     width: {DETAIL_PANEL_WIDTH};
     min-width: {DETAIL_PANEL_WIDTH};
     height: 1fr;
-    border: round {C_SURFACE0};
-    background: {C_MANTLE};
+    border: round $surface0;
+    background: $mantle;
     padding: 1 1;
     align: center top;
     opacity: 0;
@@ -143,23 +130,23 @@ DrawScreen {{
     transition: opacity 280ms {EASE_OUT}, offset 340ms {EASE_OUT}, border 180ms {EASE_OUT};
 }}
 #card-preview.box-active {{
-    border: round {C_MAUVE};
+    border: round $mauve;
 }}
 #card-preview .card-detail-frame {{
     width: 100%;
     height: auto;
     align: center middle;
-    background: {C_CRUST};
-    border: round {C_LAVENDER};
+    background: $crust;
+    border: round $lavender;
     padding: 1 1;
 }}
 #card-preview .card-detail {{
     width: 50%;
     height: auto;
-    background: {C_CRUST};
+    background: $crust;
 }}
 #card-preview Static {{
-    background: {C_MANTLE};
+    background: $mantle;
 }}
 #card-preview.visible {{
     display: block;
@@ -169,7 +156,7 @@ DrawScreen {{
 #draw-footer {{
     dock: bottom;
     height: 1;
-    color: {C_OVERLAY0};
+    color: $overlay0;
     text-align: center;
     padding: 0 2;
 }}
@@ -179,8 +166,8 @@ DrawScreen {{
     min-height: {INTERP_MIN_HEIGHT};
     max-height: {INTERP_MAX_HEIGHT};
     display: none;
-    border: round {C_SURFACE1};
-    background: {C_MANTLE};
+    border: round $surface1;
+    background: $mantle;
     padding: 0 1;
     margin: 0 1 0 1;
     opacity: 0;
@@ -188,7 +175,7 @@ DrawScreen {{
     transition: width 300ms {EASE_OUT}, border 180ms {EASE_OUT};
 }}
 #interp-dialog.box-active {{
-    border: round {C_MAUVE};
+    border: round $mauve;
 }}
 #interp-dialog.visible {{
     display: block;
@@ -200,17 +187,17 @@ DrawScreen {{
     margin-top: 0;
 }}
 #interp-dialog-title {{
-    color: {C_MAUVE};
+    color: $mauve;
     text-style: bold;
     height: 1;
     margin: 0;
 }}
 #interp-dialog-content {{
-    color: {C_TEXT};
+    color: $text;
     margin: 0;
 }}
 #interp-dialog-hints {{
-    color: {C_OVERLAY0};
+    color: $overlay0;
     height: 1;
     margin: 0;
 }}
@@ -236,17 +223,17 @@ DrawScreen {{
     width: 50;
     height: 3;
     padding: 0 1;
-    border: round {C_MAUVE};
+    border: round $mauve;
     background: transparent;
-    color: {C_TEXT};
+    color: $text;
 }}
 #followup-input:focus {{
-    border: round {C_PINK};
+    border: round $pink;
     background: transparent;
 }}
 #status {{
     text-align: center;
-    color: {C_MAUVE};
+    color: $mauve;
     height: auto;
 }}
 """

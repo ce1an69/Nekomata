@@ -21,14 +21,11 @@ from nekomata.core.card.types import DrawnCard
 from nekomata.core.i18n import lazy_section
 from nekomata.core.render.card_renderer import create_card_face_widget
 from nekomata.core.render.styles import (
-    C_CRUST,
     C_LAVENDER,
-    C_MANTLE,
     C_MAUVE,
     C_OVERLAY0,
     C_PINK,
     C_SUBTEXT0,
-    C_SURFACE0,
     C_SURFACE1,
     C_SURFACE2,
     C_TEXT,
@@ -61,22 +58,22 @@ class ConfirmExitInterpretation(ModalScreen[bool]):
     DEFAULT_CSS = f"""
     ConfirmExitInterpretation {{
         align: center middle;
-        background: {C_CRUST};
+        background: $crust;
     }}
     ConfirmExitInterpretation #confirm-card {{
         width: 54;
         height: auto;
         align: center middle;
-        border: round {C_MAUVE};
-        background: {C_MANTLE};
+        border: round $mauve;
+        background: $mantle;
         padding: 1 2;
         transition: opacity 220ms {EASE}, offset 260ms {EASE};
     }}
     ConfirmExitInterpretation #confirm-content {{
         width: 1fr;
         height: auto;
-        color: {C_TEXT};
-        background: {C_MANTLE};
+        color: $text;
+        background: $mantle;
         text-align: center;
         content-align: center middle;
     }}
@@ -118,21 +115,21 @@ class DeckCard(Static):
         height: {DECK_CARD_HEIGHT};
         min-width: {DECK_CARD_WIDTH};
         min-height: {DECK_CARD_HEIGHT};
-        background: {C_SURFACE0};
-        border: round {C_SURFACE0};
+        background: $surface0;
+        border: round $surface0;
         content-align: center middle;
         padding: 0 0;
         margin: 0 1;
         transition: offset 140ms {EASE_OUT}, border 160ms {EASE_OUT}, background 160ms {EASE_OUT}, opacity 320ms {EASE_OUT};
     }}
     DeckCard:focus {{
-        border: round {C_MAUVE};
-        background: {C_SURFACE1};
+        border: round $mauve;
+        background: $surface1;
         offset: 0 -1;
     }}
     DeckCard.picked {{
-        border: round {C_PINK};
-        background: {C_SURFACE1};
+        border: round $pink;
+        background: $surface1;
         opacity: 1;
         offset: 0 -1;
     }}
@@ -180,62 +177,62 @@ class SpreadSlot(Widget):
         height: {SPREAD_SLOT_HEIGHT};
         min-width: {SPREAD_SLOT_WIDTH};
         min-height: {SPREAD_SLOT_HEIGHT};
-        background: {C_CRUST};
-        border: round {C_SURFACE0};
+        background: $crust;
+        border: round $surface0;
         content-align: center middle;
         padding: 0 0;
         margin: 0 1;
         transition: opacity 280ms {EASE_OUT}, offset 220ms {EASE_OUT}, border 260ms {EASE_OUT}, background 260ms {EASE_OUT};
     }}
     SpreadSlot:focus {{
-        border: round {C_PINK};
-        background: {C_SURFACE1};
+        border: round $pink;
+        background: $surface1;
     }}
     SpreadSlot.empty {{
-        border: round {C_SURFACE1};
-        background: {C_CRUST};
+        border: round $surface1;
+        background: $crust;
     }}
     SpreadSlot.waiting {{
-        border: round {C_MAUVE};
+        border: round $mauve;
     }}
     SpreadSlot.face-down {{
-        background: {C_SURFACE0};
-        border: round {C_SURFACE0};
+        background: $surface0;
+        border: round $surface0;
     }}
     SpreadSlot.face-down:focus {{
-        border: round {C_PINK};
-        background: {C_SURFACE1};
+        border: round $pink;
+        background: $surface1;
     }}
     SpreadSlot.revealed {{
-        background: {C_CRUST};
+        background: $crust;
         border: none;
-        outline: round {C_LAVENDER};
+        outline: round $lavender;
     }}
     SpreadSlot.reversed {{
-        outline: round {C_MAUVE};
+        outline: round $mauve;
     }}
     SpreadSlot.reversed:focus {{
-        outline: round {C_PINK};
+        outline: round $pink;
     }}
     SpreadSlot.revealed:focus {{
         border: none;
-        outline: round {C_PINK};
-        background: {C_CRUST};
+        outline: round $pink;
+        background: $crust;
     }}
     SpreadSlot.selected {{
         border: none;
-        outline: round {C_LAVENDER};
-        background: {C_CRUST};
+        outline: round $lavender;
+        background: $crust;
     }}
     SpreadSlot.selected:focus {{
         border: none;
-        outline: round {C_PINK};
-        background: {C_CRUST};
+        outline: round $pink;
+        background: $crust;
     }}
     SpreadSlot.glow {{
         border: none;
-        outline: round {C_PINK};
-        background: {C_CRUST};
+        outline: round $pink;
+        background: $crust;
         text-style: bold;
     }}
     SpreadSlot .card-face {{

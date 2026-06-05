@@ -5,11 +5,9 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from textual.css.scalar import ScalarOffset
-from textual.geometry import Offset
-
 from nekomata.core.render.card_renderer import preload_card_image_async
 from nekomata.core.render.styles import EASE
+from nekomata.tui.render.animations import staggered_entrance
 from nekomata.tui.screens.draw_constants import (
     PICK_COMPLETE_DELAY,
     SPREAD_SLOT_ENTRANCE_FADE,
@@ -25,7 +23,7 @@ class PickMixin:
     """PICK phase methods extracted from DrawScreen."""
 
     async def on_deck_card_picked(self, event: DeckCard.Picked) -> None:
-        if self._phase != Phase.PICK:
+        if self.phase != Phase.PICK:
             return
         event.stop()
 
@@ -49,7 +47,7 @@ class PickMixin:
             "Picked card %s/%s in %s phase",
             self._pick_index,
             self._n_positions,
-            self._phase.name,
+            self.phase.name,
         )
 
         if self._pick_index >= self._n_positions:
@@ -70,36 +68,24 @@ class PickMixin:
         for i, dc in enumerate(self._drawn_cards):
             slots[self._display_order[i]].place_card(dc)
 
-        self._phase = Phase.FLIP
+        self.phase = Phase.FLIP
         self._box.active_box = "spread"
         self._box.update_highlights()
-        self._update_phase_ui()
 
         self._focus_first_slot()
 
-        if self.app.animation_enabled:
-            for slot in slots:
-                slot.styles.opacity = 0
-                slot.styles.offset = (0, 2)
-            for i, slot in enumerate(slots):
-                self.set_timer(
-                    0.05 + i * SPREAD_SLOT_ENTRANCE_STAGGER,
-                    lambda s=slot: self._animate_slot_entrance(s),
-                )
-            total = 0.05 + len(slots) * SPREAD_SLOT_ENTRANCE_STAGGER + SPREAD_SLOT_ENTRANCE_FADE
-            self.set_timer(total, self._focus_first_slot)
+        staggered_entrance(
+            self,
+            slots,
+            stagger=SPREAD_SLOT_ENTRANCE_STAGGER,
+            duration=SPREAD_SLOT_ENTRANCE_FADE,
+            dy=2,
+            easing=EASE,
+            initial_delay=0.05,
+            on_complete=self._focus_first_slot,
+        )
 
     def _focus_first_slot(self) -> None:
         unrevealed = [s for s in self.query(SpreadSlot) if not s.is_revealed]
         if unrevealed:
             unrevealed[0].focus()
-
-    @staticmethod
-    def _animate_slot_entrance(slot: SpreadSlot) -> None:
-        slot.styles.animate("opacity", 1.0, duration=SPREAD_SLOT_ENTRANCE_FADE, easing=EASE)
-        slot.styles.animate(
-            "offset",
-            ScalarOffset.from_offset(Offset(0, 0)),
-            duration=SPREAD_SLOT_ENTRANCE_FADE,
-            easing=EASE,
-        )

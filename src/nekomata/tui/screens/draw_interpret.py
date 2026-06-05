@@ -11,9 +11,7 @@ from rich.markdown import Markdown
 from rich.rule import Rule
 from rich.text import Text
 from textual.css.query import NoMatches
-from textual.css.scalar import ScalarOffset
 from textual.events import Key
-from textual.geometry import Offset
 from textual.widgets import Input
 
 from nekomata.core.card.display import card_keywords as _card_keywords
@@ -25,6 +23,7 @@ from nekomata.core.i18n import lazy_section
 from nekomata.core.render.image_export import render_interp_image
 from nekomata.core.render.image_export import save_image as _save_tmp_image
 from nekomata.core.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_TEXT, EASE
+from nekomata.tui.render.animations import animate_entrance, animate_exit
 from nekomata.tui.screens.draw_constants import SCROLL_NEAR_BOTTOM_THRESHOLD
 from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_widgets import ConfirmExitInterpretation, SpreadSlot
@@ -90,7 +89,6 @@ class InterpretMixin:
             message,
             self._update_phase_ui,
             sync_layout=self._sync_interp_layout,
-            fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
         )
         if config_error:
             from nekomata.tui.screens.setup import SetupScreen
@@ -133,22 +131,18 @@ class InterpretMixin:
             self._w_interp_hints.update("")
 
     def _sync_interp_hints(self) -> None:
-        from nekomata.tui.screens.draw import Phase
-
         if self._dialog.is_streaming:
             pass
-        elif self._phase == Phase.DONE and self._first_interp_done:
+        elif self.phase == Phase.DONE and self._first_interp_done:
             self._update_followup_hints()
-        elif self._phase == Phase.DONE:
+        elif self.phase == Phase.DONE:
             self._w_interp_hints.update("")
             self._update_footer_fullscreen()
 
     def _available_boxes(self) -> list[str]:
-        from nekomata.tui.screens.draw import Phase
-
-        if self._phase == Phase.PICK:
+        if self.phase == Phase.PICK:
             return ["deck"]
-        if self._phase == Phase.FLIP:
+        if self.phase == Phase.FLIP:
             return ["spread"]
         if self._dialog.fullscreen:
             boxes = []
@@ -187,7 +181,7 @@ class InterpretMixin:
 
     def _update_phase_ui(self) -> None:
         lbl = f"bold {C_LAVENDER}"
-        if self._phase == Phase.PICK:
+        if self.phase == Phase.PICK:
             self._w_deck_section.styles.opacity = 1.0
             self._w_deck_section.styles.offset = (0, 0)
             if self._pick_index < self._n_positions:
@@ -205,11 +199,11 @@ class InterpretMixin:
             )
             self._w_footer.update(Text(_STR["hint_pick"], style=C_OVERLAY0))
             self._w_deck_section.display = True
-        elif self._phase == Phase.FLIP:
+        elif self.phase == Phase.FLIP:
             unrevealed = sum(1 for s in self.query(SpreadSlot) if not s.is_revealed)
             self._w_spread_label.update(Text(_STR["flip_label"].format(unrevealed=unrevealed), style=lbl))
             self._w_footer.update(Text(_STR["hint_flip"], style=C_OVERLAY0))
-        elif self._phase == Phase.DONE:
+        elif self.phase == Phase.DONE:
             self._w_deck_section.display = False
             self._w_spread_label.update(Text(_STR["done_label"], style=lbl))
             self._update_footer_fullscreen()
@@ -217,9 +211,7 @@ class InterpretMixin:
     # -- Flip phase --
 
     async def on_spread_slot_flipped(self, event: SpreadSlot.Flipped) -> None:
-        from nekomata.tui.screens.draw import Phase
-
-        if self._phase != Phase.FLIP:
+        if self.phase != Phase.FLIP:
             return
         event.stop()
 
@@ -231,7 +223,7 @@ class InterpretMixin:
         await event.slot.flip()
 
         # Re-check phase — a concurrent flip may have completed the spread
-        if self._phase != Phase.FLIP:
+        if self.phase != Phase.FLIP:
             return
         self._update_phase_ui()
 
@@ -239,24 +231,20 @@ class InterpretMixin:
         if all(s.is_revealed for s in slots):
             if self.app.animation_enabled:
                 self.run_worker(self._completion_shimmer(slots), exclusive=False)
-            self._phase = Phase.DONE
+            self.phase = Phase.DONE
             self._box.active_box = "spread"
             self._box.update_highlights()
             self._detail.show(
                 slots[0] if slots else None,
                 sync_interp=self._sync_interp_layout,
-                fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
             )
-            self._update_phase_ui()
             for s in slots:
                 s.remove_class("selected")
             slots[0].add_class("selected")
             slots[0].focus()
 
     async def on_spread_slot_selected(self, event: SpreadSlot.Selected) -> None:
-        from nekomata.tui.screens.draw import Phase
-
-        if self._phase != Phase.DONE:
+        if self.phase != Phase.DONE:
             return
         event.stop()
         for s in self.query(SpreadSlot):
@@ -279,9 +267,7 @@ class InterpretMixin:
     # -- Detail toggle --
 
     def action_toggle_detail(self) -> None:
-        from nekomata.tui.screens.draw import Phase
-
-        if self._phase != Phase.DONE:
+        if self.phase != Phase.DONE:
             return
         if self._detail.visible:
             if self._box.active_box == "detail":
@@ -293,7 +279,6 @@ class InterpretMixin:
         else:
             self._detail.show(
                 sync_interp=self._sync_interp_layout,
-                fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
             )
             slots = list(self.query(SpreadSlot))
             if slots:
@@ -309,9 +294,7 @@ class InterpretMixin:
     # -- Follow-up --
 
     def key_f(self, event: Key) -> None:
-        from nekomata.tui.screens.draw import Phase
-
-        if self._phase != Phase.DONE:
+        if self.phase != Phase.DONE:
             return
         if not self._dialog.is_visible or self._dialog.is_streaming:
             return
@@ -326,14 +309,6 @@ class InterpretMixin:
         else:
             self._show_followup()
 
-    def _sync_detail_height(self) -> None:
-        if self._detail.visible:
-            self._dialog.fit_height(self._w_main_area, True)
-
-    def _sync_detail_height_after_refresh(self) -> None:
-        self._sync_detail_height()
-        self.call_after_refresh(self._sync_detail_height)
-
     def _update_followup_placeholder(self) -> None:
         template = _STR.get("followup_placeholder_remaining")
         if not template:
@@ -345,37 +320,21 @@ class InterpretMixin:
         self._w_followup_input.value = ""
         self._update_followup_placeholder()
         self._w_followup_section.display = True
-        if self.app.animation_enabled:
-            self._w_followup_section.styles.opacity = 0
-            self._w_followup_section.styles.offset = (0, 1)
         self._w_followup_section.add_class("visible")
         self._sync_interp_layout()
-        self._sync_detail_height_after_refresh()
-        if self.app.animation_enabled:
-            self._w_followup_section.styles.animate("opacity", 1.0, duration=0.24, easing=EASE)
-            self._w_followup_section.styles.animate(
-                "offset",
-                ScalarOffset.from_offset(Offset(0, 0)),
-                duration=0.24,
-                easing=EASE,
-            )
+        animate_entrance(self._w_followup_section, duration=0.24, dy=1, easing=EASE)
         self._w_followup_input.focus()
 
     def _hide_followup(self) -> None:
         self._followup_visible = False
         self._sync_interp_layout()
-        self._sync_detail_height_after_refresh()
-        if self.app.animation_enabled:
-            self._w_followup_section.styles.animate("opacity", 0.0, duration=0.18, easing=EASE)
-            self._w_followup_section.styles.animate(
-                "offset",
-                ScalarOffset.from_offset(Offset(0, 1)),
-                duration=0.18,
-                easing=EASE,
-            )
-            self.set_timer(0.18, self._finish_followup_hide)
-        else:
-            self._finish_followup_hide()
+        animate_exit(
+            self._w_followup_section,
+            duration=0.18,
+            dy=1,
+            easing=EASE,
+            callback=self._finish_followup_hide,
+        )
 
     def _finish_followup_hide(self) -> None:
         self._w_followup_section.remove_class("visible")
@@ -397,11 +356,7 @@ class InterpretMixin:
         self._followup_active = True
         self._dialog.set_streaming(True)
         self._stream.reset(append=True)
-        self._dialog.fit_height(self._w_main_area, self._detail.visible)
-        self.run_worker(
-            self._stream.run_followup(self._messages_history, question, lambda: self._cancelled),
-            exclusive=True,
-        )
+        self._stream.run_followup(self._messages_history, question, lambda: self._cancelled)
 
     def _update_followup_hints(self) -> None:
         if self._dialog.is_streaming or not self._first_interp_done:
@@ -412,9 +367,7 @@ class InterpretMixin:
     # -- Fullscreen / Copy / Export --
 
     def key_h(self, event: Key) -> None:
-        from nekomata.tui.screens.draw import Phase
-
-        if self._phase != Phase.DONE or not self._dialog.is_visible:
+        if self.phase != Phase.DONE or not self._dialog.is_visible:
             return
         event.stop()
         self._dialog.toggle_fullscreen(self._w_main_area)
@@ -422,9 +375,7 @@ class InterpretMixin:
         self._update_footer_fullscreen()
 
     def key_c(self, event: Key) -> None:
-        from nekomata.tui.screens.draw import Phase
-
-        if self._phase != Phase.DONE or not self._first_interp_done or self._dialog.is_streaming:
+        if self.phase != Phase.DONE or not self._first_interp_done or self._dialog.is_streaming:
             return
         if not self._dialog.is_visible:
             return
@@ -439,9 +390,7 @@ class InterpretMixin:
             self.set_timer(2.0, self._update_footer_fullscreen)
 
     def key_e(self, event: Key) -> None:
-        from nekomata.tui.screens.draw import Phase
-
-        if self._phase != Phase.DONE or not self._first_interp_done or self._dialog.is_streaming:
+        if self.phase != Phase.DONE or not self._first_interp_done or self._dialog.is_streaming:
             return
         if not self._dialog.is_visible:
             return
@@ -475,13 +424,10 @@ class InterpretMixin:
     # -- Interpretation / back actions --
 
     def action_interpret(self) -> None:
-        from nekomata.tui.screens.draw import Phase
-
-        if self._phase == Phase.DONE and not self._dialog.is_streaming:
+        if self.phase == Phase.DONE and not self._dialog.is_streaming:
             self._cancelled = False
             self._dialog.show(
                 sync_layout=self._sync_interp_layout,
-                fit_height=lambda: self._dialog.fit_height(self._w_main_area, self._detail.visible),
             )
             self._sync_interp_hints()
             self._update_footer_fullscreen()

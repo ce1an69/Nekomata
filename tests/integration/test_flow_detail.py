@@ -276,10 +276,6 @@ async def test_fullscreen_interpretation_keeps_top_visible():
         assert isinstance(app.screen, DrawScreen)
         app.screen._dialog.show(
             sync_layout=app.screen._sync_interp_layout,
-            fit_height=lambda: app.screen._dialog.fit_height(
-                app.screen._w_main_area,
-                app.screen._detail.visible,
-            ),
         )
         await pilot.pause(0.2)
 
@@ -322,10 +318,6 @@ async def test_fullscreen_can_toggle_detail_panel():
         assert isinstance(app.screen, DrawScreen)
         app.screen._dialog.show(
             sync_layout=app.screen._sync_interp_layout,
-            fit_height=lambda: app.screen._dialog.fit_height(
-                app.screen._w_main_area,
-                app.screen._detail.visible,
-            ),
         )
         await pilot.pause(0.2)
 
@@ -383,10 +375,6 @@ async def test_fullscreen_preserves_bottom_alignment_with_detail_panel():
             await pilot.pause(0.2)
         app.screen._dialog.show(
             sync_layout=app.screen._sync_interp_layout,
-            fit_height=lambda: app.screen._dialog.fit_height(
-                app.screen._w_main_area,
-                app.screen._detail.visible,
-            ),
         )
         await pilot.pause(0.2)
 
@@ -448,10 +436,6 @@ async def test_footer_hides_interpret_hint_after_interpretation_starts():
         assert isinstance(app.screen, DrawScreen)
         app.screen._dialog.show(
             sync_layout=app.screen._sync_interp_layout,
-            fit_height=lambda: app.screen._dialog.fit_height(
-                app.screen._w_main_area,
-                app.screen._detail.visible,
-            ),
         )
         app.screen._update_footer_fullscreen()
 
@@ -516,10 +500,6 @@ async def test_followup_input_is_centered_above_footer_with_remaining_placeholde
         assert isinstance(app.screen, DrawScreen)
         app.screen._dialog.show(
             sync_layout=app.screen._sync_interp_layout,
-            fit_height=lambda: app.screen._dialog.fit_height(
-                app.screen._w_main_area,
-                app.screen._detail.visible,
-            ),
         )
         await pilot.pause(0.2)
         interp = app.screen.query_one("#interp-dialog")
@@ -563,10 +543,6 @@ async def test_fullscreen_toggle_during_stream_does_not_show_action_hints():
         assert isinstance(app.screen, DrawScreen)
         app.screen._dialog.show(
             sync_layout=app.screen._sync_interp_layout,
-            fit_height=lambda: app.screen._dialog.fit_height(
-                app.screen._w_main_area,
-                app.screen._detail.visible,
-            ),
         )
         app.screen._first_interp_done = False
         app.screen._w_interp_hints.update("loading")

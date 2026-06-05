@@ -8,13 +8,9 @@ from textual.widgets import Static
 
 from nekomata.core.i18n import lazy_section
 from nekomata.core.render.styles import (
-    C_BASE,
-    C_CRUST,
-    C_MANTLE,
     C_MAUVE,
     C_OVERLAY0,
     C_SUBTEXT0,
-    C_SURFACE0,
     C_TEXT,
 )
 from nekomata.core.spread import SPREAD_REGISTRY, get_spread
@@ -29,31 +25,31 @@ class SpreadOption(Static):
 
     can_focus = True
 
-    DEFAULT_CSS = f"""
-    SpreadOption {{
+    DEFAULT_CSS = """
+    SpreadOption {
         height: 3;
         padding: 0 2;
         margin-bottom: 1;
-        border: round {C_MANTLE};
-        background: {C_MANTLE};
-        color: {C_SUBTEXT0};
+        border: round $mantle;
+        background: $mantle;
+        color: $subtext0;
         transition: offset 300ms out_quint, opacity 300ms out_quint,
                     background 200ms, border 200ms, color 200ms;
-    }}
-    SpreadOption:hover {{
-        background: {C_BASE};
-        color: {C_TEXT};
-    }}
-    SpreadOption:focus {{
-        background: {C_BASE};
-        border: round {C_MAUVE};
-        color: {C_TEXT};
+    }
+    SpreadOption:hover {
+        background: $base;
+        color: $text;
+    }
+    SpreadOption:focus {
+        background: $base;
+        border: round $mauve;
+        color: $text;
         text-style: bold;
-    }}
-    SpreadOption.back {{
+    }
+    SpreadOption.back {
         margin-top: 1;
-        color: {C_SUBTEXT0};
-    }}
+        color: $subtext0;
+    }
     """
 
     class Selected(Message):
@@ -84,73 +80,73 @@ class SpreadSelectScreen(Screen):
         ("escape", "go_back", "Back"),
     ]
 
-    DEFAULT_CSS = f"""
-    SpreadSelectScreen {{
+    DEFAULT_CSS = """
+    SpreadSelectScreen {
         align: center middle;
-    }}
-    SpreadSelectScreen #spread-shell {{
+    }
+    SpreadSelectScreen #spread-shell {
         width: 86;
         height: auto;
-    }}
-    SpreadSelectScreen #question {{
+    }
+    SpreadSelectScreen #question {
         text-align: center;
-        color: {C_TEXT};
-        border: round {C_SURFACE0};
-        background: {C_MANTLE};
+        color: $text;
+        border: round $surface0;
+        background: $mantle;
         padding: 0 2;
         margin-bottom: 1;
         width: 100%;
-    }}
-    SpreadSelectScreen #prompt {{
+    }
+    SpreadSelectScreen #prompt {
         text-align: center;
-        color: {C_MAUVE};
+        color: $mauve;
         text-style: bold;
         margin-bottom: 1;
-    }}
-    SpreadSelectScreen #spread-body {{
+    }
+    SpreadSelectScreen #spread-body {
         height: auto;
-    }}
-    SpreadSelectScreen #spread-buttons {{
+    }
+    SpreadSelectScreen #spread-buttons {
         width: 44;
         height: auto;
-        border: round {C_SURFACE0};
-        background: {C_MANTLE};
+        border: round $surface0;
+        background: $mantle;
         padding: 1 1;
-    }}
-    SpreadSelectScreen #spread-preview {{
+    }
+    SpreadSelectScreen #spread-preview {
         width: 1fr;
         height: 100%;
-        color: {C_OVERLAY0};
+        color: $overlay0;
         text-align: left;
         margin-left: 1;
         margin-bottom: 0;
-        border: round {C_SURFACE0};
-        background: {C_CRUST};
+        border: round $surface0;
+        background: $crust;
         padding: 1 2;
-    }}
-    SpreadSelectScreen #preview-title {{
-        background: {C_CRUST};
-        color: {C_MAUVE};
+    }
+    SpreadSelectScreen #preview-title {
+        background: $crust;
+        color: $mauve;
         text-style: bold;
         margin-bottom: 1;
-    }}
-    SpreadSelectScreen #preview-desc {{
-        background: {C_CRUST};
-        color: {C_SUBTEXT0};
+    }
+    SpreadSelectScreen #preview-desc {
+        background: $crust;
+        color: $subtext0;
         margin-bottom: 1;
-    }}
-    SpreadSelectScreen #preview-positions {{
-        background: {C_CRUST};
-        color: {C_OVERLAY0};
+    }
+    SpreadSelectScreen #preview-positions {
+        background: $crust;
+        color: $overlay0;
         padding: 0 2;
-    }}
-    SpreadSelectScreen #hints {{
+    }
+    SpreadSelectScreen #hints {
         width: 100%;
         height: auto;
-        color: {C_OVERLAY0};
+        color: $overlay0;
         text-align: center;
         margin-top: 1;
-    }}
+    }
     """
 
     def compose(self) -> ComposeResult:

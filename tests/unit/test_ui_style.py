@@ -122,7 +122,7 @@ def test_card_rendering_catppuccin_theme_uses_purple_accents():
 def test_home_suggestion_panel_can_animate_out():
     names = HomeScreen._hide_suggestions.__code__.co_names
 
-    assert "animate" in names
+    assert "animate_exit" in names
     assert "_finish_hide_suggestions" in names
 
 
@@ -260,8 +260,9 @@ def test_draw_hiding_interpretation_animates_down_without_height_collapse():
 
     source = inspect.getsource(InterpretationDialog.hide)
 
-    assert "ScalarOffset.from_offset(Offset(0, 2))" in source
-    assert "self._screen.set_timer(0.28, _finish_hide)" in source
+    assert "animate_exit" in source
+    assert "dy=2" in source
+    assert "_finish_hide" in source
     assert "self._animate_interp_height(" not in source
 
 
@@ -278,7 +279,7 @@ def test_draw_hiding_detail_recenters_spread_area():
 def test_draw_stream_uses_app_thread_callback():
     from nekomata.tui.screens.stream_handler import StreamHandler
 
-    source = inspect.getsource(StreamHandler._run_stream)
+    source = inspect.getsource(StreamHandler._consume_stream)
 
     assert "call_from_thread" in source
 
@@ -343,10 +344,10 @@ def test_interpretation_exit_confirm_uses_catppuccin_modal():
 
     assert "ConfirmExitInterpretation" in source
     assert "callback=on_confirm" in source
-    assert f"background: {C_CRUST};" in css
+    assert "background: $crust;" in css
     assert "background: #11111b 70%" not in css
-    assert f"border: round {C_MAUVE}" in css
-    assert f"background: {C_MANTLE}" in css
+    assert "border: round $mauve" in css
+    assert "background: $mantle" in css
     assert "#confirm-content" in css
     assert "transition: opacity 220ms" in css
 

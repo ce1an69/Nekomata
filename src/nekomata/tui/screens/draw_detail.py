@@ -1,11 +1,10 @@
 """Detail panel manager for the draw screen."""
 
-from textual.css.scalar import ScalarOffset
-from textual.geometry import Offset
 from textual.widgets import Static
 
 from nekomata.core.render.card_renderer import render_card_detail, render_card_full_detail_widgets
 from nekomata.core.render.styles import EASE
+from nekomata.tui.render.animations import animate_entrance, animate_exit
 from nekomata.tui.screens._debounce import DebouncedCall
 
 
@@ -34,28 +33,16 @@ class DetailPanel:
 
     # -- Show / Hide --
 
-    def show(self, slot=None, sync_interp=None, fit_height=None) -> None:
+    def show(self, slot=None, sync_interp=None) -> None:
         """Display the detail panel with entrance animation."""
         self._visible = True
         if sync_interp:
             sync_interp()
         self._w_preview.display = True
         self._fit_height()
-        if fit_height:
-            fit_height()
         self._screen.call_after_refresh(self._fit_height)
-        if self._screen.app.animation_enabled:
-            self._w_preview.styles.opacity = 0
-            self._w_preview.styles.offset = (4, 0)
         self._w_preview.add_class("visible")
-        if self._screen.app.animation_enabled:
-            self._w_preview.styles.animate("opacity", 1.0, duration=0.28, easing=EASE)
-            self._w_preview.styles.animate(
-                "offset",
-                ScalarOffset.from_offset(Offset(0, 0)),
-                duration=0.28,
-                easing=EASE,
-            )
+        animate_entrance(self._w_preview, duration=0.28, dx=4, dy=0, easing=EASE)
         self._last_preview_id = None
         if slot is not None:
             self.update(slot, immediate=True)
@@ -67,17 +54,14 @@ class DetailPanel:
         self._pending_center_spread = center_spread
         if sync_interp:
             sync_interp()
-        if self._screen.app.animation_enabled:
-            self._w_preview.styles.animate("opacity", 0.0, duration=0.22, easing=EASE)
-            self._w_preview.styles.animate(
-                "offset",
-                ScalarOffset.from_offset(Offset(4, 0)),
-                duration=0.22,
-                easing=EASE,
-            )
-            self._screen.set_timer(0.22, self._finish_hide)
-        else:
-            self._finish_hide()
+        animate_exit(
+            self._w_preview,
+            duration=0.22,
+            dx=4,
+            dy=0,
+            easing=EASE,
+            callback=self._finish_hide,
+        )
 
     def _fit_height(self) -> None:
         """Let the shared reading-area flow define the detail panel height."""

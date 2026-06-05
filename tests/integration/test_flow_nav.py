@@ -279,7 +279,7 @@ async def test_draw_screen_enters_flip_immediately_after_final_pick():
         await pilot.pause(0.1)
 
         slots = list(app.screen.query(SpreadSlot))
-        assert app.screen._phase == Phase.FLIP
+        assert app.screen.phase == Phase.FLIP
         assert app.screen.focused is slots[0]
 
 
@@ -307,7 +307,7 @@ async def test_draw_screen_accepts_final_pick_during_deck_entrance():
         await pilot.pause(0.1)
 
         slots = list(app.screen.query(SpreadSlot))
-        assert app.screen._phase == Phase.FLIP
+        assert app.screen.phase == Phase.FLIP
         assert app.screen._pick_index == 1
         assert app.screen.focused is slots[0]
 

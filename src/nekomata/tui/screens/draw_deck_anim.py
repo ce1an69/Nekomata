@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from textual.css.scalar import ScalarOffset
-from textual.geometry import Offset
-
 from nekomata.core.render.styles import EASE
+from nekomata.tui.render.animations import staggered_entrance
 from nekomata.tui.screens.draw_constants import (
     DECK_ENTRANCE_FADE,
     DECK_ENTRANCE_STAGGER,
@@ -34,33 +32,21 @@ class DeckAnimMixin:
     # -- Entrance --
 
     def _animate_deck_entrance(self) -> None:
-        if not self.app.animation_enabled:
-            return
         self._dealing = True
         cards = list(self.query(DeckCard))
-        for i, card in enumerate(cards):
-            card.styles.opacity = 0
-            card.styles.offset = (0, 1)
-            self.set_timer(
-                0.01 + i * DECK_ENTRANCE_STAGGER,
-                lambda c=card: self._reveal_deck_card(c),
-            )
-        total = 0.01 + len(cards) * DECK_ENTRANCE_STAGGER + DECK_ENTRANCE_FADE + 0.05
-        self.set_timer(total, self._enable_deck_selection)
-
-    @staticmethod
-    def _reveal_deck_card(card: DeckCard) -> None:
-        card.styles.animate("opacity", 1.0, duration=DECK_ENTRANCE_FADE, easing=EASE)
-        card.styles.animate(
-            "offset",
-            ScalarOffset.from_offset(Offset(0, 0)),
+        staggered_entrance(
+            self,
+            cards,
+            stagger=DECK_ENTRANCE_STAGGER,
             duration=DECK_ENTRANCE_FADE,
+            dy=1,
             easing=EASE,
+            on_complete=self._enable_deck_selection,
         )
 
     def _enable_deck_selection(self) -> None:
         self._dealing = False
-        if self._phase != Phase.PICK:
+        if self.phase != Phase.PICK:
             return
         deck_cards = list(self.query(DeckCard))
         if deck_cards:

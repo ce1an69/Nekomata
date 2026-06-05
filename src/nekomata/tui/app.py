@@ -5,17 +5,6 @@ from textual.binding import Binding
 from textual.events import Resize
 
 from nekomata.core.i18n import set_lang
-from nekomata.core.render.styles import (
-    C_BASE,
-    C_CRUST,
-    C_LAVENDER,
-    C_MANTLE,
-    C_MAUVE,
-    C_SUBTEXT0,
-    C_SURFACE0,
-    C_SURFACE1,
-    C_TEXT,
-)
 from nekomata.core.render.terminal import get_render_mode
 from nekomata.core.render.themes import set_default_theme
 from nekomata.core.storage.config import AppConfig
@@ -32,67 +21,93 @@ class NekomataApp(App):
         Binding("ctrl+q", "quit", "Quit", priority=True),
     ]
 
-    DEFAULT_CSS = f"""
-    Screen {{
-        background: {C_CRUST};
-        color: {C_TEXT};
+    # Catppuccin Mocha palette — registered as CSS variables so all
+    # child widgets can reference them via $crust, $mauve, etc.
+    _CATPPUCCIN_MOCHA: dict[str, str] = {
+        "crust": "#11111b",
+        "mantle": "#181825",
+        "base": "#1e1e2e",
+        "surface0": "#313244",
+        "surface1": "#45475a",
+        "surface2": "#585b70",
+        "overlay0": "#6c7086",
+        "subtext0": "#a6adc8",
+        "subtext1": "#bac2de",
+        "text": "#cdd6f4",
+        "mauve": "#cba6f7",
+        "lavender": "#b4befe",
+        "pink": "#f5c2e7",
+        "red": "#f38ba8",
+        "peach": "#fab387",
+        "teal": "#94e2d5",
+        "gold": "#f9e2af",
+    }
+
+    def get_theme_variable_defaults(self) -> dict[str, str]:
+        """Register Catppuccin Mocha colors as global CSS variables."""
+        return dict(self._CATPPUCCIN_MOCHA)
+
+    DEFAULT_CSS = """
+    Screen {
+        background: $crust;
+        color: $text;
         padding: 1 2;
-    }}
-    Button {{
-        background: {C_MANTLE};
-        color: {C_SUBTEXT0};
-        border: round {C_SURFACE0};
+    }
+    Button {
+        background: $mantle;
+        color: $subtext0;
+        border: round $surface0;
         padding: 0 2;
         min-width: 12;
         transition: background 180ms, border 180ms, color 180ms;
-    }}
-    Button:hover {{
-        background: {C_BASE};
-        color: {C_TEXT};
-        border: round {C_SURFACE1};
-    }}
-    Button:focus {{
-        background: {C_BASE};
-        border: round {C_MAUVE};
-        color: {C_TEXT};
+    }
+    Button:hover {
+        background: $base;
+        color: $text;
+        border: round $surface1;
+    }
+    Button:focus {
+        background: $base;
+        border: round $mauve;
+        color: $text;
         text-style: bold;
-    }}
-    Button.-primary {{
-        background: {C_BASE};
-        border: round {C_MAUVE};
-        color: {C_MAUVE};
-    }}
-    Button.-primary:hover {{
-        background: {C_SURFACE0};
-    }}
-    Button.-primary:focus {{
-        background: {C_SURFACE0};
+    }
+    Button.-primary {
+        background: $base;
+        border: round $mauve;
+        color: $mauve;
+    }
+    Button.-primary:hover {
+        background: $surface0;
+    }
+    Button.-primary:focus {
+        background: $surface0;
         text-style: bold;
-    }}
-    Button.-success {{
-        background: {C_BASE};
-        border: round {C_LAVENDER};
-        color: {C_LAVENDER};
-    }}
-    Button.-success:hover {{
-        background: {C_SURFACE0};
-    }}
-    Button.-success:disabled {{
+    }
+    Button.-success {
+        background: $base;
+        border: round $lavender;
+        color: $lavender;
+    }
+    Button.-success:hover {
+        background: $surface0;
+    }
+    Button.-success:disabled {
         opacity: 0.5;
-    }}
-    Input {{
-        background: {C_BASE};
-        color: {C_TEXT};
-        border: round {C_SURFACE1};
+    }
+    Input {
+        background: $base;
+        color: $text;
+        border: round $surface1;
         transition: background 180ms, border 180ms;
-    }}
-    Input:focus {{
-        border: round {C_MAUVE};
-    }}
-    VerticalScroll {{
-        scrollbar-background: {C_MANTLE};
-        scrollbar-color: {C_SURFACE1};
-    }}
+    }
+    Input:focus {
+        border: round $mauve;
+    }
+    VerticalScroll {
+        scrollbar-background: $mantle;
+        scrollbar-color: $surface1;
+    }
     """
 
     def __init__(self) -> None:

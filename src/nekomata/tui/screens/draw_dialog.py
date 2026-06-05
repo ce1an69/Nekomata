@@ -1,10 +1,9 @@
 """Interpretation dialog manager for the draw screen."""
 
 from rich.text import Text
-from textual.css.scalar import ScalarOffset
-from textual.geometry import Offset
 
 from nekomata.core.render.styles import C_RED, EASE
+from nekomata.tui.render.animations import animate_entrance, animate_exit
 from nekomata.tui.screens.draw_constants import (
     INTERP_FULLSCREEN_VERTICAL_CHROME,
     INTERP_MAX_HEIGHT,
@@ -100,13 +99,11 @@ class InterpretationDialog:
         if self._prev_detail_visible and not detail.visible:
             detail.show(
                 sync_interp=lambda: self.sync_layout(True, self._screen.size.width),
-                fit_height=lambda: self.fit_height(main_area, True),
             )
         elif not self._prev_detail_visible and detail.visible:
             detail.hide(sync_interp=lambda: self.sync_layout(False, self._screen.size.width))
         else:
             self.sync_layout(detail.visible, self._screen.size.width)
-        self.fit_height(main_area, detail.visible)
 
     def _finish_fullscreen_exit(self) -> None:
         """Finish returning the interpretation dialog to its normal panel."""
@@ -161,38 +158,22 @@ class InterpretationDialog:
         self._w_interp.styles.margin = (0, 1, bottom_margin, 1)
         self._w_interp.styles.width = "1fr"
 
-    def fit_height(self, main_area, detail_visible: bool) -> None:
-        """Retained for callers; flow layout now owns panel heights."""
-        return
-
     # -- Show / Hide --
 
-    def show(self, sync_layout=None, fit_height=None) -> None:
+    def show(self, sync_layout=None) -> None:
         """Display the interpretation dialog with entrance animation."""
         self.set_streaming(True)
         self._box.active_box = "interp"
         self._box.update_highlights()
         if sync_layout:
             sync_layout()
-        if fit_height:
-            fit_height()
         self._w_interp.display = True
-        if self._screen.app.animation_enabled:
-            self._w_interp.styles.opacity = 0
-            self._w_interp.styles.offset = (0, 2)
         self._w_interp.add_class("visible")
-        if self._screen.app.animation_enabled:
-            self._w_interp.styles.animate("opacity", 1.0, duration=0.30, easing=EASE)
-            self._w_interp.styles.animate(
-                "offset",
-                ScalarOffset.from_offset(Offset(0, 0)),
-                duration=0.34,
-                easing=EASE,
-            )
+        animate_entrance(self._w_interp, duration=0.30, dy=2, easing=EASE)
         self._stream.reset()
         self._w_status.update("")
 
-    def hide(self, update_phase_ui, sync_layout=None, fit_height=None) -> None:
+    def hide(self, update_phase_ui, sync_layout=None) -> None:
         """Hide the dialog with exit animation, then update phase UI."""
         self.set_streaming(False)
         self._stream.stop()
@@ -212,34 +193,28 @@ class InterpretationDialog:
             self._w_interp.styles.height = self._panel_height_cells()
             if sync_layout:
                 sync_layout()
-            if fit_height:
-                fit_height()
             update_phase_ui()
 
         if self._screen.app.animation_enabled:
-            self._w_interp.styles.animate("opacity", 0.0, duration=0.22, easing=EASE)
-            self._w_interp.styles.animate(
-                "offset",
-                ScalarOffset.from_offset(Offset(0, 2)),
+            animate_exit(
+                self._w_interp,
                 duration=0.28,
+                dy=2,
                 easing=EASE,
+                callback=_finish_hide,
             )
-            self._screen.set_timer(0.28, _finish_hide)
         else:
             _finish_hide()
 
     def run(self, drawn_cards, question, cancelled_flag) -> None:
-        """Start streaming interpretation in a background worker."""
-        self._screen.run_worker(
-            self._stream.run(drawn_cards, question, cancelled_flag),
-            exclusive=True,
-        )
+        """Start streaming interpretation in a background thread worker."""
+        self._stream.run(drawn_cards, question, cancelled_flag)
 
     def stop(self) -> None:
         self._stream.stop()
         self.set_streaming(False)
 
-    def show_error(self, message: str, update_phase_ui, sync_layout=None, fit_height=None) -> None:
+    def show_error(self, message: str, update_phase_ui, sync_layout=None) -> None:
         """Hide dialog and display an error message."""
-        self.hide(update_phase_ui, sync_layout=sync_layout, fit_height=fit_height)
+        self.hide(update_phase_ui, sync_layout=sync_layout)
         self._w_status.update(Text(message, style=C_RED))
