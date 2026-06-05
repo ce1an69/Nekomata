@@ -137,7 +137,6 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
             with VerticalScroll(id="card-preview"):
                 pass
 
-        yield Static("", id="status")
         yield Static("", id="draw-footer")
 
         with Vertical(id="followup-section"):

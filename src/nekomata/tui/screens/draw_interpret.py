@@ -94,11 +94,8 @@ class InterpretMixin:
 
     @on(StreamError)
     def _on_stream_error_message(self, message: StreamError) -> None:
-        self._dialog.show_error(
-            message.message,
-            self._update_phase_ui,
-            sync_layout=self._sync_interp_layout,
-        )
+        self._dialog.hide(self._update_phase_ui, sync_layout=self._sync_interp_layout)
+        self.app.notify(message.message, severity="error", timeout=10)
         if message.config_error:
             from nekomata.tui.screens.setup import SetupScreen
 
@@ -406,8 +403,7 @@ class InterpretMixin:
             )
             ok = _copy_text_to_clipboard(text)
             msg = _STR["copy_success"] if ok else _STR["copy_failed"]
-            self._w_footer.update(Text(msg, style=C_MAUVE if ok else C_OVERLAY0))
-            self.set_timer(2.0, self._update_footer_fullscreen)
+            self.app.notify(msg, severity="information" if ok else "error", timeout=3)
 
     def key_e(self, event: Key) -> None:
         if self.phase != Phase.DONE or not self._first_interp_done or self._dialog.is_streaming:
@@ -438,8 +434,7 @@ class InterpretMixin:
             except OSError:
                 pass
         msg = _STR["export_success"] if ok else _STR["export_failed"]
-        self._w_footer.update(Text(msg, style=C_MAUVE if ok else C_OVERLAY0))
-        self.set_timer(2.0, self._update_footer_fullscreen)
+        self.app.notify(msg, severity="information" if ok else "error", timeout=3)
 
     # -- Interpretation / back actions --
 
@@ -454,10 +449,15 @@ class InterpretMixin:
             self._dialog.run(self._drawn_cards, self._question, lambda: self._cancelled)
 
     def action_handle_back(self) -> None:
+        """Layered escape: peel off one UI layer per press (innermost first)."""
         if self._followup_visible:
             self._hide_followup()
             return
         if self._dialog.is_visible:
+            if self._dialog.fullscreen:
+                self._dialog.toggle_fullscreen(self._w_main_area)
+                self._update_footer_fullscreen()
+                return
 
             def on_confirm(confirmed: bool) -> None:
                 if confirmed:
@@ -466,5 +466,7 @@ class InterpretMixin:
                     go_home(self)
 
             self.app.push_screen(ConfirmExitInterpretation(), callback=on_confirm)
+        elif self.phase == Phase.DONE and self._detail.visible:
+            self.action_toggle_detail()
         else:
             go_home(self)

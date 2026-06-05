@@ -1,8 +1,6 @@
 """Interpretation dialog manager for the draw screen."""
 
-from rich.text import Text
-
-from nekomata.core.render.styles import C_RED, EASE
+from nekomata.core.render.styles import EASE
 from nekomata.tui.render.animations import animate_entrance, animate_exit
 from nekomata.tui.screens.draw_constants import (
     INTERP_FULLSCREEN_VERTICAL_CHROME,
@@ -36,19 +34,16 @@ class InterpretationDialog:
         self._fullscreen = False
         self._prev_detail_visible = False
         self._prev_main_area_display = True
-        self._prev_status_display = True
         self._height_timers: list = []
         # Cache widget references (set after mount)
         self._w_interp = None
         self._w_content = None
         self._w_hints = None
-        self._w_status = None
 
     def cache_widgets(self) -> None:
         self._w_interp = self._screen.query_one("#interp-dialog")
         self._w_content = self._screen.query_one("#interp-dialog-content")
         self._w_hints = self._screen.query_one("#interp-dialog-hints")
-        self._w_status = self._screen.query_one("#status")
 
     @property
     def is_visible(self) -> bool:
@@ -75,7 +70,6 @@ class InterpretationDialog:
         if self._fullscreen:
             self._prev_detail_visible = detail_visible
             self._prev_main_area_display = main_area.display
-            self._prev_status_display = self._w_status.display
             fullscreen_height = self._fullscreen_height_cells()
             spread_area.display = False
             main_area.display = False
@@ -106,7 +100,6 @@ class InterpretationDialog:
     def _restore_fullscreen_layout(self, spread_area, main_area) -> None:
         """Restore normal flow before shrinking the fullscreen dialog."""
         main_area.display = self._prev_main_area_display
-        self._w_status.display = self._prev_status_display
         spread_area.display = True
         detail_visible = self._get_detail_visible()
         if self._prev_detail_visible and not detail_visible:
@@ -176,7 +169,6 @@ class InterpretationDialog:
         self._w_interp.add_class("visible")
         animate_entrance(self._w_interp, duration=0.30, dy=2, easing=EASE)
         self._stream.reset()
-        self._w_status.update("")
 
     def hide(self, update_phase_ui, sync_layout=None) -> None:
         """Hide the dialog with exit animation, then update phase UI."""
@@ -194,7 +186,6 @@ class InterpretationDialog:
             if was_fullscreen:
                 self._w_interp.remove_class("fullscreen")
                 self._screen.query_one("#main-area").display = self._prev_main_area_display
-                self._w_status.display = self._prev_status_display
             self._w_interp.styles.height = self._panel_height_cells()
             if sync_layout:
                 sync_layout()
@@ -218,8 +209,3 @@ class InterpretationDialog:
     def stop(self) -> None:
         self._stream.stop()
         self.set_streaming(False)
-
-    def show_error(self, message: str, update_phase_ui, sync_layout=None) -> None:
-        """Hide dialog and display an error message."""
-        self.hide(update_phase_ui, sync_layout=sync_layout)
-        self._w_status.update(Text(message, style=C_RED))

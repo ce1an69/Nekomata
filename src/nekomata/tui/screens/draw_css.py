@@ -231,9 +231,4 @@ DrawScreen {{
     border: round $pink;
     background: transparent;
 }}
-#status {{
-    text-align: center;
-    color: $mauve;
-    height: auto;
-}}
 """
