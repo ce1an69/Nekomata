@@ -96,6 +96,7 @@ class InterpretMixin:
     def _on_stream_error_message(self, message: StreamError) -> None:
         self._dialog.hide(self._update_phase_ui, sync_layout=self._sync_interp_layout)
         self.app.notify(message.message, severity="error", timeout=10)
+        _copy_text_to_clipboard(message.message)
         if message.config_error:
             from nekomata.tui.screens.setup import SetupScreen
 
@@ -120,6 +121,10 @@ class InterpretMixin:
 
         self._dialog.set_streaming(False)
         self._update_followup_hints()
+
+        # Ensure final scroll position after layout reflow from content update
+        if self._w_interp.max_scroll_y - self._w_interp.scroll_y <= SCROLL_NEAR_BOTTOM_THRESHOLD:
+            self.call_after_refresh(self._w_interp.scroll_end)
 
     @property
     def _loading_timer(self):
