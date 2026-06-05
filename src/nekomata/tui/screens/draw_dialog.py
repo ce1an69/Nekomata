@@ -10,16 +10,28 @@ from nekomata.tui.screens.draw_constants import (
     INTERP_MIN_HEIGHT,
     INTERP_PANEL_HEIGHT_RATIO,
 )
+from nekomata.tui.screens.draw_messages import DetailHideRequested, DetailShowRequested
 from nekomata.tui.screens.stream_handler import StreamHandler
 
 
 class InterpretationDialog:
-    """Manages the interpretation dialog: show/hide, layout, streaming."""
+    """Manages the interpretation dialog: show/hide, layout, streaming.
 
-    def __init__(self, screen, box_manager, stream: StreamHandler) -> None:
+    Communicates with DetailPanel via Messages (DetailShowRequested /
+    DetailHideRequested) instead of directly accessing ``screen._detail``.
+    """
+
+    def __init__(
+        self,
+        screen,
+        box_manager,
+        stream: StreamHandler,
+        get_detail_visible,
+    ) -> None:
         self._screen = screen
         self._box = box_manager
         self._stream = stream
+        self._get_detail_visible = get_detail_visible
         self._streaming = False
         self._fullscreen = False
         self._prev_detail_visible = False
@@ -47,7 +59,6 @@ class InterpretationDialog:
         return self._streaming
 
     def set_streaming(self, value: bool) -> None:
-        """流式状态的唯一写入口（外部不直接改 _streaming 字段）。"""
         self._streaming = value
 
     # -- Layout --
@@ -60,9 +71,9 @@ class InterpretationDialog:
         """Toggle fullscreen mode: hide spread, keep detail available."""
         self._fullscreen = not self._fullscreen
         spread_area = self._screen.query_one("#spread-area")
-        detail = self._screen._detail
+        detail_visible = self._get_detail_visible()
         if self._fullscreen:
-            self._prev_detail_visible = detail.visible
+            self._prev_detail_visible = detail_visible
             self._prev_main_area_display = main_area.display
             self._prev_status_display = self._w_status.display
             fullscreen_height = self._fullscreen_height_cells()
@@ -71,7 +82,7 @@ class InterpretationDialog:
             self._start_height_fullscreen(fullscreen_height)
         else:
             current_height = self._w_interp.region.height
-            self._restore_fullscreen_layout(spread_area, detail, main_area)
+            self._restore_fullscreen_layout(spread_area, main_area)
             self._animate_interp_height(
                 current_height,
                 self._panel_height_cells(),
@@ -81,7 +92,8 @@ class InterpretationDialog:
     def _start_height_fullscreen(self, height: int) -> None:
         self._w_interp.add_class("fullscreen")
         self._cancel_height_anim()
-        self.sync_layout(self._screen._detail.visible, self._screen.size.width)
+        detail_visible = self._get_detail_visible()
+        self.sync_layout(detail_visible, self._screen.size.width)
         self._w_interp.styles.height = height
 
     def _fullscreen_height_cells(self) -> int:
@@ -91,19 +103,22 @@ class InterpretationDialog:
             height = self._screen.size.height - INTERP_FULLSCREEN_VERTICAL_CHROME
         return max(INTERP_MIN_HEIGHT, height)
 
-    def _restore_fullscreen_layout(self, spread_area, detail, main_area) -> None:
+    def _restore_fullscreen_layout(self, spread_area, main_area) -> None:
         """Restore normal flow before shrinking the fullscreen dialog."""
         main_area.display = self._prev_main_area_display
         self._w_status.display = self._prev_status_display
         spread_area.display = True
-        if self._prev_detail_visible and not detail.visible:
-            detail.show(
-                sync_interp=lambda: self.sync_layout(True, self._screen.size.width),
+        detail_visible = self._get_detail_visible()
+        if self._prev_detail_visible and not detail_visible:
+            self._screen.post_message(
+                DetailShowRequested(slot=None),
             )
-        elif not self._prev_detail_visible and detail.visible:
-            detail.hide(sync_interp=lambda: self.sync_layout(False, self._screen.size.width))
+            # sync_layout will be called by the DetailShowRequested handler
+        elif not self._prev_detail_visible and detail_visible:
+            self._screen.post_message(DetailHideRequested(center_spread=None))
+            # sync_layout will be called by the DetailHideRequested handler
         else:
-            self.sync_layout(detail.visible, self._screen.size.width)
+            self.sync_layout(detail_visible, self._screen.size.width)
 
     def _finish_fullscreen_exit(self) -> None:
         """Finish returning the interpretation dialog to its normal panel."""
@@ -141,21 +156,11 @@ class InterpretationDialog:
 
     def sync_layout(self, detail_visible: bool, screen_width: int) -> None:
         """Keep interp spacing in sync with the surrounding reading layout."""
-        bottom_margin = 0
-        if self._fullscreen:
-            self._w_interp.styles.margin = (0, 1, bottom_margin, 1)
-            self._w_interp.styles.width = "1fr"
-            if detail_visible:
-                self._w_interp.add_class("detail-visible")
-            else:
-                self._w_interp.remove_class("detail-visible")
-            return
-
         if detail_visible:
             self._w_interp.add_class("detail-visible")
         else:
             self._w_interp.remove_class("detail-visible")
-        self._w_interp.styles.margin = (0, 1, bottom_margin, 1)
+        self._w_interp.styles.margin = (0, 1, 0, 1)
         self._w_interp.styles.width = "1fr"
 
     # -- Show / Hide --

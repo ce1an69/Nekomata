@@ -1,7 +1,11 @@
-"""Stream handler for AI interpretation with typewriter effect."""
+"""Stream handler for AI interpretation with typewriter effect.
+
+Uses callbacks for synchronous UI updates (required by timer-driven animation)
+and posts Messages (StreamDone, StreamError) for one-shot lifecycle events
+where asynchronous dispatch is appropriate.
+"""
 
 from collections import deque
-from typing import Callable
 
 from rich.markdown import Markdown
 from rich.text import Text
@@ -10,16 +14,20 @@ from nekomata.core.ai.interpreter import InterpretationError, StreamChunk, get_i
 from nekomata.core.ai.prompts import build_followup_prompt
 from nekomata.core.i18n import lazy_strings as _s
 from nekomata.core.render.styles import C_OVERLAY0, C_TEXT
+from nekomata.tui.screens.draw_messages import StreamDone, StreamError
 
 
 class StreamHandler:
     """Manages AI streaming interpretation state and typewriter rendering.
 
-    Callbacks:
+    Callbacks (synchronous, called from timer callbacks):
       render_content(parts: list | None) — update interp content; None = reset
       render_hints(text: Text) — update interp hints bar
       scroll_to_bottom() — scroll interp panel to bottom
-      show_error(message: str, config_error: bool = False) — hide dialog and show error
+
+    Messages (asynchronous, for one-shot lifecycle events):
+      StreamDone — posted when streaming finishes successfully
+      StreamError — posted on stream errors
     """
 
     def __init__(
@@ -28,15 +36,11 @@ class StreamHandler:
         render_content,
         render_hints,
         scroll_to_bottom,
-        show_error,
-        on_done: Callable | None = None,
     ) -> None:
         self._screen = screen
         self._render_content = render_content
         self._render_hints = render_hints
         self._scroll_to_bottom = scroll_to_bottom
-        self._show_error = show_error
-        self._on_done = on_done
 
         self._thinking_chars: list[str] = []
         self._content_chars: list[str] = []
@@ -151,8 +155,7 @@ class StreamHandler:
 
     def _finish(self) -> None:
         self.stop()
-        if self._on_done:
-            self._on_done()
+        self._screen.post_message(StreamDone())
 
     async def run(self, drawn_cards, question, cancelled_check) -> None:
         from nekomata.core.ai.interpreter import _DEFAULT_STYLE, build_messages
@@ -181,13 +184,17 @@ class StreamHandler:
         try:
             stream_fn = stream_fn_factory()
         except InterpretationError as exc:
+            self._stop_loading()
             if self._screen.is_mounted and not cancelled_check():
-                self._show_error(
-                    _s()["errors"]["interp_failed"].format(error=exc),
-                    config_error=exc.config_error,
+                self._screen.post_message(
+                    StreamError(
+                        _s()["errors"]["interp_failed"].format(error=exc),
+                        config_error=exc.config_error,
+                    )
                 )
             return
         except Exception as exc:
+            self._stop_loading()
             if self._screen.is_mounted and not cancelled_check():
                 self._handle_stream_error(exc, cancelled_check)
             return
@@ -210,9 +217,11 @@ class StreamHandler:
         except InterpretationError as exc:
             if self._screen.is_mounted and not cancelled_check():
                 self._screen.app.call_from_thread(
-                    self._show_error,
-                    _s()["errors"]["interp_failed"].format(error=exc),
-                    exc.config_error,
+                    self._screen.post_message,
+                    StreamError(
+                        _s()["errors"]["interp_failed"].format(error=exc),
+                        config_error=exc.config_error,
+                    ),
                 )
             return
         except Exception as exc:
@@ -238,6 +247,6 @@ class StreamHandler:
             )
         )
         if "api_key" in msg or "unauthorized" in msg:
-            self._show_error(errors["api_key_missing"], config_error=True)
+            self._screen.post_message(StreamError(errors["api_key_missing"], config_error=True))
         else:
-            self._show_error(errors["interp_failed"].format(error=exc), config_error=is_config)
+            self._screen.post_message(StreamError(errors["interp_failed"].format(error=exc), config_error=is_config))

@@ -10,6 +10,7 @@ from rich.console import Group
 from rich.markdown import Markdown
 from rich.rule import Rule
 from rich.text import Text
+from textual import on
 from textual.css.query import NoMatches
 from textual.events import Key
 from textual.widgets import Input
@@ -25,6 +26,11 @@ from nekomata.core.render.image_export import save_image as _save_tmp_image
 from nekomata.core.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_TEXT, EASE
 from nekomata.tui.render.animations import animate_entrance, animate_exit
 from nekomata.tui.screens.draw_constants import SCROLL_NEAR_BOTTOM_THRESHOLD
+from nekomata.tui.screens.draw_messages import (
+    PhaseChanged,
+    StreamDone,
+    StreamError,
+)
 from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_widgets import ConfirmExitInterpretation, SpreadSlot
 from nekomata.tui.screens.widgets import go_home
@@ -54,7 +60,7 @@ log = logging.getLogger(__name__)
 class InterpretMixin:
     """Interpretation, follow-up, fullscreen, and copy/export methods."""
 
-    # -- StreamHandler callbacks --
+    # -- StreamHandler callbacks (synchronous, called from timer callbacks) --
 
     def _on_stream_render(self, parts) -> None:
         if parts is None:
@@ -84,20 +90,24 @@ class InterpretMixin:
         except NoMatches:
             pass
 
-    def _on_stream_error(self, message: str, config_error: bool = False) -> None:
+    # -- Stream lifecycle Message handlers (asynchronous, one-shot events) --
+
+    @on(StreamError)
+    def _on_stream_error_message(self, message: StreamError) -> None:
         self._dialog.show_error(
-            message,
+            message.message,
             self._update_phase_ui,
             sync_layout=self._sync_interp_layout,
         )
-        if config_error:
+        if message.config_error:
             from nekomata.tui.screens.setup import SetupScreen
 
             app = self.app
             go_home(self)
             app.push_screen(SetupScreen(app.config))
 
-    def _on_stream_done(self) -> None:
+    @on(StreamDone)
+    def _on_stream_done_message(self, message: StreamDone) -> None:
         new_content = "".join(self._stream._content_chars)
 
         if self._followup_active:
@@ -121,6 +131,12 @@ class InterpretMixin:
     @property
     def _stream_timer(self):
         return self._stream._timer
+
+    # -- Phase Message handler --
+
+    @on(PhaseChanged)
+    def _on_phase_changed(self, message: PhaseChanged) -> None:
+        self._update_phase_ui(message.new_phase)
 
     # -- Box change / hints sync --
 
@@ -179,9 +195,10 @@ class InterpretMixin:
         parts = [d_hint, h_hint, f_hint, c_hint, e_hint, i_hint, _STR["hint_back"]]
         self._w_footer.update(Text("  ".join(p for p in parts if p), style=C_OVERLAY0))
 
-    def _update_phase_ui(self) -> None:
+    def _update_phase_ui(self, phase: Phase | None = None) -> None:
+        phase = phase if phase is not None else self.phase
         lbl = f"bold {C_LAVENDER}"
-        if self.phase == Phase.PICK:
+        if phase == Phase.PICK:
             self._w_deck_section.styles.opacity = 1.0
             self._w_deck_section.styles.offset = (0, 0)
             if self._pick_index < self._n_positions:
@@ -199,11 +216,11 @@ class InterpretMixin:
             )
             self._w_footer.update(Text(_STR["hint_pick"], style=C_OVERLAY0))
             self._w_deck_section.display = True
-        elif self.phase == Phase.FLIP:
+        elif phase == Phase.FLIP:
             unrevealed = sum(1 for s in self.query(SpreadSlot) if not s.is_revealed)
             self._w_spread_label.update(Text(_STR["flip_label"].format(unrevealed=unrevealed), style=lbl))
             self._w_footer.update(Text(_STR["hint_flip"], style=C_OVERLAY0))
-        elif self.phase == Phase.DONE:
+        elif phase == Phase.DONE:
             self._w_deck_section.display = False
             self._w_spread_label.update(Text(_STR["done_label"], style=lbl))
             self._update_footer_fullscreen()
@@ -225,15 +242,18 @@ class InterpretMixin:
         # Re-check phase — a concurrent flip may have completed the spread
         if self.phase != Phase.FLIP:
             return
-        self._update_phase_ui()
-
         slots = list(self.query(SpreadSlot))
-        if all(s.is_revealed for s in slots):
+        if not all(s.is_revealed for s in slots):
+            self._update_phase_ui()
+        else:
             if self.app.animation_enabled:
                 self.run_worker(self._completion_shimmer(slots), exclusive=False)
             self.phase = Phase.DONE
             self._box.active_box = "spread"
             self._box.update_highlights()
+            # Direct call (not Message) — same-component operation within DrawScreen.
+            # InterpretationDialog uses DetailShowRequested/DetailHideRequested Messages
+            # for its cross-component detail panel operations.
             self._detail.show(
                 slots[0] if slots else None,
                 sync_interp=self._sync_interp_layout,

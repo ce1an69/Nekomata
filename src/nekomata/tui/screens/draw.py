@@ -10,6 +10,7 @@ from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.css.scalar import ScalarOffset
 from textual.events import DescendantFocus, Key, Resize
 from textual.geometry import Offset
+from textual import on
 from textual.screen import Screen
 from textual.widgets import Input, Static
 from textual.reactive import reactive
@@ -31,6 +32,7 @@ from nekomata.tui.screens.draw_deck_anim import DeckAnimMixin
 from nekomata.tui.screens.draw_detail import DetailPanel
 from nekomata.tui.screens.draw_dialog import InterpretationDialog
 from nekomata.tui.screens.draw_interpret import InterpretMixin
+from nekomata.tui.screens.draw_messages import DetailHideRequested, DetailShowRequested, PhaseChanged
 from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_pick import PickMixin
 from nekomata.tui.screens.draw_widgets import DeckCard, SpreadSlot
@@ -43,7 +45,7 @@ log = logging.getLogger(__name__)
 class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
     """Card drawing screen: pick from deck -> flip to reveal -> detail + interpret."""
 
-    # Reactive phase — watcher auto-updates UI on phase transitions.
+    # Reactive phase — watcher posts PhaseChanged Message on transitions.
     phase: reactive[Phase] = reactive(Phase.PICK, repaint=False)
 
     BINDINGS = [
@@ -86,11 +88,11 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
             render_content=self._on_stream_render,
             render_hints=self._on_stream_hints,
             scroll_to_bottom=self._on_stream_scroll,
-            show_error=self._on_stream_error,
-            on_done=self._on_stream_done,
         )
-        self._dialog = InterpretationDialog(self, self._box, self._stream)
         self._detail = DetailPanel(self)
+        self._dialog = InterpretationDialog(
+            self, self._box, self._stream, lambda: self._detail.visible
+        )
 
     # -- Compose --
 
@@ -190,8 +192,18 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
     # -- Reactive watchers --
 
     def watch_phase(self, old_phase: Phase, new_phase: Phase) -> None:
-        """Auto-update UI when phase transitions."""
-        self._update_phase_ui()
+        """Post PhaseChanged Message on phase transitions."""
+        self.post_message(PhaseChanged(old_phase, new_phase))
+
+    # -- Detail Message handlers --
+
+    @on(DetailShowRequested)
+    def _on_detail_show_requested(self, message: DetailShowRequested) -> None:
+        self._detail.show(slot=message.slot, sync_interp=self._sync_interp_layout)
+
+    @on(DetailHideRequested)
+    def _on_detail_hide_requested(self, message: DetailHideRequested) -> None:
+        self._detail.hide(sync_interp=self._sync_interp_layout, center_spread=message.center_spread)
 
     # -- Layout helpers --
 
