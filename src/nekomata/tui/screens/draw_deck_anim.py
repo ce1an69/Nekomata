@@ -27,6 +27,8 @@ class DeckAnimMixin:
             return
         self._w_deck_section.styles.animate("opacity", 0.0, duration=DECK_EXIT_DURATION, easing=EASE)
         await asyncio.sleep(DECK_EXIT_DURATION + 0.02)
+        if self._cancelled:
+            return
         self._w_deck_section.display = False
         self._w_deck_section.styles.opacity = 1.0  # reset for next DrawScreen
 

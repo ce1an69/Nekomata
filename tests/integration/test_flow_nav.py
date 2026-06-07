@@ -107,7 +107,7 @@ async def test_draw_screen_candidate_grid_uses_all_arrow_keys():
     """Draw screen candidate cards support left/right and up/down movement."""
     app = NekomataApp()
     app.animation_enabled = False
-    async with app.run_test() as pilot:
+    async with app.run_test(size=(160, 40)) as pilot:
         inp = app.screen.query_one("#prompt-input")
         inp.value = "candidate arrow test"
         await pilot.press("enter")
@@ -126,6 +126,7 @@ async def test_draw_screen_candidate_grid_uses_all_arrow_keys():
         assert app.screen.focused is cards[1]
         await pilot.press("down")
         await pilot.pause()
+        # At 160 cols: deck_cards_per_row=12, so down from index 1 → index 13
         assert app.screen.focused is cards[13]
         await pilot.press("up")
         await pilot.pause()

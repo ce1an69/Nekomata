@@ -257,6 +257,7 @@ class SpreadSlot(Widget):
         self.position_name_zh = position_name_zh
         self.drawn_card: DrawnCard | None = None
         self.is_revealed = False
+        self._flipping = False
         self.flip_done_callback = None
         super().__init__()
 
@@ -350,6 +351,7 @@ class SpreadSlot(Widget):
             self._show_revealed_state()
             self.styles.opacity = 1
             self.styles.offset = (0, 0)
+            self._flipping = False
             if self.flip_done_callback is not None:
                 self.flip_done_callback(self)
             return
@@ -386,15 +388,18 @@ class SpreadSlot(Widget):
 
         if self.flip_done_callback is not None:
             self.flip_done_callback(self)
+        self._flipping = False
 
     def on_click(self) -> None:
-        if self.drawn_card and not self.is_revealed:
+        if self.drawn_card and not self.is_revealed and not self._flipping:
+            self._flipping = True
             self.post_message(self.Flipped(self))
         elif self.is_revealed:
             self.post_message(self.Selected(self))
 
     def key_enter(self) -> None:
-        if self.drawn_card and not self.is_revealed:
+        if self.drawn_card and not self.is_revealed and not self._flipping:
+            self._flipping = True
             self.post_message(self.Flipped(self))
         elif self.is_revealed:
             self.post_message(self.Selected(self))

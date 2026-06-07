@@ -587,3 +587,34 @@ async def test_loading_hint_keeps_rotating_between_stream_chunks():
         await pilot.pause(2.1)
         second_hint = str(app.screen.query_one("#interp-dialog-hints").render())
         assert first_hint != second_hint
+
+
+@pytest.mark.asyncio
+async def test_stacked_detail_panel_below_spread():
+    """In narrow terminal, detail panel docks below the spread, not beside it."""
+    app = NekomataApp()
+    app.animation_enabled = False
+    async with app.run_test(size=(100, 36)) as pilot:
+        inp = app.screen.query_one("#prompt-input")
+        inp.value = "stacked test"
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.click("#spread-single")
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause(1.0)
+        await pilot.press("enter")
+        await pilot.pause(1.2)
+
+        from nekomata.tui.screens.draw import DrawScreen
+
+        assert isinstance(app.screen, DrawScreen)
+        reading_area = app.screen.query_one("#reading-area")
+        preview = app.screen.query_one("#card-preview")
+        assert reading_area.has_class("stacked")
+        assert preview.has_class("stacked")
+        assert preview.has_class("visible")
+        # Stacked: preview is below spread, not beside it
+        spread_area = app.screen.query_one("#spread-area")
+        assert preview.region.y >= spread_area.region.y
+        assert preview.region.x == reading_area.region.x

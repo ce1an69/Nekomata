@@ -50,7 +50,7 @@ class LayoutHints:
         """Min height for deck section in current terminal."""
         # Each row: 7 (card height) + 1 (row margin) = 8
         # + 2 for label + 2 for padding
-        return min(32, self.deck_row_count * 8 + 4)
+        return self.deck_row_count * 8 + 4
 
     # -- Spread slot sizes --------------------------------------------------
 

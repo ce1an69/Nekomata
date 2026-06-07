@@ -16,6 +16,7 @@ from nekomata.core.render.card_renderer import (
 )
 from nekomata.tui.render.animations import animate_entrance
 from nekomata.tui.screens._debounce import DebouncedCall
+from nekomata.tui.screens.layout_hints import LayoutHints
 
 _STR = lazy_section("card_browser")
 
@@ -192,7 +193,8 @@ class CardBrowserScreen(Screen):
 
     def _apply_responsive_layout(self) -> None:
         """Toggle stacked layout for narrow terminals."""
-        stacked = self.size.width < 140
+        hints = LayoutHints(self.size.width, self.size.height, self.app.render_mode)
+        stacked = hints.detail_stacked
         area = self.query_one("#browser-area")
         area.set_class(stacked, "stacked")
 

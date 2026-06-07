@@ -26,7 +26,7 @@ from nekomata.core.render.card_renderer import clear_cache
 from nekomata.core.render.styles import C_MAUVE, C_SUBTEXT0, EASE
 from nekomata.core.spread import get_spread
 from nekomata.tui.screens.box_manager import BoxManager
-from nekomata.tui.screens.draw_constants import DECK_ROW_COUNT, NUM_DECK_CARDS, SPREAD_SLOT_HEIGHT, SPREAD_SLOT_WIDTH
+from nekomata.tui.screens.draw_constants import NUM_DECK_CARDS, SPREAD_SLOT_HEIGHT, SPREAD_SLOT_WIDTH
 from nekomata.tui.screens.draw_css import DRAW_SCREEN_CSS
 from nekomata.tui.screens.draw_deck_anim import DeckAnimMixin
 from nekomata.tui.screens.draw_detail import DetailPanel
@@ -88,6 +88,8 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         self._box = BoxManager(self, self._available_boxes)
         self._current_layout_mode: str = "default"  # "default" | "compact" | "tiny"
         self._detail_stacked: bool = False
+        self._current_slot_w: int = 0
+        self._current_slot_h: int = 0
         self._stream = StreamHandler(
             screen=self,
             render_content=self._on_stream_render,
@@ -221,7 +223,15 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         new_mode = "tiny" if hints.is_tiny else ("compact" if hints.is_narrow else "default")
         new_stacked = hints.detail_stacked
 
-        if new_mode == self._current_layout_mode and new_stacked == self._detail_stacked:
+        if new_mode == "default":
+            new_slot_w, new_slot_h = SPREAD_SLOT_WIDTH, SPREAD_SLOT_HEIGHT
+        else:
+            new_slot_w, new_slot_h = hints.spread_slot_width, hints.spread_slot_height
+
+        if (new_mode == self._current_layout_mode
+                and new_stacked == self._detail_stacked
+                and new_slot_w == self._current_slot_w
+                and new_slot_h == self._current_slot_h):
             return
 
         # -- Spread grid class --
@@ -258,6 +268,8 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
 
         self._current_layout_mode = new_mode
         self._detail_stacked = new_stacked
+        self._current_slot_w = new_slot_w
+        self._current_slot_h = new_slot_h
 
     def _sync_interp_layout(self) -> None:
         self._dialog.sync_layout(self._detail.visible, self.size.width)

@@ -49,7 +49,7 @@ class DetailPanel:
         self._fit_height()
         self._screen.call_after_refresh(self._fit_height)
         self._w_preview.add_class("visible")
-        stacked = getattr(self._screen, "_detail_stacked", False)
+        stacked = self._screen._detail_stacked
         dx, dy = (0, 2) if stacked else (4, 0)
         animate_entrance(self._w_preview, duration=PANEL_ENTRANCE_DURATION, dx=dx, dy=dy, easing=EASE)
         self._last_preview_id = None
@@ -63,7 +63,7 @@ class DetailPanel:
         self._pending_center_spread = center_spread
         if sync_interp:
             sync_interp()
-        stacked = getattr(self._screen, "_detail_stacked", False)
+        stacked = self._screen._detail_stacked
         dx, dy = (0, 2) if stacked else (4, 0)
         animate_exit(
             self._w_preview,

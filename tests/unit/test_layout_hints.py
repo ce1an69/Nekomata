@@ -44,11 +44,11 @@ class TestDeckLayout:
 
     def test_min_height_scales_with_rows(self):
         wide = LayoutHints(160, 50, "full")
-        assert wide.deck_section_min_height == 32  # capped at 32
+        assert wide.deck_section_min_height == 36  # 4 rows × 8 + 4
 
         narrow = LayoutHints(80, 24, "compact")
-        # 6 cards/row → 8 rows → 8*8+4=68, but capped at 32
-        assert narrow.deck_section_min_height == 32
+        # 6 cards/row → 8 rows → 8*8+4=68
+        assert narrow.deck_section_min_height == 68
 
 
 class TestSpreadSlotSizes:

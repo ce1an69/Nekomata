@@ -249,16 +249,16 @@ DrawScreen {{
 
 /* ── Responsive: tiny (<100 cols or short) ─────────────────────── */
 #spread-grid.tiny.layout-1 {{
-    grid-columns: 14;
+    grid-columns: 16;
 }}
 #spread-grid.tiny.layout-3 {{
-    grid-columns: 14 14 14;
+    grid-columns: 16 16 16;
 }}
 #spread-grid.tiny.layout-5 {{
-    grid-columns: 14 14 14 14 14;
+    grid-columns: 16 16 16 16 16;
 }}
 #spread-grid.tiny.layout-10 {{
-    grid-columns: 14 14 14 14 14;
+    grid-columns: 16 16 16 16 16;
     grid-rows: auto auto;
 }}
 
