@@ -86,6 +86,7 @@ class SpreadSelectScreen(Screen):
     }
     SpreadSelectScreen #spread-shell {
         width: 86;
+        max-width: 94%;
         height: auto;
     }
     SpreadSelectScreen #question {

@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from nekomata.core.render.styles import EASE
 from nekomata.tui.render.animations import staggered_entrance
 from nekomata.tui.screens.draw_constants import (
     DECK_ENTRANCE_FADE,
     DECK_ENTRANCE_STAGGER,
+    DECK_EXIT_DURATION,
 )
 from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_widgets import DeckCard
@@ -17,9 +20,15 @@ class DeckAnimMixin:
 
     # -- Exit --
 
-    def _hide_deck_section(self) -> None:
-        """Hide the deck section immediately to free layout space for the spread."""
+    async def _animate_deck_exit(self) -> None:
+        """Fade out the deck section, then hide it to free layout space for the spread."""
+        if not self.app.animation_enabled:
+            self._w_deck_section.display = False
+            return
+        self._w_deck_section.styles.animate("opacity", 0.0, duration=DECK_EXIT_DURATION, easing=EASE)
+        await asyncio.sleep(DECK_EXIT_DURATION + 0.02)
         self._w_deck_section.display = False
+        self._w_deck_section.styles.opacity = 1.0  # reset for next DrawScreen
 
     # -- Entrance --
 

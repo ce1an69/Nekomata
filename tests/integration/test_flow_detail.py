@@ -136,7 +136,7 @@ async def test_detail_panel_has_content_after_first_flip():
     """After the last flip opens detail, it should be populated immediately."""
     app = NekomataApp()
     app.animation_enabled = False
-    async with app.run_test() as pilot:
+    async with app.run_test(size=(160, 40)) as pilot:
         inp = app.screen.query_one("#prompt-input")
         inp.value = "detail first open"
         await pilot.press("enter")
@@ -186,7 +186,7 @@ async def test_q_during_interpretation_confirms_then_returns_home():
     """Q during interpretation should confirm before going home."""
     app = NekomataApp()
     app.animation_enabled = False
-    async with app.run_test() as pilot:
+    async with app.run_test(size=(160, 40)) as pilot:
         inp = app.screen.query_one("#prompt-input")
         inp.value = "confirm exit interpretation"
         await pilot.press("enter")
@@ -223,7 +223,7 @@ async def test_detail_panel_keeps_interpretation_height_after_toggle():
     """Reopening detail during interpretation should keep it aligned with the dialog."""
     app = NekomataApp()
     app.animation_enabled = False
-    async with app.run_test() as pilot:
+    async with app.run_test(size=(160, 40)) as pilot:
         inp = app.screen.query_one("#prompt-input")
         inp.value = "toggle detail during interpretation"
         await pilot.press("enter")

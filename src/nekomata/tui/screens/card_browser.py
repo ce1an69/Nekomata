@@ -131,6 +131,15 @@ class CardBrowserScreen(Screen):
         text-align: center;
         margin-top: 1;
     }
+    /* Responsive: stack list + detail vertically in narrow terminals */
+    CardBrowserScreen #browser-area.stacked {
+        layout: vertical;
+    }
+    CardBrowserScreen #browser-area.stacked #card-detail {
+        margin-left: 0;
+        margin-top: 1;
+        max-height: 50%;
+    }
     """
 
     def __init__(self) -> None:
@@ -173,9 +182,19 @@ class CardBrowserScreen(Screen):
         """Populate card list, focus the first item, and animate entrance."""
         container = self.query_one("#card-list")
         container.mount(*(CardListItem(card) for card in self._cards))
+        self._apply_responsive_layout()
         animate_entrance(self.query_one("#filter-bar"), duration=0.3, dy=-1)
         animate_entrance(self.query_one("#browser-area"), duration=0.35)
         self.set_timer(0.1, self._focus_first_visible_card)
+
+    def on_resize(self, event) -> None:
+        self._apply_responsive_layout()
+
+    def _apply_responsive_layout(self) -> None:
+        """Toggle stacked layout for narrow terminals."""
+        stacked = self.size.width < 140
+        area = self.query_one("#browser-area")
+        area.set_class(stacked, "stacked")
 
     def _focus_first_visible_card(self) -> None:
         for item in self.query(CardListItem):

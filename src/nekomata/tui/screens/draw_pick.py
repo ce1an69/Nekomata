@@ -61,7 +61,7 @@ class PickMixin:
 
     async def _reveal_spread(self) -> None:
         log.debug("Revealing spread and entering flip phase")
-        self._hide_deck_section()
+        await self._animate_deck_exit()
         self._w_main_area.display = True
 
         slots = list(self.query(SpreadSlot))

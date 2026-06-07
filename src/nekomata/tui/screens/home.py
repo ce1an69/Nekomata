@@ -61,6 +61,7 @@ class HomeScreen(Screen):
     }
     HomeScreen #home-stack {
         width: 72;
+        max-width: 92%;
         height: auto;
         align: center middle;
         border: round $surface0;

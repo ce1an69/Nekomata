@@ -257,6 +257,7 @@ class SpreadSlot(Widget):
         self.position_name_zh = position_name_zh
         self.drawn_card: DrawnCard | None = None
         self.is_revealed = False
+        self.flip_done_callback = None
         super().__init__()
 
     def compose(self) -> ComposeResult:
@@ -349,6 +350,8 @@ class SpreadSlot(Widget):
             self._show_revealed_state()
             self.styles.opacity = 1
             self.styles.offset = (0, 0)
+            if self.flip_done_callback is not None:
+                self.flip_done_callback(self)
             return
 
         # Phase 1: fade out + slide up the face-down card
@@ -380,6 +383,9 @@ class SpreadSlot(Widget):
         # Hold glow, then fade it out
         await asyncio.sleep(SLOT_FLIP_FADE_IN + SLOT_FLIP_GLOW_HOLD)
         self.remove_class("glow")
+
+        if self.flip_done_callback is not None:
+            self.flip_done_callback(self)
 
     def on_click(self) -> None:
         if self.drawn_card and not self.is_revealed:

@@ -41,7 +41,10 @@ def _make_drawn_card() -> DrawnCard:
 
 @pytest.mark.asyncio
 async def test_draw_screen_mounts_deck():
-    """DrawScreen mounts deck cards and spread slots."""
+    """DrawScreen mounts deck cards and spread slots.
+
+    Deck row layout adapts to terminal width via LayoutHints.
+    """
     app = NekomataApp()
     app.animation_enabled = False
     async with app.run_test() as pilot:
@@ -55,11 +58,12 @@ async def test_draw_screen_mounts_deck():
         from nekomata.tui.screens.draw_widgets import DeckCard, SpreadSlot
 
         assert isinstance(app.screen, DrawScreen)
-        deck_rows = app.screen.query(".deck-row-line")
-        assert len(deck_rows) == 4
-        assert [len(list(row.query(DeckCard))) for row in deck_rows] == [12, 12, 12, 12]
+        # All 48 deck cards must be mounted across rows
         deck_cards = app.screen.query(DeckCard)
-        assert len(deck_cards) > 0
+        assert len(deck_cards) == NUM_DECK_CARDS
+        deck_rows = app.screen.query(".deck-row-line")
+        total_in_rows = sum(len(list(row.query(DeckCard))) for row in deck_rows)
+        assert total_in_rows == NUM_DECK_CARDS
         slots = app.screen.query(SpreadSlot)
         assert len(slots) == 1
 
@@ -142,10 +146,11 @@ def test_draw_screen_offers_more_candidate_cards():
 
 
 def test_pick_complete_transition_is_immediate():
-    """Finishing selection should immediately free layout space for the spread.
+    """Finishing selection should free layout space quickly for the spread.
 
-    The deck section is hidden instantly (display=False) rather than fading out,
-    so the spread area gets full space without the user needing to press a key.
+    The deck section fades out via programmatic animation (not CSS transition),
+    then display=False. CSS transition must stay border-only so it doesn't
+    interfere with the programmatic opacity animation.
     """
     from nekomata.tui.screens.draw import DrawScreen
 
@@ -182,7 +187,7 @@ def test_spread_slot_flip_uses_smooth_two_phase_motion():
     assert "offset 220ms" not in css
     assert 0.0 in constants  # fade-out to fully invisible (no flash)
     assert SLOT_FLIP_FADE_OUT == pytest.approx(0.14)
-    assert SLOT_FLIP_SWAP_PAUSE == pytest.approx(0.02)
+    assert SLOT_FLIP_SWAP_PAUSE == pytest.approx(0.12)
     assert SLOT_FLIP_FADE_IN == pytest.approx(0.28)
     assert SLOT_FLIP_GLOW_HOLD == pytest.approx(0.16)
 
@@ -230,13 +235,22 @@ def test_spread_slot_reveal_only_ignores_missing_slot_content(monkeypatch):
 
 
 def test_done_phase_does_not_wait_for_completion_shimmer():
-    """The detail panel should appear immediately after the final flip."""
+    """The detail panel should appear immediately after the final flip.
+
+    The completion shimmer runs in a background worker (non-blocking).
+    Since flip is now fire-and-forget, the shimmer is triggered from
+    _on_flip_done (not on_spread_slot_flipped directly).
+    """
     from nekomata.tui.screens.draw import DrawScreen
 
+    # on_spread_slot_flipped uses run_worker for fire-and-forget flip
     names = DrawScreen.on_spread_slot_flipped.__code__.co_names
-
     assert "run_worker" in names
-    assert "_completion_shimmer" in names
+
+    # _on_flip_done triggers the shimmer via run_worker when all flips complete
+    done_names = DrawScreen._on_flip_done.__code__.co_names
+    assert "_completion_shimmer" in done_names
+    assert "run_worker" in done_names
 
 
 def test_completion_shimmer_avoids_zero_delay_timer():

@@ -26,7 +26,7 @@ from nekomata.core.render.card_renderer import clear_cache
 from nekomata.core.render.styles import C_MAUVE, C_SUBTEXT0, EASE
 from nekomata.core.spread import get_spread
 from nekomata.tui.screens.box_manager import BoxManager
-from nekomata.tui.screens.draw_constants import DECK_ROW_COUNT, NUM_DECK_CARDS
+from nekomata.tui.screens.draw_constants import DECK_ROW_COUNT, NUM_DECK_CARDS, SPREAD_SLOT_HEIGHT, SPREAD_SLOT_WIDTH
 from nekomata.tui.screens.draw_css import DRAW_SCREEN_CSS
 from nekomata.tui.screens.draw_deck_anim import DeckAnimMixin
 from nekomata.tui.screens.draw_detail import DetailPanel
@@ -36,6 +36,7 @@ from nekomata.tui.screens.draw_messages import DetailHideRequested, DetailShowRe
 from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_pick import PickMixin
 from nekomata.tui.screens.draw_widgets import DeckCard, SpreadSlot
+from nekomata.tui.screens.layout_hints import LayoutHints
 from nekomata.tui.screens.stream_handler import StreamHandler
 
 _STR = lazy_section("draw")
@@ -68,6 +69,7 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         self._pick_index = 0
         self._cancelled = False
         self._dealing = False
+        self._pending_flips: int = 0
         self._skip_phase_ui_message = False
         self._n_positions = len(self._spread.positions)
         self._display_order = self._spread.display_order
@@ -84,6 +86,8 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         self._messages_history: list[dict] = []
 
         self._box = BoxManager(self, self._available_boxes)
+        self._current_layout_mode: str = "default"  # "default" | "compact" | "tiny"
+        self._detail_stacked: bool = False
         self._stream = StreamHandler(
             screen=self,
             render_content=self._on_stream_render,
@@ -111,10 +115,12 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
 
         with Vertical(id="deck-section"):
             yield Static("", id="deck-label")
-            base_cards_per_row, extra_cards = divmod(NUM_DECK_CARDS, DECK_ROW_COUNT)
+            hints = LayoutHints(self.size.width or 120, self.size.height or 40, "compact")
+            row_count = hints.deck_row_count
+            base_cards_per_row, extra_cards = divmod(NUM_DECK_CARDS, row_count)
             card_index = 0
             with Vertical(id="deck-row"):
-                for row_index in range(DECK_ROW_COUNT):
+                for row_index in range(row_count):
                     row_size = base_cards_per_row + int(row_index < extra_cards)
                     with Horizontal(classes="deck-row-line"):
                         for i in range(card_index, card_index + row_size):
@@ -169,6 +175,7 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         grid.add_class(f"layout-{self._n_positions}")
 
         self._w_main_area.display = False
+        self._apply_responsive_layout()
         self._update_phase_ui()
         self._animate_deck_entrance()
         deck_cards = list(self.query(DeckCard))
@@ -207,6 +214,51 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
 
     # -- Layout helpers --
 
+    def _apply_responsive_layout(self) -> None:
+        """Toggle responsive CSS classes and runtime styles based on terminal size."""
+        hints = LayoutHints(self.size.width, self.size.height, self.app.render_mode)
+
+        new_mode = "tiny" if hints.is_tiny else ("compact" if hints.is_narrow else "default")
+        new_stacked = hints.detail_stacked
+
+        if new_mode == self._current_layout_mode and new_stacked == self._detail_stacked:
+            return
+
+        # -- Spread grid class --
+        grid = self._w_spread_grid
+        for cls in ("compact", "tiny"):
+            grid.remove_class(cls)
+        if new_mode != "default":
+            grid.add_class(new_mode)
+
+        # -- Slot runtime sizes --
+        if new_mode == "default":
+            slot_w, slot_h = SPREAD_SLOT_WIDTH, SPREAD_SLOT_HEIGHT
+        else:
+            slot_w, slot_h = hints.spread_slot_width, hints.spread_slot_height
+        for slot in self.query(SpreadSlot):
+            slot.styles.width = slot_w
+            slot.styles.height = slot_h
+            slot.styles.min_width = slot_w
+            slot.styles.min_height = slot_h
+
+        # -- Deck section min-height --
+        self._w_deck_section.styles.min_height = hints.deck_section_min_height
+
+        # -- Detail panel stacked mode --
+        if new_stacked != self._detail_stacked:
+            reading_area = self.query_one("#reading-area")
+            preview = self.query_one("#card-preview")
+            if new_stacked:
+                reading_area.add_class("stacked")
+                preview.add_class("stacked")
+            else:
+                reading_area.remove_class("stacked")
+                preview.remove_class("stacked")
+
+        self._current_layout_mode = new_mode
+        self._detail_stacked = new_stacked
+
     def _sync_interp_layout(self) -> None:
         self._dialog.sync_layout(self._detail.visible, self.size.width)
 
@@ -225,6 +277,7 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
     # -- Resize --
 
     def on_resize(self, event: Resize) -> None:
+        self._apply_responsive_layout()
         if self._detail.visible:
             self._detail._fit_height()
         self._sync_interp_layout()

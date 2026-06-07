@@ -254,9 +254,16 @@ class InterpretMixin:
         if next_unrevealed:
             next_unrevealed[0].focus()
 
-        await event.slot.flip()
+        # Fire-and-forget: multiple flips can overlap
+        event.slot.flip_done_callback = self._on_flip_done
+        self._pending_flips += 1
+        self.run_worker(event.slot.flip(), exclusive=False)
 
-        # Re-check phase — a concurrent flip may have completed the spread
+    def _on_flip_done(self, slot: SpreadSlot) -> None:
+        """Called by each slot when its flip animation finishes."""
+        self._pending_flips -= 1
+        if self._pending_flips > 0:
+            return
         if self.phase != Phase.FLIP:
             return
         slots = list(self.query(SpreadSlot))

@@ -68,6 +68,7 @@ class SetupScreen(Screen):
     }
     SetupScreen #setup-stack {
         width: 60;
+        max-width: 90%;
         height: auto;
         align: center middle;
         border: round $surface0;

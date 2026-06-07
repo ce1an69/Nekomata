@@ -231,4 +231,44 @@ DrawScreen {{
     border: round $pink;
     background: transparent;
 }}
+
+/* ── Responsive: compact (<120 cols) ──────────────────────────── */
+#spread-grid.compact.layout-1 {{
+    grid-columns: 16;
+}}
+#spread-grid.compact.layout-3 {{
+    grid-columns: 16 16 16;
+}}
+#spread-grid.compact.layout-5 {{
+    grid-columns: 16 16 16 16 16;
+}}
+#spread-grid.compact.layout-10 {{
+    grid-columns: 16 16 16 16 16;
+    grid-rows: auto auto;
+}}
+
+/* ── Responsive: tiny (<100 cols or short) ─────────────────────── */
+#spread-grid.tiny.layout-1 {{
+    grid-columns: 14;
+}}
+#spread-grid.tiny.layout-3 {{
+    grid-columns: 14 14 14;
+}}
+#spread-grid.tiny.layout-5 {{
+    grid-columns: 14 14 14 14 14;
+}}
+#spread-grid.tiny.layout-10 {{
+    grid-columns: 14 14 14 14 14;
+    grid-rows: auto auto;
+}}
+
+/* ── Responsive: stacked detail (below spread) ────────────────── */
+#reading-area.stacked {{
+    layout: vertical;
+}}
+#card-preview.stacked {{
+    width: 100%;
+    min-width: 100%;
+    max-height: 40%;
+}}
 """
