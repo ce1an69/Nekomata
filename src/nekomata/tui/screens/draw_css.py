@@ -39,7 +39,7 @@ DrawScreen {{
     border: round transparent;
     border-bottom: round $surface0;
     background: $crust;
-    transition: opacity 420ms {EASE_OUT}, offset 420ms {EASE_OUT}, border 180ms {EASE_OUT};
+    transition: border 180ms {EASE_OUT};
 }}
 #deck-section.box-active {{
     border-bottom: round $mauve;

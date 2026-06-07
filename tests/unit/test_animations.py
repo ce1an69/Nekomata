@@ -6,7 +6,6 @@ from textual.css.query import NoMatches
 from nekomata.core.card.types import Arcana, Card, DrawnCard, Position
 from nekomata.tui.app import NekomataApp
 from nekomata.tui.screens.draw_constants import (
-    DECK_HIDE_DELAY,
     NUM_DECK_CARDS,
     PICK_COMPLETE_DELAY,
     SLOT_FLIP_FADE_IN,
@@ -79,7 +78,7 @@ def test_deck_card_motion_stays_subtle():
     """Pick/focus movement should feel like a glide, and picked cards stay visible."""
     css = DeckCard.DEFAULT_CSS
 
-    assert "offset 140ms" in css
+    assert "offset 80ms" in css
     assert "DeckCard:focus" in css
     assert "offset: 0 -1;" in css
     assert "DeckCard.picked" in css
@@ -142,15 +141,23 @@ def test_draw_screen_offers_more_candidate_cards():
     assert NUM_DECK_CARDS == 48
 
 
-def test_pick_complete_transition_is_gentle():
-    """Finishing selection should move briskly into the flip phase."""
+def test_pick_complete_transition_is_immediate():
+    """Finishing selection should immediately free layout space for the spread.
+
+    The deck section is hidden instantly (display=False) rather than fading out,
+    so the spread area gets full space without the user needing to press a key.
+    """
     from nekomata.tui.screens.draw import DrawScreen
 
     css = DrawScreen.DEFAULT_CSS
 
-    assert "transition: opacity 420ms" in css
-    assert "offset 420ms" in css
-    assert DECK_HIDE_DELAY == pytest.approx(0.42)
+    # Extract the #deck-section block and verify its transition is border-only.
+    deck_section = css.split("#deck-section {")[1].split("}")[0]
+    transition_line = [l.strip() for l in deck_section.split("\n") if "transition" in l]
+    assert len(transition_line) == 1
+    assert "border 180ms" in transition_line[0]
+    assert "opacity" not in transition_line[0]
+    assert "offset" not in transition_line[0]
     assert PICK_COMPLETE_DELAY == pytest.approx(0.0)
 
 
@@ -169,7 +176,10 @@ def test_spread_slot_flip_uses_smooth_two_phase_motion():
     constants = SpreadSlot.flip.__code__.co_consts
     css = SpreadSlot.DEFAULT_CSS
 
-    assert "offset 220ms" in css
+    # opacity/offset are animated programmatically (not via CSS transitions)
+    # to avoid conflicts with staggered_entrance and flip animations.
+    assert "opacity 280ms" not in css
+    assert "offset 220ms" not in css
     assert 0.0 in constants  # fade-out to fully invisible (no flash)
     assert SLOT_FLIP_FADE_OUT == pytest.approx(0.14)
     assert SLOT_FLIP_SWAP_PAUSE == pytest.approx(0.02)

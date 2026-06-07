@@ -68,6 +68,7 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
         self._pick_index = 0
         self._cancelled = False
         self._dealing = False
+        self._skip_phase_ui_message = False
         self._n_positions = len(self._spread.positions)
         self._display_order = self._spread.display_order
         self._ordered_positions = [self._spread.positions[i] for i in self._display_order]

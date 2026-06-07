@@ -7,7 +7,6 @@ from nekomata.tui.render.animations import staggered_entrance
 from nekomata.tui.screens.draw_constants import (
     DECK_ENTRANCE_FADE,
     DECK_ENTRANCE_STAGGER,
-    DECK_HIDE_DELAY,
 )
 from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_widgets import DeckCard
@@ -18,15 +17,8 @@ class DeckAnimMixin:
 
     # -- Exit --
 
-    def _animate_deck_exit(self) -> None:
-        """Fade out the deck section, then hide it from layout."""
-        if self.app.animation_enabled:
-            self._w_deck_section.styles.animate("opacity", 0.0, duration=DECK_HIDE_DELAY, easing=EASE)
-            self.set_timer(DECK_HIDE_DELAY, self._hide_deck)
-        else:
-            self._w_deck_section.display = False
-
-    def _hide_deck(self) -> None:
+    def _hide_deck_section(self) -> None:
+        """Hide the deck section immediately to free layout space for the spread."""
         self._w_deck_section.display = False
 
     # -- Entrance --

@@ -25,7 +25,11 @@ from nekomata.core.render.image_export import render_interp_image
 from nekomata.core.render.image_export import save_image as _save_tmp_image
 from nekomata.core.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_TEXT, EASE
 from nekomata.tui.render.animations import animate_entrance, animate_exit
-from nekomata.tui.screens.draw_constants import SCROLL_NEAR_BOTTOM_THRESHOLD
+from nekomata.tui.screens.draw_constants import (
+    FOLLOWUP_ENTRANCE_DURATION,
+    FOLLOWUP_EXIT_DURATION,
+    SCROLL_NEAR_BOTTOM_THRESHOLD,
+)
 from nekomata.tui.screens.draw_messages import (
     PhaseChanged,
     StreamDone,
@@ -146,6 +150,9 @@ class InterpretMixin:
 
     @on(PhaseChanged)
     def _on_phase_changed(self, message: PhaseChanged) -> None:
+        if self._skip_phase_ui_message:
+            self._skip_phase_ui_message = False
+            return
         self._update_phase_ui(message.new_phase)
 
     # -- Box change / hints sync --
@@ -352,7 +359,7 @@ class InterpretMixin:
         self._w_followup_section.display = True
         self._w_followup_section.add_class("visible")
         self._sync_interp_layout()
-        animate_entrance(self._w_followup_section, duration=0.24, dy=1, easing=EASE)
+        animate_entrance(self._w_followup_section, duration=FOLLOWUP_ENTRANCE_DURATION, dy=1, easing=EASE)
         self._w_followup_input.focus()
 
     def _hide_followup(self) -> None:
@@ -360,7 +367,7 @@ class InterpretMixin:
         self._sync_interp_layout()
         animate_exit(
             self._w_followup_section,
-            duration=0.18,
+            duration=FOLLOWUP_EXIT_DURATION,
             dy=1,
             easing=EASE,
             callback=self._finish_followup_hide,

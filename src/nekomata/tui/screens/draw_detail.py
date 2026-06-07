@@ -6,6 +6,13 @@ from nekomata.core.render.card_renderer import render_card_detail, render_card_f
 from nekomata.core.render.styles import EASE
 from nekomata.tui.render.animations import animate_entrance, animate_exit
 from nekomata.tui.screens._debounce import DebouncedCall
+from nekomata.tui.screens.draw_constants import (
+    PANEL_ENTRANCE_DURATION,
+    PANEL_EXIT_DURATION,
+    PANEL_FADE_IN_DURATION,
+    PANEL_FADE_OUT_DURATION,
+    PANEL_SWAP_DELAY,
+)
 
 
 class DetailPanel:
@@ -42,7 +49,7 @@ class DetailPanel:
         self._fit_height()
         self._screen.call_after_refresh(self._fit_height)
         self._w_preview.add_class("visible")
-        animate_entrance(self._w_preview, duration=0.28, dx=4, dy=0, easing=EASE)
+        animate_entrance(self._w_preview, duration=PANEL_ENTRANCE_DURATION, dx=4, dy=0, easing=EASE)
         self._last_preview_id = None
         if slot is not None:
             self.update(slot, immediate=True)
@@ -56,7 +63,7 @@ class DetailPanel:
             sync_interp()
         animate_exit(
             self._w_preview,
-            duration=0.22,
+            duration=PANEL_EXIT_DURATION,
             dx=4,
             dy=0,
             easing=EASE,
@@ -124,9 +131,9 @@ class DetailPanel:
             self._fadein_timer.stop()
             self._fadein_timer = None
         if self._screen.app.animation_enabled and self._w_preview.children:
-            self._w_preview.styles.animate("opacity", 0.0, duration=0.14, easing=EASE)
-            self._render_timer = self._screen.set_timer(0.14, lambda: self._render_slot(dc))
-            self._fadein_timer = self._screen.set_timer(0.16, self._fade_in_preview)
+            self._w_preview.styles.animate("opacity", 0.0, duration=PANEL_FADE_OUT_DURATION, easing=EASE)
+            self._render_timer = self._screen.set_timer(PANEL_FADE_OUT_DURATION, lambda: self._render_slot(dc))
+            self._fadein_timer = self._screen.set_timer(PANEL_SWAP_DELAY, self._fade_in_preview)
         else:
             self._render_slot(dc)
 
@@ -149,4 +156,4 @@ class DetailPanel:
 
     def _fade_in_preview(self) -> None:
         """Fade the preview panel back in after content swap."""
-        self._w_preview.styles.animate("opacity", 1.0, duration=0.22, easing=EASE)
+        self._w_preview.styles.animate("opacity", 1.0, duration=PANEL_FADE_IN_DURATION, easing=EASE)

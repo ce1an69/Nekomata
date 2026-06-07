@@ -36,6 +36,7 @@ from nekomata.tui.render.animations import animate_entrance
 from nekomata.tui.screens.draw_constants import (
     DECK_CARD_HEIGHT,
     DECK_CARD_WIDTH,
+    FOLLOWUP_ENTRANCE_DURATION,
     SLOT_FLIP_FADE_IN,
     SLOT_FLIP_FADE_OUT,
     SLOT_FLIP_GLOW_HOLD,
@@ -90,7 +91,7 @@ class ConfirmExitInterpretation(ModalScreen[bool]):
             yield Static(content, id="confirm-content")
 
     def on_mount(self) -> None:
-        animate_entrance(self.query_one("#confirm-card"), duration=0.24)
+        animate_entrance(self.query_one("#confirm-card"), duration=FOLLOWUP_ENTRANCE_DURATION)
 
     def action_confirm(self) -> None:
         self.dismiss(True)
@@ -120,7 +121,7 @@ class DeckCard(Static):
         content-align: center middle;
         padding: 0 0;
         margin: 0 1;
-        transition: offset 140ms {EASE_OUT}, border 160ms {EASE_OUT}, background 160ms {EASE_OUT}, opacity 320ms {EASE_OUT};
+        transition: offset 80ms {EASE_OUT}, border 80ms {EASE_OUT}, background 80ms {EASE_OUT};
     }}
     DeckCard:focus {{
         border: round $mauve;
@@ -132,10 +133,6 @@ class DeckCard(Static):
         background: $surface1;
         opacity: 1;
         offset: 0 -1;
-    }}
-    DeckCard.exiting {{
-        opacity: 0;
-        offset: 0 -2;
     }}
     """
 
@@ -182,7 +179,7 @@ class SpreadSlot(Widget):
         content-align: center middle;
         padding: 0 0;
         margin: 0 1;
-        transition: opacity 280ms {EASE_OUT}, offset 220ms {EASE_OUT}, border 260ms {EASE_OUT}, background 260ms {EASE_OUT};
+        transition: border 100ms {EASE_OUT}, background 100ms {EASE_OUT};
     }}
     SpreadSlot:focus {{
         border: round $pink;

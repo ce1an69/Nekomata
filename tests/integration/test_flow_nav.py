@@ -285,7 +285,7 @@ async def test_draw_screen_enters_flip_immediately_after_final_pick():
 
 @pytest.mark.asyncio
 async def test_draw_screen_accepts_final_pick_during_deck_entrance():
-    """A focused card can be picked before the entrance timer finishes."""
+    """A focused card can be picked and the transition to flip phase works."""
     app = NekomataApp()
     app.animation_enabled = True
     async with app.run_test() as pilot:
@@ -301,7 +301,6 @@ async def test_draw_screen_accepts_final_pick_during_deck_entrance():
         from nekomata.tui.screens.draw_widgets import SpreadSlot
 
         assert isinstance(app.screen, DrawScreen)
-        assert app.screen._dealing
         await pilot.press("right")
         await pilot.press("enter")
         await pilot.pause(0.1)

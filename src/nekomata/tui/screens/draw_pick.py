@@ -61,7 +61,7 @@ class PickMixin:
 
     async def _reveal_spread(self) -> None:
         log.debug("Revealing spread and entering flip phase")
-        self._animate_deck_exit()
+        self._hide_deck_section()
         self._w_main_area.display = True
 
         slots = list(self.query(SpreadSlot))
@@ -71,6 +71,10 @@ class PickMixin:
         self.phase = Phase.FLIP
         self._box.active_box = "spread"
         self._box.update_highlights()
+        # Update labels immediately and suppress the deferred PhaseChanged
+        # Message — avoids a one-frame flash of stale PICK text.
+        self._skip_phase_ui_message = True
+        self._update_phase_ui(Phase.FLIP)
 
         self._focus_first_slot()
 
