@@ -225,21 +225,22 @@ class StreamHandler:
         if self._screen.is_mounted and not cancelled_check():
             self._screen.app.call_from_thread(self.on_done)
 
+    # Substrings that indicate a config/setup issue rather than a transient failure.
+    # Matches are case-insensitive (compared against lowered message).
+    _CONFIG_ERROR_KEYWORDS = (
+        "api_key",
+        "unauthorized",
+        "nodename",
+        "name or service",
+        "connection refused",
+        "unknown url type",
+    )
+
     def _handle_stream_error(self, exc: Exception, cancelled_check) -> None:
         """Map common stream errors to user-facing messages."""
         msg = str(exc).lower()
         errors = _s()["errors"]
-        is_config = any(
-            s in msg
-            for s in (
-                "api_key",
-                "unauthorized",
-                "nodename",
-                "name or service",
-                "connection refused",
-                "unknown url type",
-            )
-        )
+        is_config = any(s in msg for s in self._CONFIG_ERROR_KEYWORDS)
         if "api_key" in msg or "unauthorized" in msg:
             self._screen.post_message(StreamError(errors["api_key_missing"], config_error=True))
         else:

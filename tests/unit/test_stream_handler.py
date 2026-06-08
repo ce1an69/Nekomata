@@ -81,6 +81,30 @@ def test_handle_stream_error_generic():
     assert msg.config_error is False
 
 
+def test_handle_stream_error_nodename():
+    h = _make_handler()
+    exc = Exception("nodename nor servname provided")
+    h._handle_stream_error(exc, lambda: False)
+    msg = h._screen.post_message.call_args[0][0]
+    assert msg.config_error is True
+
+
+def test_handle_stream_error_name_or_service():
+    h = _make_handler()
+    exc = Exception("name or service not known")
+    h._handle_stream_error(exc, lambda: False)
+    msg = h._screen.post_message.call_args[0][0]
+    assert msg.config_error is True
+
+
+def test_handle_stream_error_unknown_url_type():
+    h = _make_handler()
+    exc = Exception("unknown url type: 'htp://bad'")
+    h._handle_stream_error(exc, lambda: False)
+    msg = h._screen.post_message.call_args[0][0]
+    assert msg.config_error is True
+
+
 # --- on_done tests ---
 
 

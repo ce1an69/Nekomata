@@ -262,7 +262,7 @@ class InterpretMixin:
 
     def _on_flip_done(self, slot: SpreadSlot) -> None:
         """Called by each slot when its flip animation finishes."""
-        self._pending_flips -= 1
+        self._pending_flips = max(0, self._pending_flips - 1)
         if self._pending_flips > 0:
             return
         if self.phase != Phase.FLIP:

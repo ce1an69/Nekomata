@@ -5,10 +5,51 @@ from textual.binding import Binding
 from textual.events import Resize
 
 from nekomata.core.i18n import set_lang
+from nekomata.core.render.styles import (
+    C_BASE,
+    C_CRUST,
+    C_GOLD,
+    C_LAVENDER,
+    C_MANTLE,
+    C_MAUVE,
+    C_OVERLAY0,
+    C_PEACH,
+    C_PINK,
+    C_RED,
+    C_SUBTEXT0,
+    C_SUBTEXT1,
+    C_SURFACE0,
+    C_SURFACE1,
+    C_SURFACE2,
+    C_TEAL,
+    C_TEXT,
+)
 from nekomata.core.render.terminal import get_render_mode
 from nekomata.core.render.themes import set_default_theme
 from nekomata.core.storage.config import AppConfig
 from nekomata.tui.screens.home import HomeScreen
+
+# Single Catppuccin Mocha palette — built from styles.py constants.
+# All TUI CSS variables (e.g. $crust, $mauve) resolve to these values.
+_CATPPUCCIN_MOCHA: dict[str, str] = {
+    "crust": C_CRUST,
+    "mantle": C_MANTLE,
+    "base": C_BASE,
+    "surface0": C_SURFACE0,
+    "surface1": C_SURFACE1,
+    "surface2": C_SURFACE2,
+    "overlay0": C_OVERLAY0,
+    "subtext0": C_SUBTEXT0,
+    "subtext1": C_SUBTEXT1,
+    "text": C_TEXT,
+    "mauve": C_MAUVE,
+    "lavender": C_LAVENDER,
+    "pink": C_PINK,
+    "red": C_RED,
+    "peach": C_PEACH,
+    "teal": C_TEAL,
+    "gold": C_GOLD,
+}
 
 
 class NekomataApp(App):
@@ -21,31 +62,9 @@ class NekomataApp(App):
         Binding("ctrl+q", "quit", "Quit", priority=True),
     ]
 
-    # Catppuccin Mocha palette — registered as CSS variables so all
-    # child widgets can reference them via $crust, $mauve, etc.
-    _CATPPUCCIN_MOCHA: dict[str, str] = {
-        "crust": "#11111b",
-        "mantle": "#181825",
-        "base": "#1e1e2e",
-        "surface0": "#313244",
-        "surface1": "#45475a",
-        "surface2": "#585b70",
-        "overlay0": "#6c7086",
-        "subtext0": "#a6adc8",
-        "subtext1": "#bac2de",
-        "text": "#cdd6f4",
-        "mauve": "#cba6f7",
-        "lavender": "#b4befe",
-        "pink": "#f5c2e7",
-        "red": "#f38ba8",
-        "peach": "#fab387",
-        "teal": "#94e2d5",
-        "gold": "#f9e2af",
-    }
-
     def get_theme_variable_defaults(self) -> dict[str, str]:
         """Register Catppuccin Mocha colors as global CSS variables."""
-        return dict(self._CATPPUCCIN_MOCHA)
+        return dict(_CATPPUCCIN_MOCHA)
 
     DEFAULT_CSS = """
     Screen {

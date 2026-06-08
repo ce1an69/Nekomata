@@ -39,7 +39,7 @@ log = logging.getLogger(__name__)
 _STATIC_DIR = static_dir()
 _ASSETS_DIR = assets_dir()
 
-# Catppuccin Mocha colors mapped to CSS variable names
+# Catppuccin Mocha colors mapped to CSS variable names — built from styles.py constants.
 _THEME_COLORS = {
     "crust": C_CRUST,
     "mantle": C_MANTLE,
