@@ -127,6 +127,8 @@ class StreamHandler:
         self._scroll_to_bottom()
 
     def _append_char(self, kind: str, char: str) -> None:
+        if kind == "thinking":
+            return
         self._content_chars.append(char)
         self._has_content = True
 

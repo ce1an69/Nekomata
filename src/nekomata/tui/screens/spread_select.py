@@ -220,6 +220,7 @@ class SpreadSelectScreen(Screen):
         """Digit key quick-selects a spread."""
         if event.character and event.character in "123456789":
             self._select_by_index(int(event.character) - 1)
+            event.stop()
 
     def key_down(self) -> None:
         """Move focus to the next spread option."""
