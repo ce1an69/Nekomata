@@ -1,11 +1,11 @@
 """Core data types for tarot cards, positions, and readings."""
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 
-class Arcana(str, Enum):
+class Arcana(StrEnum):
     MAJOR = "major"
     CUPS = "cups"
     WANDS = "wands"

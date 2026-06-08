@@ -1,19 +1,13 @@
 """Spread selection screen — choose a card layout before drawing."""
 
 from textual.app import ComposeResult
-from textual.events import Key
 from textual.containers import Horizontal, Vertical
+from textual.events import Key
 from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import Static
 
 from nekomata.core.i18n import lazy_section
-from nekomata.core.render.styles import (
-    C_MAUVE,
-    C_OVERLAY0,
-    C_SUBTEXT0,
-    C_TEXT,
-)
 from nekomata.core.spread import SPREAD_REGISTRY, get_spread
 from nekomata.tui.render.animations import animate_entrance, staggered_entrance
 from nekomata.tui.screens.solid_static import SolidStatic
@@ -160,7 +154,7 @@ class SpreadSelectScreen(Screen):
             yield Static(_STR["prompt"], id="prompt")
             with Horizontal(id="spread-body"):
                 with Vertical(id="spread-buttons"):
-                    for key, cls in SPREAD_REGISTRY:
+                    for key, _ in SPREAD_REGISTRY:
                         spread = get_spread(key)
                         n_pos = len(spread.positions)
                         label = f"{spread.name:<{34 - len(str(n_pos))}}{n_pos}"
@@ -187,7 +181,7 @@ class SpreadSelectScreen(Screen):
         title = self.query_one("#preview-title", Static)
         desc_text = self.query_one("#preview-desc", Static)
         positions_text = self.query_one("#preview-positions", Static)
-        for key, cls in SPREAD_REGISTRY:
+        for key, _ in SPREAD_REGISTRY:
             if btn_id == f"spread-{key}":
                 spread = get_spread(key)
                 positions = "\n".join(f"{position.name}" for position in spread.positions)

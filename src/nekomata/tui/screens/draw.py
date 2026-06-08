@@ -4,16 +4,16 @@ import logging
 from typing import TYPE_CHECKING, cast
 
 from rich.text import Text
+from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.css.scalar import ScalarOffset
 from textual.events import DescendantFocus, Key, Resize
 from textual.geometry import Offset
-from textual import on
+from textual.reactive import reactive
 from textual.screen import Screen
 from textual.widgets import Input, Static
-from textual.reactive import reactive
 
 from nekomata.core.card.deck import Deck
 from nekomata.core.card.types import DrawnCard
@@ -26,7 +26,13 @@ from nekomata.core.render.card_renderer import clear_cache
 from nekomata.core.render.styles import C_MAUVE, C_SUBTEXT0, EASE
 from nekomata.core.spread import get_spread
 from nekomata.tui.screens.box_manager import BoxManager
-from nekomata.tui.screens.draw_constants import NUM_DECK_CARDS, SPREAD_CENTER_DURATION, SPREAD_SLOT_HEIGHT, SPREAD_SLOT_WIDTH, _STR
+from nekomata.tui.screens.draw_constants import (
+    _STR,
+    NUM_DECK_CARDS,
+    SPREAD_CENTER_DURATION,
+    SPREAD_SLOT_HEIGHT,
+    SPREAD_SLOT_WIDTH,
+)
 from nekomata.tui.screens.draw_css import DRAW_SCREEN_CSS
 from nekomata.tui.screens.draw_deck_anim import DeckAnimMixin
 from nekomata.tui.screens.draw_detail import DetailPanel
@@ -130,12 +136,11 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
 
         with Horizontal(id="reading-area"):
             with Vertical(id="left-pane"):
-                with Horizontal(id="main-area"):
-                    with Vertical(id="spread-area"):
-                        yield Static("", id="spread-label")
-                        with Horizontal(id="spread-grid"):
-                            for i, pos in enumerate(self._ordered_positions):
-                                yield SpreadSlot(i, pos.name)
+                with Horizontal(id="main-area"), Vertical(id="spread-area"):
+                    yield Static("", id="spread-label")
+                    with Horizontal(id="spread-grid"):
+                        for i, pos in enumerate(self._ordered_positions):
+                            yield SpreadSlot(i, pos.name)
 
                 with VerticalScroll(id="interp-dialog"):
                     yield Static(_STR["interp_title"], id="interp-dialog-title")

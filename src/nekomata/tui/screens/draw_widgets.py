@@ -33,6 +33,7 @@ from nekomata.core.render.styles import (
 )
 from nekomata.tui.render.animations import animate_entrance
 from nekomata.tui.screens.draw_constants import (
+    _STR,
     DECK_CARD_HEIGHT,
     DECK_CARD_WIDTH,
     FOLLOWUP_ENTRANCE_DURATION,
@@ -42,7 +43,6 @@ from nekomata.tui.screens.draw_constants import (
     SLOT_FLIP_SWAP_PAUSE,
     SPREAD_SLOT_HEIGHT,
     SPREAD_SLOT_WIDTH,
-    _STR,
 )
 
 

@@ -220,12 +220,7 @@ def _tokenize(text: str) -> list[str]:
     tokens: list[str] = []
     buf = ""
     for ch in text:
-        if ch.isspace():
-            if buf:
-                tokens.append(buf)
-                buf = ""
-            tokens.append(ch)
-        elif "\u4e00" <= ch <= "\u9fff" or ch in "，。？！、；：《》（）“”‘’":
+        if ch.isspace() or "\u4e00" <= ch <= "\u9fff" or ch in "，。？！、；：《》（）“”‘’":
             if buf:
                 tokens.append(buf)
                 buf = ""

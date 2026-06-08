@@ -104,6 +104,14 @@ select = [
 ]
 ignore = [
     "E501",   # line too long (formatter handles this)
+    "RUF001", # ambiguous CJK characters are intentional
+    "RUF002", # ambiguous CJK in docstrings is intentional
+    "RUF003", # ambiguous CJK in comments is intentional
+    "RUF005", # iterable unpacking vs concatenation — readability preference
+    "RUF012", # Textual BINDINGS are mutable class attrs by framework convention
+    "SIM105", # contextlib.suppress — explicit try/except is clearer for error handling
+    "SIM108", # ternary — multi-line ternary harms readability
+    "SIM115", # temp file needs path after close, context manager not suitable
 ]
 
 [tool.ruff.lint.isort]

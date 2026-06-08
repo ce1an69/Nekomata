@@ -13,7 +13,6 @@ from textual.message import Message
 
 from nekomata.tui.screens.draw_phase import Phase
 
-
 # -- Phase lifecycle --
 
 

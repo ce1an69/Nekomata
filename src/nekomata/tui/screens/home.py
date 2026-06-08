@@ -12,10 +12,7 @@ from textual.widgets import Input, Static
 
 from nekomata.core.i18n import ORNAMENT, lazy_section
 from nekomata.core.render.styles import (
-    C_BASE,
-    C_CRUST,
     C_MAUVE,
-    C_OVERLAY0,
     C_SURFACE0,
     C_TEXT,
     EASE,

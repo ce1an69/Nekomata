@@ -8,7 +8,6 @@ from textual.screen import Screen
 from textual.widgets import Input, Select, Static
 
 from nekomata.core.i18n import ORNAMENT, SUPPORTED_LANGS, lazy_section, set_lang
-from nekomata.core.render.styles import C_RED
 from nekomata.core.storage.config import AppConfig
 from nekomata.tui.render.animations import animate_entrance
 from nekomata.tui.screens.solid_static import SolidStatic

@@ -5,8 +5,9 @@ import logging
 import socket
 import urllib.error
 import urllib.request
+from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Generator, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from nekomata.core.ai.prompts import build_user_prompt, load_spread_prompt, load_system_prompt
 from nekomata.core.card.display import card_keywords, card_meaning, card_name
@@ -42,9 +43,9 @@ class AIInterpreter(Protocol):
 
     def interpret_stream(
         self, drawn_cards: list[DrawnCard], question: str, spread_key: str = "", lang: str = "en"
-    ) -> Generator[StreamChunk, None, None]: ...
+    ) -> Generator[StreamChunk]: ...
 
-    def stream_raw(self, messages: list[dict], *, thinking: bool = True) -> Generator[StreamChunk, None, None]: ...
+    def stream_raw(self, messages: list[dict], *, thinking: bool = True) -> Generator[StreamChunk]: ...
 
 
 def _cards_info(drawn_cards: list[DrawnCard], lang: str) -> str:
@@ -129,12 +130,12 @@ class OpenAIInterpreter:
 
     def interpret_stream(
         self, drawn_cards: list[DrawnCard], question: str, spread_key: str = "", lang: str = "en"
-    ) -> Generator[StreamChunk, None, None]:
+    ) -> Generator[StreamChunk]:
         """Yield text chunks from the streaming API (SSE)."""
         messages = build_messages(_DEFAULT_STYLE, question, drawn_cards, spread_key, lang)
         yield from self.stream_raw(messages)
 
-    def stream_raw(self, messages: list[dict], *, thinking: bool = True) -> Generator[StreamChunk, None, None]:
+    def stream_raw(self, messages: list[dict], *, thinking: bool = True) -> Generator[StreamChunk]:
         """Yield text chunks from pre-built messages (for follow-up conversations).
 
         Parses Server-Sent Events line by line. Each event is "data: {json}".

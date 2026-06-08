@@ -2,9 +2,9 @@
 
 from textual.css.query import NoMatches
 
-from nekomata.tui.screens.layout_hints import LayoutHints
 from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_widgets import DeckCard, SpreadSlot
+from nekomata.tui.screens.layout_hints import LayoutHints
 
 _BOX_SELECTORS = {
     "deck": "#deck-section",

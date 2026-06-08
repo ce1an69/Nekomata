@@ -117,7 +117,7 @@ def _spreads_to_list(lang: str | None = None) -> list[dict]:
     from nekomata.core.spread import get_spread as _get_spread
 
     result = []
-    for key, cls in SPREAD_REGISTRY:
+    for key, _ in SPREAD_REGISTRY:
         spread = _get_spread(key, lang=lang)
         result.append(
             {

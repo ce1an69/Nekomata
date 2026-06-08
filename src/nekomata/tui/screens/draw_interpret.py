@@ -25,13 +25,13 @@ from nekomata.core.render.image_export import save_image as _save_tmp_image
 from nekomata.core.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_TEXT, EASE
 from nekomata.tui.render.animations import animate_entrance, animate_exit
 from nekomata.tui.screens.draw_constants import (
+    _STR,
     FOLLOWUP_ENTRANCE_DURATION,
     FOLLOWUP_EXIT_DURATION,
     SCROLL_NEAR_BOTTOM_THRESHOLD,
     SHIMMER_GLOW_HOLD,
     SHIMMER_INITIAL_DELAY,
     SHIMMER_STAGGER,
-    _STR,
 )
 from nekomata.tui.screens.draw_messages import (
     PhaseChanged,
