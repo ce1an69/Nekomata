@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -46,6 +47,7 @@ class AppConfig:
         if api_key:
             data["api_key"] = api_key
         path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+        os.chmod(path, 0o600)
         normalized_key = api_key if api_key and api_key.strip() else None
         return cls(api_url=api_url, api_key=normalized_key, model=model, lang=lang)
 

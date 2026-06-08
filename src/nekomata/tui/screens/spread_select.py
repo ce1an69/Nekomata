@@ -1,6 +1,7 @@
 """Spread selection screen — choose a card layout before drawing."""
 
 from textual.app import ComposeResult
+from textual.events import Key
 from textual.containers import Horizontal, Vertical
 from textual.message import Message
 from textual.screen import Screen
@@ -14,7 +15,7 @@ from nekomata.core.render.styles import (
     C_TEXT,
 )
 from nekomata.core.spread import SPREAD_REGISTRY, get_spread
-from nekomata.tui.render.animations import animate_entrance
+from nekomata.tui.render.animations import animate_entrance, staggered_entrance
 from nekomata.tui.screens.solid_static import SolidStatic
 
 _STR = lazy_section("spread_select")
@@ -179,11 +180,7 @@ class SpreadSelectScreen(Screen):
             if options[0].id:
                 self._update_preview(options[0].id)
         animate_entrance(self.query_one("#spread-shell"), duration=0.35)
-        for i, opt in enumerate(options):
-            self.set_timer(
-                max(i * 0.05, 0.001),
-                lambda o=opt: animate_entrance(o, duration=0.28),
-            )
+        staggered_entrance(self, options, stagger=0.05, duration=0.28, initial_delay=0.001)
 
     def _update_preview(self, btn_id: str) -> None:
         """Show position breakdown for the focused spread button."""
@@ -219,23 +216,10 @@ class SpreadSelectScreen(Screen):
         if 0 <= index < len(SPREAD_REGISTRY):
             self.dismiss(SPREAD_REGISTRY[index][0])
 
-    def key_1(self) -> None:
-        self._select_by_index(0)
-
-    def key_2(self) -> None:
-        self._select_by_index(1)
-
-    def key_3(self) -> None:
-        self._select_by_index(2)
-
-    def key_4(self) -> None:
-        self._select_by_index(3)
-
-    def key_5(self) -> None:
-        self._select_by_index(4)
-
-    def key_6(self) -> None:
-        self._select_by_index(5)
+    def on_key(self, event: Key) -> None:
+        """Digit key quick-selects a spread."""
+        if event.character and event.character in "123456789":
+            self._select_by_index(int(event.character) - 1)
 
     def key_down(self) -> None:
         """Move focus to the next spread option."""

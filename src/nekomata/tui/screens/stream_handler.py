@@ -42,23 +42,19 @@ class StreamHandler:
         self._render_hints = render_hints
         self._scroll_to_bottom = scroll_to_bottom
 
-        self._thinking_chars: list[str] = []
         self._content_chars: list[str] = []
         self._queue: deque[StreamChunk] = deque()
         self._timer = None
         self._source_done = False
-        self._has_thinking = False
         self._has_content = False
         self._loading_timer = None
         self._loading_frame = 0
         self.messages: list[dict] = []
 
     def reset(self, append: bool = False) -> None:
-        self._thinking_chars.clear()
         self._content_chars.clear()
         self._queue.clear()
         self._source_done = False
-        self._has_thinking = False
         self._has_content = False
         if not append:
             self._render_content(None)
@@ -131,12 +127,8 @@ class StreamHandler:
         self._scroll_to_bottom()
 
     def _append_char(self, kind: str, char: str) -> None:
-        if kind == "thinking":
-            self._thinking_chars.append(char)
-            self._has_thinking = True
-        else:
-            self._content_chars.append(char)
-            self._has_content = True
+        self._content_chars.append(char)
+        self._has_content = True
 
     def _render(self) -> None:
         parts = []

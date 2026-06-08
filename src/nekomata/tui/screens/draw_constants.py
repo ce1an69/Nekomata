@@ -1,5 +1,10 @@
 """Shared layout and animation constants for the draw screen and its sub-modules."""
 
+from nekomata.core.i18n import lazy_section
+
+# ── Shared i18n ───────────────────────────────────────────────────────
+_STR = lazy_section("draw")
+
 # ── Deck layout ──────────────────────────────────────────────────────
 NUM_DECK_CARDS = 48
 DECK_ROW_COUNT = 4
@@ -43,3 +48,20 @@ PANEL_SWAP_DELAY = 0.16
 PANEL_FADE_IN_DURATION = 0.22
 FOLLOWUP_ENTRANCE_DURATION = 0.24
 FOLLOWUP_EXIT_DURATION = 0.18
+
+# ── Shimmer / completion ─────────────────────────────────────────────
+SHIMMER_INITIAL_DELAY = 0.01
+SHIMMER_STAGGER = 0.08
+SHIMMER_GLOW_HOLD = 0.22
+
+# ── Detail panel ─────────────────────────────────────────────────────
+DETAIL_UPDATE_DEBOUNCE = 0.08
+
+# ── Spread entrance ──────────────────────────────────────────────────
+SPREAD_ENTRANCE_DELAY = 0.05
+SPREAD_CENTER_DURATION = 0.22
+
+# ── Interpretation dialog extras ─────────────────────────────────────
+INTERP_ENTRANCE_DURATION = 0.30
+TIMER_SLACK = 0.01
+DECK_EXIT_SLEEP_SLACK = 0.02

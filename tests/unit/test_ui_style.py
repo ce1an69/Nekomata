@@ -362,4 +362,4 @@ def test_draw_recentering_spread_uses_animation():
     source = inspect.getsource(DrawScreen._center_spread_area)
 
     assert "styles.animate" in source
-    assert "duration=0.22" in source
+    assert "SPREAD_CENTER_DURATION" in source

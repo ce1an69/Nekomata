@@ -10,6 +10,7 @@ from nekomata.tui.screens.draw_constants import (
     DECK_ENTRANCE_FADE,
     DECK_ENTRANCE_STAGGER,
     DECK_EXIT_DURATION,
+    DECK_EXIT_SLEEP_SLACK,
 )
 from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_widgets import DeckCard
@@ -26,7 +27,7 @@ class DeckAnimMixin:
             self._w_deck_section.display = False
             return
         self._w_deck_section.styles.animate("opacity", 0.0, duration=DECK_EXIT_DURATION, easing=EASE)
-        await asyncio.sleep(DECK_EXIT_DURATION + 0.02)
+        await asyncio.sleep(DECK_EXIT_DURATION + DECK_EXIT_SLEEP_SLACK)
         if self._cancelled:
             return
         self._w_deck_section.display = False

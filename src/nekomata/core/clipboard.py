@@ -17,6 +17,7 @@ def copy_text(text: str) -> bool:
                 ["pbcopy"],
                 input=text.encode("utf-8"),
                 capture_output=True,
+                timeout=5,
             )
             return proc.returncode == 0
         if system == "Linux":
@@ -25,6 +26,7 @@ def copy_text(text: str) -> bool:
                     ["xclip", "-selection", "clipboard"],
                     input=text.encode("utf-8"),
                     capture_output=True,
+                    timeout=5,
                 )
                 return proc.returncode == 0
             if shutil.which("xsel"):
@@ -32,6 +34,7 @@ def copy_text(text: str) -> bool:
                     ["xsel", "--clipboard", "--input"],
                     input=text.encode("utf-8"),
                     capture_output=True,
+                    timeout=5,
                 )
                 return proc.returncode == 0
         if system == "Windows":
@@ -39,6 +42,7 @@ def copy_text(text: str) -> bool:
                 ["clip"],
                 input=text.encode("utf-8"),
                 capture_output=True,
+                timeout=5,
             )
             return proc.returncode == 0
     except Exception:
@@ -61,9 +65,10 @@ def copy_image(png_path: str) -> bool:
 
 def _copy_image_macos(png_path: str) -> bool:
     """Copy image to clipboard on macOS using osascript + AppKit."""
+    escaped = png_path.replace("\\", "\\\\").replace('"', '\\"')
     script = (
         'use framework "AppKit"\n'
-        f'set imgPath to "{png_path}"\n'
+        f'set imgPath to "{escaped}"\n'
         "set theImage to current application's NSImage's alloc()'s "
         "initWithContentsOfFile:imgPath\n"
         "set thePasteboard to current application's NSPasteboard's generalPasteboard()\n"
@@ -84,6 +89,7 @@ def _copy_image_linux(png_path: str) -> bool:
         proc = subprocess.run(
             ["xclip", "-selection", "clipboard", "-t", "image/png", "-i", png_path],
             capture_output=True,
+            timeout=5,
         )
         return proc.returncode == 0
     return False

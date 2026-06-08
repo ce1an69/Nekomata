@@ -10,7 +10,7 @@ def _ensure_config(request, tmp_path: Path, monkeypatch):
 
     Skipped for test_config.py which manages its own config files.
     """
-    if "test_config" in request.node.nodeid or "test_renderer" in request.node.nodeid:
+    if "test_config" in request.node.nodeid or "test_renderer" in request.node.nodeid or "test_server" in request.node.nodeid:
         yield
         return
     settings = tmp_path / ".neko" / "settings.json"

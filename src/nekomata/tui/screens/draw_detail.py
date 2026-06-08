@@ -7,6 +7,7 @@ from nekomata.core.render.styles import EASE
 from nekomata.tui.render.animations import animate_entrance, animate_exit
 from nekomata.tui.screens._debounce import DebouncedCall
 from nekomata.tui.screens.draw_constants import (
+    DETAIL_UPDATE_DEBOUNCE,
     PANEL_ENTRANCE_DURATION,
     PANEL_EXIT_DURATION,
     PANEL_FADE_IN_DURATION,
@@ -24,7 +25,7 @@ class DetailPanel:
         self._last_preview_id: str | None = None
         self._pending_center_spread = None
         # 详情渲染防抖: 快速移动焦点时只渲染最终停留的那一张
-        self._update_debounce = DebouncedCall(screen, 0.08, self._on_update_debounce)
+        self._update_debounce = DebouncedCall(screen, DETAIL_UPDATE_DEBOUNCE, self._on_update_debounce)
         # _apply_update 内部的动画定时器句柄(用于取消孤立定时器)
         self._render_timer = None
         self._fadein_timer = None
@@ -33,6 +34,11 @@ class DetailPanel:
 
     def cache_widgets(self) -> None:
         self._w_preview = self._screen.query_one("#card-preview")
+
+    @property
+    def _entrance_offset(self) -> tuple[int, int]:
+        """Animation offset: vertical for stacked layout, horizontal for side-by-side."""
+        return (0, 2) if self._screen._detail_stacked else (4, 0)
 
     @property
     def visible(self) -> bool:
@@ -49,8 +55,7 @@ class DetailPanel:
         self._fit_height()
         self._screen.call_after_refresh(self._fit_height)
         self._w_preview.add_class("visible")
-        stacked = self._screen._detail_stacked
-        dx, dy = (0, 2) if stacked else (4, 0)
+        dx, dy = self._entrance_offset
         animate_entrance(self._w_preview, duration=PANEL_ENTRANCE_DURATION, dx=dx, dy=dy, easing=EASE)
         self._last_preview_id = None
         if slot is not None:
@@ -63,8 +68,7 @@ class DetailPanel:
         self._pending_center_spread = center_spread
         if sync_interp:
             sync_interp()
-        stacked = self._screen._detail_stacked
-        dx, dy = (0, 2) if stacked else (4, 0)
+        dx, dy = self._entrance_offset
         animate_exit(
             self._w_preview,
             duration=PANEL_EXIT_DURATION,

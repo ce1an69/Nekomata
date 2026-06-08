@@ -21,12 +21,12 @@ from nekomata.core.card.types import DrawnCard
 if TYPE_CHECKING:
     from nekomata.tui.app import NekomataApp
 
-from nekomata.core.i18n import ORNAMENT, lazy_section
+from nekomata.core.i18n import ORNAMENT
 from nekomata.core.render.card_renderer import clear_cache
 from nekomata.core.render.styles import C_MAUVE, C_SUBTEXT0, EASE
 from nekomata.core.spread import get_spread
 from nekomata.tui.screens.box_manager import BoxManager
-from nekomata.tui.screens.draw_constants import NUM_DECK_CARDS, SPREAD_SLOT_HEIGHT, SPREAD_SLOT_WIDTH
+from nekomata.tui.screens.draw_constants import NUM_DECK_CARDS, SPREAD_CENTER_DURATION, SPREAD_SLOT_HEIGHT, SPREAD_SLOT_WIDTH, _STR
 from nekomata.tui.screens.draw_css import DRAW_SCREEN_CSS
 from nekomata.tui.screens.draw_deck_anim import DeckAnimMixin
 from nekomata.tui.screens.draw_detail import DetailPanel
@@ -39,7 +39,6 @@ from nekomata.tui.screens.draw_widgets import DeckCard, SpreadSlot
 from nekomata.tui.screens.layout_hints import LayoutHints
 from nekomata.tui.screens.stream_handler import StreamHandler
 
-_STR = lazy_section("draw")
 log = logging.getLogger(__name__)
 
 
@@ -280,7 +279,7 @@ class DrawScreen(DeckAnimMixin, PickMixin, InterpretMixin, Screen):
             self._w_main_area.styles.animate(
                 "offset",
                 target,  # type: ignore[arg-type]
-                duration=0.22,
+                duration=SPREAD_CENTER_DURATION,
                 easing=EASE,
             )
         else:

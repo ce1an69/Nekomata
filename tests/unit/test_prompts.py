@@ -1,6 +1,6 @@
 """Tests for AI prompt templates."""
 
-from nekomata.core.ai.prompts import build_user_prompt, load_spread_prompt, load_system_prompt
+from nekomata.core.ai.prompts import build_followup_prompt, build_user_prompt, load_spread_prompt, load_system_prompt
 
 
 def test_system_prompt_has_style_placeholder():
@@ -35,3 +35,13 @@ def test_build_user_prompt_asks_for_analysis():
 def test_build_user_prompt_requests_synthesis():
     result = build_user_prompt("测试", "测试牌")
     assert "综合" in result
+
+
+def test_build_followup_prompt_includes_question():
+    result = build_followup_prompt("What about love?", lang="en")
+    assert "What about love?" in result
+
+
+def test_build_followup_prompt_chinese():
+    result = build_followup_prompt("感情呢？", lang="zh")
+    assert "感情呢？" in result

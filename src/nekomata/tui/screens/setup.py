@@ -276,6 +276,10 @@ class SetupScreen(Screen):
         self._save()
 
     def _save(self) -> None:
+        # Clear any previous error before validating
+        error = self.query_one("#setup-error", SolidStatic)
+        error.display = False
+
         url = self.query_one("#api-url-input", Input).value.strip()
         key = self.query_one("#api-key-input", Input).value.strip()
         model = self.query_one("#model-input", Input).value.strip()

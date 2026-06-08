@@ -18,7 +18,6 @@ from textual.widgets import Static
 
 from nekomata.core.card.display import status_label as _status_label
 from nekomata.core.card.types import DrawnCard
-from nekomata.core.i18n import lazy_section
 from nekomata.core.render.card_renderer import create_card_face_widget
 from nekomata.core.render.styles import (
     C_LAVENDER,
@@ -43,9 +42,8 @@ from nekomata.tui.screens.draw_constants import (
     SLOT_FLIP_SWAP_PAUSE,
     SPREAD_SLOT_HEIGHT,
     SPREAD_SLOT_WIDTH,
+    _STR,
 )
-
-_STR = lazy_section("draw")
 
 
 class ConfirmExitInterpretation(ModalScreen[bool]):
@@ -140,15 +138,16 @@ class DeckCard(Static):
         self.index = index
         super().__init__()
 
-    def on_click(self) -> None:
+    def _handle_pick(self) -> None:
         if self.has_class("picked"):
             return
         self.post_message(self.Picked(self))
 
+    def on_click(self) -> None:
+        self._handle_pick()
+
     def key_enter(self) -> None:
-        if self.has_class("picked"):
-            return
-        self.post_message(self.Picked(self))
+        self._handle_pick()
 
 
 class SpreadSlot(Widget):
@@ -390,19 +389,18 @@ class SpreadSlot(Widget):
             self.flip_done_callback(self)
         self._flipping = False
 
-    def on_click(self) -> None:
+    def _handle_activate(self) -> None:
         if self.drawn_card and not self.is_revealed and not self._flipping:
             self._flipping = True
             self.post_message(self.Flipped(self))
         elif self.is_revealed:
             self.post_message(self.Selected(self))
 
+    def on_click(self) -> None:
+        self._handle_activate()
+
     def key_enter(self) -> None:
-        if self.drawn_card and not self.is_revealed and not self._flipping:
-            self._flipping = True
-            self.post_message(self.Flipped(self))
-        elif self.is_revealed:
-            self.post_message(self.Selected(self))
+        self._handle_activate()
 
     def on_focus(self) -> None:
         if self.is_revealed:

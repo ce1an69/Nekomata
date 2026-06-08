@@ -20,15 +20,14 @@ from nekomata.tui.screens.layout_hints import LayoutHints
 
 _STR = lazy_section("card_browser")
 
-_SUIT_ARCANAS = [
-    None,
-    Arcana.MAJOR,
-    Arcana.CUPS,
-    Arcana.WANDS,
-    Arcana.SWORDS,
-    Arcana.PENTACLES,
+_ARCANAS: list[tuple[str, Arcana | None]] = [
+    ("all", None),
+    ("major", Arcana.MAJOR),
+    ("cups", Arcana.CUPS),
+    ("wands", Arcana.WANDS),
+    ("swords", Arcana.SWORDS),
+    ("pentacles", Arcana.PENTACLES),
 ]
-_ARCANA_KEYS = ["all", "major", "cups", "wands", "swords", "pentacles"]
 
 # Reusable position for card browser preview
 _BROWSER_POS = Position(name="Browser", name_zh="浏览", description="Card browser")
@@ -163,7 +162,7 @@ class CardBrowserScreen(Screen):
     def compose(self) -> ComposeResult:
         labels = ui_section("arcana_labels")
         with Horizontal(id="filter-bar"):
-            for key, arcana in zip(_ARCANA_KEYS, _SUIT_ARCANAS):
+            for key, arcana in _ARCANAS:
                 btn_id = f"filter-{arcana.value}" if arcana else "filter-all"
                 button = Button(labels[key], id=btn_id)
                 if btn_id == "filter-all":
@@ -219,7 +218,7 @@ class CardBrowserScreen(Screen):
 
     def _update_filter_highlight(self, active_btn_id: str) -> None:
         """Highlight the active filter button and dim all others."""
-        for arcana in _SUIT_ARCANAS:
+        for _key, arcana in _ARCANAS:
             btn_id = f"filter-{arcana.value}" if arcana else "filter-all"
             btn = self.query_one(f"#{btn_id}", Button)
             btn.set_class(btn_id == active_btn_id, "active-filter")
@@ -228,7 +227,7 @@ class CardBrowserScreen(Screen):
         """Handle filter button clicks."""
         btn_id = event.button.id
 
-        for i, arcana in enumerate(_SUIT_ARCANAS):
+        for i, (_key, arcana) in enumerate(_ARCANAS):
             filter_id = f"filter-{arcana.value}" if arcana else "filter-all"
             if btn_id == filter_id:
                 self._apply_filter_by_index(i)
@@ -268,11 +267,11 @@ class CardBrowserScreen(Screen):
     def _cycle_filter(self, delta: int) -> None:
         """Switch filter tab left or right."""
         current_idx = 0
-        for i, arcana in enumerate(_SUIT_ARCANAS):
+        for i, (_key, arcana) in enumerate(_ARCANAS):
             if arcana == self._active_arcana:
                 current_idx = i
                 break
-        new_idx = (current_idx + delta) % len(_SUIT_ARCANAS)
+        new_idx = (current_idx + delta) % len(_ARCANAS)
         self._apply_filter_by_index(new_idx)
 
     def _focus_next_visible_card(self, delta: int) -> None:
@@ -318,9 +317,9 @@ class CardBrowserScreen(Screen):
                 visible_items[0].focus()
 
     def _apply_filter_by_index(self, index: int) -> None:
-        """Apply a suit filter by index into SUIT_FILTERS."""
-        if 0 <= index < len(_SUIT_ARCANAS):
-            arcana = _SUIT_ARCANAS[index]
+        """Apply a suit filter by index into _ARCANAS."""
+        if 0 <= index < len(_ARCANAS):
+            _key, arcana = _ARCANAS[index]
             filter_id = f"filter-{arcana.value}" if arcana else "filter-all"
             self._update_filter_highlight(filter_id)
             self._show_placeholder_detail()

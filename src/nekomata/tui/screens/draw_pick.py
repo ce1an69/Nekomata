@@ -10,6 +10,7 @@ from nekomata.core.render.styles import EASE
 from nekomata.tui.render.animations import staggered_entrance
 from nekomata.tui.screens.draw_constants import (
     PICK_COMPLETE_DELAY,
+    SPREAD_ENTRANCE_DELAY,
     SPREAD_SLOT_ENTRANCE_FADE,
     SPREAD_SLOT_ENTRANCE_STAGGER,
 )
@@ -85,7 +86,7 @@ class PickMixin:
             duration=SPREAD_SLOT_ENTRANCE_FADE,
             dy=2,
             easing=EASE,
-            initial_delay=0.05,
+            initial_delay=SPREAD_ENTRANCE_DELAY,
             on_complete=self._focus_first_slot,
         )
 

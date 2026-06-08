@@ -20,7 +20,6 @@ from nekomata.core.card.display import card_name as _card_name
 from nekomata.core.card.display import status_label as _status_label
 from nekomata.core.clipboard import copy_image as _copy_image_to_clipboard
 from nekomata.core.clipboard import copy_text as _copy_text_to_clipboard
-from nekomata.core.i18n import lazy_section
 from nekomata.core.render.image_export import render_interp_image
 from nekomata.core.render.image_export import save_image as _save_tmp_image
 from nekomata.core.render.styles import C_LAVENDER, C_MAUVE, C_OVERLAY0, C_TEXT, EASE
@@ -29,6 +28,10 @@ from nekomata.tui.screens.draw_constants import (
     FOLLOWUP_ENTRANCE_DURATION,
     FOLLOWUP_EXIT_DURATION,
     SCROLL_NEAR_BOTTOM_THRESHOLD,
+    SHIMMER_GLOW_HOLD,
+    SHIMMER_INITIAL_DELAY,
+    SHIMMER_STAGGER,
+    _STR,
 )
 from nekomata.tui.screens.draw_messages import (
     PhaseChanged,
@@ -38,8 +41,6 @@ from nekomata.tui.screens.draw_messages import (
 from nekomata.tui.screens.draw_phase import Phase
 from nekomata.tui.screens.draw_widgets import ConfirmExitInterpretation, SpreadSlot
 from nekomata.tui.screens.widgets import go_home
-
-_STR = lazy_section("draw")
 
 
 def _compose_copy_text(question: str, drawn_cards: list, interp: str, lang: str) -> str:
@@ -300,13 +301,13 @@ class InterpretMixin:
         if not self.app.animation_enabled:
             return
         for i, slot in enumerate(slots):
-            self.set_timer(0.01 + i * 0.08, lambda s=slot: self._pulse_slot(s))
-        await asyncio.sleep(len(slots) * 0.08 + 0.22)
+            self.set_timer(SHIMMER_INITIAL_DELAY + i * SHIMMER_STAGGER, lambda s=slot: self._pulse_slot(s))
+        await asyncio.sleep(len(slots) * SHIMMER_STAGGER + SHIMMER_GLOW_HOLD)
 
     @staticmethod
     def _pulse_slot(slot: SpreadSlot) -> None:
         slot.add_class("glow")
-        slot.set_timer(0.22, lambda: slot.remove_class("glow"))
+        slot.set_timer(SHIMMER_GLOW_HOLD, lambda: slot.remove_class("glow"))
 
     # -- Detail toggle --
 

@@ -255,8 +255,9 @@ def test_done_phase_does_not_wait_for_completion_shimmer():
 
 def test_completion_shimmer_avoids_zero_delay_timer():
     """The first completion pulse should not use Textual's zero-second timer path."""
+    import inspect
+
     from nekomata.tui.screens.draw import DrawScreen
 
-    constants = DrawScreen._completion_shimmer.__code__.co_consts
-
-    assert 0.01 in constants
+    source = inspect.getsource(DrawScreen._completion_shimmer)
+    assert "SHIMMER_INITIAL_DELAY" in source

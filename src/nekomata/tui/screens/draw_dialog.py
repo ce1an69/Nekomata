@@ -3,10 +3,14 @@
 from nekomata.core.render.styles import EASE
 from nekomata.tui.render.animations import animate_entrance, animate_exit
 from nekomata.tui.screens.draw_constants import (
+    INTERP_ENTRANCE_DURATION,
     INTERP_FULLSCREEN_VERTICAL_CHROME,
     INTERP_MAX_HEIGHT,
     INTERP_MIN_HEIGHT,
     INTERP_PANEL_HEIGHT_RATIO,
+    PANEL_ENTRANCE_DURATION,
+    PANEL_EXIT_DURATION,
+    TIMER_SLACK,
 )
 from nekomata.tui.screens.draw_messages import DetailHideRequested, DetailShowRequested
 from nekomata.tui.screens.stream_handler import StreamHandler
@@ -141,10 +145,10 @@ class InterpretationDialog:
                 on_complete()
             return
         self._w_interp.styles.height = from_height
-        duration = 0.28
-        self._w_interp.styles.animate("height", to_height, duration=duration, easing="out_cubic")
+        duration = PANEL_ENTRANCE_DURATION
+        self._w_interp.styles.animate("height", to_height, duration=duration, easing=EASE)
         if on_complete:
-            timer = self._screen.set_timer(duration + 0.01, on_complete)
+            timer = self._screen.set_timer(duration + TIMER_SLACK, on_complete)
             self._height_timers.append(timer)
 
     def sync_layout(self, detail_visible: bool, screen_width: int) -> None:
@@ -167,7 +171,7 @@ class InterpretationDialog:
             sync_layout()
         self._w_interp.display = True
         self._w_interp.add_class("visible")
-        animate_entrance(self._w_interp, duration=0.30, dy=2, easing=EASE)
+        animate_entrance(self._w_interp, duration=INTERP_ENTRANCE_DURATION, dy=2, easing=EASE)
         self._stream.reset()
 
     def hide(self, update_phase_ui, sync_layout=None) -> None:
@@ -194,7 +198,7 @@ class InterpretationDialog:
         if self._screen.app.animation_enabled:
             animate_exit(
                 self._w_interp,
-                duration=0.28,
+                duration=PANEL_EXIT_DURATION,
                 dy=2,
                 easing=EASE,
                 callback=_finish_hide,

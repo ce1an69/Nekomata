@@ -70,7 +70,7 @@ addopts = "--tb=short -q"
 source = ["nekomata"]
 
 [tool.coverage.report]
-fail_under = 69
+fail_under = 77
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -121,3 +121,10 @@ reportMissingImports = "warning"
 reportOptionalMemberAccess = "warning"
 reportAttributeAccessIssue = "warning"
 reportArgumentType = "warning"
+
+[dependency-groups]
+dev = [
+    "fastapi>=0.136.1",
+    "httpx>=0.28.1",
+    "slowapi>=0.1.9",
+]
