@@ -100,6 +100,19 @@ def _get_cached_cards(app) -> tuple[list[dict], dict[str, Card]]:
     return app.state.cards_dict, app.state.cards_by_id
 
 
+def _get_config(app) -> AppConfig:
+    """Return cached AppConfig, loading from disk on first call."""
+    if not hasattr(app.state, "config"):
+        app.state.config = AppConfig.load()
+    return app.state.config
+
+
+def _invalidate_config(app) -> None:
+    """Clear cached config so the next read reloads from disk."""
+    if hasattr(app.state, "config"):
+        del app.state.config
+
+
 def _spreads_to_list(lang: str | None = None) -> list[dict]:
     from nekomata.core.spread import get_spread as _get_spread
 
@@ -224,7 +237,7 @@ def create_app() -> FastAPI:
 
     @app.get("/api/config")
     async def get_config():
-        cfg = AppConfig.load()
+        cfg = _get_config(app)
         return {
             "api_url": cfg.api_url,
             "api_key": "",
@@ -235,7 +248,7 @@ def create_app() -> FastAPI:
 
     @app.post("/api/config")
     async def save_config(payload: ConfigPayload):
-        existing = AppConfig.load()
+        existing = _get_config(app)
         api_key = payload.api_key or existing.api_key or ""
         cfg = AppConfig.save(
             api_url=payload.api_url,
@@ -243,6 +256,7 @@ def create_app() -> FastAPI:
             model=payload.model,
             lang=payload.lang,
         )
+        _invalidate_config(app)
         return {
             "ok": True,
             "api_url": cfg.api_url,
@@ -258,7 +272,7 @@ def create_app() -> FastAPI:
 
     @app.get("/api/spreads")
     async def get_spreads():
-        cfg = AppConfig.load()
+        cfg = _get_config(app)
         cache_key = f"spreads_{cfg.lang}"
         if not hasattr(app.state, cache_key):
             setattr(app.state, cache_key, _spreads_to_list(lang=cfg.lang))
@@ -270,13 +284,13 @@ def create_app() -> FastAPI:
 
     @app.get("/api/strings")
     async def get_strings():
-        cfg = AppConfig.load()
+        cfg = _get_config(app)
         return ui_strings(lang=cfg.lang)
 
     @app.post("/api/interpret")
     # AI endpoints: lower rate limit (expensive upstream calls)
     async def interpret(req: InterpretPayload):
-        config = AppConfig.load()
+        config = _get_config(app)
         _, cards_by_id = _get_cached_cards(app)
         drawn = _resolve_drawn_cards(req.cards, cards_by_id)
 
@@ -316,7 +330,7 @@ def create_app() -> FastAPI:
     @app.post("/api/interpret/followup")
     async def interpret_followup(req: FollowupPayload):
         """Stream a follow-up interpretation using conversation history."""
-        config = AppConfig.load()
+        config = _get_config(app)
         try:
             interp = get_interpreter(config)
         except InterpretationError as exc:
@@ -357,7 +371,7 @@ def create_app() -> FastAPI:
 
         from nekomata.core.render.image_export import render_interp_image
 
-        config = AppConfig.load()
+        config = _get_config(app)
         _, cards_by_id = _get_cached_cards(app)
         drawn = _resolve_drawn_cards(req.cards, cards_by_id)
 
