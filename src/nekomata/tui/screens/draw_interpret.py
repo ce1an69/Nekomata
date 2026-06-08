@@ -10,7 +10,6 @@ from rich.console import Group
 from rich.markdown import Markdown
 from rich.rule import Rule
 from rich.text import Text
-from textual import on
 from textual.css.query import NoMatches
 from textual.events import Key
 from textual.widgets import Input
@@ -97,8 +96,7 @@ class InterpretMixin:
 
     # -- Stream lifecycle Message handlers (asynchronous, one-shot events) --
 
-    @on(StreamError)
-    def _on_stream_error_message(self, message: StreamError) -> None:
+    def _on_stream_error(self, message: StreamError) -> None:
         if message.config_error:
             # Config error: skip exit animation (screen is about to be popped)
             # and navigate directly — avoids _finish_hide callback on unmounted screen.
@@ -112,8 +110,7 @@ class InterpretMixin:
             self._dialog.hide(self._update_phase_ui, sync_layout=self._sync_interp_layout)
         self.app.notify(message.message, severity="error", timeout=10)
 
-    @on(StreamDone)
-    def _on_stream_done_message(self, message: StreamDone) -> None:
+    def _on_stream_done(self, message: StreamDone) -> None:
         new_content = "".join(self._stream._content_chars)
 
         if self._followup_active:
@@ -149,7 +146,6 @@ class InterpretMixin:
 
     # -- Phase Message handler --
 
-    @on(PhaseChanged)
     def _on_phase_changed(self, message: PhaseChanged) -> None:
         if self._skip_phase_ui_message:
             self._skip_phase_ui_message = False
