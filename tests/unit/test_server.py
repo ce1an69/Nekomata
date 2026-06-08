@@ -4,6 +4,8 @@ import pytest
 
 from nekomata.web.server import create_app
 
+pytestmark = pytest.mark.skip_config_fixture
+
 
 @pytest.fixture()
 def _config(tmp_path, monkeypatch):

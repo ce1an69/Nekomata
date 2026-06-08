@@ -124,7 +124,7 @@ def clear_cache() -> None:
 # ── Widget-based API (textual-image) ─────────────────────────────────
 
 
-def create_card_face_widget(drawn: DrawnCard):
+def create_card_face_widget(drawn: DrawnCard) -> object | None:
     """Return an Image widget for the spread slot face, or None if no image.
 
     Uses preloaded cache; falls back to synchronous load if cache miss.
@@ -138,7 +138,7 @@ def create_card_face_widget(drawn: DrawnCard):
     return TUIImage(img, classes="card-face")
 
 
-def create_card_detail_widget(drawn: DrawnCard, *, upright_image: bool = False):
+def create_card_detail_widget(drawn: DrawnCard, *, upright_image: bool = False) -> object | None:
     """Return an Image widget for the detail view, or None if no PNG.
 
     By default, respects the drawn card's reversed state to show the correct

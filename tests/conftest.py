@@ -8,9 +8,9 @@ import pytest
 def _ensure_config(request, tmp_path: Path, monkeypatch):
     """Create a dummy settings file so SetupScreen is not shown during tests.
 
-    Skipped for test_config.py which manages its own config files.
+    Skipped for tests marked with @pytest.mark.skip_config_fixture.
     """
-    if "test_config" in request.node.nodeid or "test_renderer" in request.node.nodeid or "test_server" in request.node.nodeid:
+    if request.node.get_closest_marker("skip_config_fixture"):
         yield
         return
     settings = tmp_path / ".neko" / "settings.json"

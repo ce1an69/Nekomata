@@ -1,7 +1,11 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from nekomata.core.storage.config import AppConfig
+
+pytestmark = pytest.mark.skip_config_fixture
 
 
 def test_default_config():

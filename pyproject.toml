@@ -65,12 +65,15 @@ nekomata-tarot = "nekomata.app:main"
 asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = "--tb=short -q"
+markers = [
+    "skip_config_fixture: skip autouse config fixture (test manages its own config)",
+]
 
 [tool.coverage.run]
 source = ["nekomata"]
 
 [tool.coverage.report]
-fail_under = 77
+fail_under = 80
 
 [tool.setuptools.packages.find]
 where = ["src"]
