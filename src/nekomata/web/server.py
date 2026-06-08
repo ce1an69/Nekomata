@@ -361,7 +361,7 @@ def create_app() -> FastAPI:
         _, cards_by_id = _get_cached_cards(app)
         drawn = _resolve_drawn_cards(req.cards, cards_by_id)
 
-        img = render_interp_image(req.text, drawn or None, lang=config.lang, question=req.question)
+        img = await asyncio.to_thread(render_interp_image, req.text, drawn or None, lang=config.lang, question=req.question)
         buf = BytesIO()
         img.save(buf, format="PNG")
         return Response(
