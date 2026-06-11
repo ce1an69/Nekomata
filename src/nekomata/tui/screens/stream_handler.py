@@ -151,7 +151,7 @@ class StreamHandler:
         self.stop()
         self._screen.post_message(StreamDone())
 
-    async def run(self, drawn_cards, question, cancelled_check) -> None:
+    def run(self, drawn_cards, question, cancelled_check) -> None:
         from nekomata.core.ai.interpreter import _DEFAULT_STYLE, build_messages
 
         config = self._screen.app.config
@@ -162,7 +162,7 @@ class StreamHandler:
             cancelled_check,
         )
 
-    async def run_followup(self, messages_history: list[dict], question: str, cancelled_check) -> None:
+    def run_followup(self, messages_history: list[dict], question: str, cancelled_check) -> None:
         """Stream a follow-up interpretation using conversation history."""
         config = self._screen.app.config
         followup_msg = build_followup_prompt(question, lang=config.lang)
