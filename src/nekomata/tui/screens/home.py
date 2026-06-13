@@ -262,7 +262,7 @@ class HomeScreen(Screen):
         self.app.question = value
         from nekomata.tui.screens.spread_select import SpreadSelectScreen
 
-        self.app.push_screen(SpreadSelectScreen(), callback=self._on_spread_selected)
+        self.app.push_screen(SpreadSelectScreen(), callback=self._on_spread_selected)  # pyright: ignore[reportCallIssue]
 
     def _refresh_command_suggestions(self, value: str) -> None:
         """Show or hide the command suggestions dropdown based on input."""

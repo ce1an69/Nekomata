@@ -1,6 +1,6 @@
 """Unit tests for StreamHandler — typewriter effect and stream lifecycle."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from nekomata.core.ai.interpreter import InterpretationError, StreamChunk
 from nekomata.tui.screens.stream_handler import StreamHandler
@@ -143,7 +143,7 @@ def test_consume_stream_error():
 
     def bad_gen():
         raise RuntimeError("boom")
-        yield  # noqa: unreachable — makes this a generator
+        yield  # makes bad_gen a generator function
 
     h._consume_stream(bad_gen(), lambda: False)
     h._screen.app.call_from_thread.assert_called()

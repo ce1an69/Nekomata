@@ -27,7 +27,7 @@ def test_unknown_theme_fallback():
 
 
 def test_all_themes_have_required_fields():
-    for name, theme in THEMES.items():
+    for _name, theme in THEMES.items():
         assert theme.upright_border
         assert theme.reversed_border
 

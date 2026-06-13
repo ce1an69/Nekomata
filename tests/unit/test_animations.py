@@ -158,12 +158,12 @@ def test_pick_complete_transition_is_immediate():
 
     # Extract the #deck-section block and verify its transition is border-only.
     deck_section = css.split("#deck-section {")[1].split("}")[0]
-    transition_line = [l.strip() for l in deck_section.split("\n") if "transition" in l]
+    transition_line = [line.strip() for line in deck_section.split("\n") if "transition" in line]
     assert len(transition_line) == 1
     assert "border 180ms" in transition_line[0]
     assert "opacity" not in transition_line[0]
     assert "offset" not in transition_line[0]
-    assert PICK_COMPLETE_DELAY == pytest.approx(0.0)
+    assert pytest.approx(0.0) == PICK_COMPLETE_DELAY
 
 
 def test_main_area_keeps_offset_transition_for_centering():
@@ -186,10 +186,10 @@ def test_spread_slot_flip_uses_smooth_two_phase_motion():
     assert "opacity 280ms" not in css
     assert "offset 220ms" not in css
     assert 0.0 in constants  # fade-out to fully invisible (no flash)
-    assert SLOT_FLIP_FADE_OUT == pytest.approx(0.14)
-    assert SLOT_FLIP_SWAP_PAUSE == pytest.approx(0.12)
-    assert SLOT_FLIP_FADE_IN == pytest.approx(0.28)
-    assert SLOT_FLIP_GLOW_HOLD == pytest.approx(0.16)
+    assert pytest.approx(0.14) == SLOT_FLIP_FADE_OUT
+    assert pytest.approx(0.12) == SLOT_FLIP_SWAP_PAUSE
+    assert pytest.approx(0.28) == SLOT_FLIP_FADE_IN
+    assert pytest.approx(0.16) == SLOT_FLIP_GLOW_HOLD
 
 
 @pytest.mark.asyncio

@@ -48,19 +48,19 @@ def test_prompt_choice_invalid_input_defaults():
 
 
 def test_draw_cards_single():
-    drawn, spread = _draw_cards("single", seed=42)
+    drawn, _spread = _draw_cards("single", seed=42)
     assert len(drawn) == 1
     assert drawn[0].card is not None
     assert drawn[0].position is not None
 
 
 def test_draw_cards_five_card_cross():
-    drawn, spread = _draw_cards("five_card_cross", seed=42)
+    drawn, _spread = _draw_cards("five_card_cross", seed=42)
     assert len(drawn) == 5
 
 
 def test_draw_cards_past_present_future():
-    drawn, spread = _draw_cards("past_present_future", seed=42)
+    drawn, _spread = _draw_cards("past_present_future", seed=42)
     assert len(drawn) == 3
 
 
@@ -87,15 +87,13 @@ def test_prompt_empty_uses_default():
 
 
 def test_prompt_eof_exits():
-    with patch("nekomata.cli.run.input", side_effect=EOFError):
-        with pytest.raises(SystemExit):
-            _prompt("Question")
+    with patch("nekomata.cli.run.input", side_effect=EOFError), pytest.raises(SystemExit):
+        _prompt("Question")
 
 
 def test_prompt_keyboard_interrupt_exits():
-    with patch("nekomata.cli.run.input", side_effect=KeyboardInterrupt):
-        with pytest.raises(SystemExit):
-            _prompt("Question")
+    with patch("nekomata.cli.run.input", side_effect=KeyboardInterrupt), pytest.raises(SystemExit):
+        _prompt("Question")
 
 
 # --- _print_cards tests ---
@@ -113,10 +111,13 @@ def test_print_cards_no_crash():
 def test_stream_interpretation_config_error():
     config = MagicMock()
     config.lang = "en"
-    with patch(
-        "nekomata.cli.run.get_interpreter",
-        side_effect=InterpretationError("no api key", config_error=True),
-    ), patch("nekomata.cli.run.console.print") as mock_print:
+    with (
+        patch(
+            "nekomata.cli.run.get_interpreter",
+            side_effect=InterpretationError("no api key", config_error=True),
+        ),
+        patch("nekomata.cli.run.console.print") as mock_print,
+    ):
         _stream_interpretation(config, [], "test question")
     calls = [str(c) for c in mock_print.call_args_list]
     assert any("Error" in c for c in calls)
@@ -133,9 +134,10 @@ def _make_args(**overrides):
 
 def test_run_cli_no_api_key():
     config = MagicMock(api_key="", api_url="", lang="en")
-    with patch("nekomata.cli.run.AppConfig.load", return_value=config), patch(
-        "nekomata.cli.run.console.print"
-    ) as mock_print:
+    with (
+        patch("nekomata.cli.run.AppConfig.load", return_value=config),
+        patch("nekomata.cli.run.console.print") as mock_print,
+    ):
         run_cli(_make_args(question="test", seed=42, spread="single", yes=True))
     calls = [str(c) for c in mock_print.call_args_list]
     assert any("API not configured" in c for c in calls)
@@ -143,9 +145,10 @@ def test_run_cli_no_api_key():
 
 def test_run_cli_unknown_spread():
     config = MagicMock(api_key="k", api_url="http://x", lang="en")
-    with patch("nekomata.cli.run.AppConfig.load", return_value=config), patch(
-        "nekomata.cli.run.console.print"
-    ) as mock_print:
+    with (
+        patch("nekomata.cli.run.AppConfig.load", return_value=config),
+        patch("nekomata.cli.run.console.print") as mock_print,
+    ):
         run_cli(_make_args(question="q", seed=42, spread="nonexistent", yes=True))
     calls = [str(c) for c in mock_print.call_args_list]
     assert any("Unknown spread" in c for c in calls)

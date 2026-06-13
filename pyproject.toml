@@ -36,9 +36,9 @@ dependencies = [
 [project.optional-dependencies]
 desktop = [
     "pywebview>=5.0",
-    "fastapi>=0.115",
+    "fastapi>=0.136.1",
     "uvicorn>=0.30",
-    "slowapi>=0.1",
+    "slowapi>=0.1.9",
     "pyinstaller>=6.20.0",
 ]
 dev = [
@@ -65,6 +65,10 @@ nekomata-tarot = "nekomata.app:main"
 asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = "--tb=short -q"
+filterwarnings = [
+    # slowapi 0.1.x probes endpoints with asyncio.iscoroutinefunction (deprecated, removed in 3.16)
+    "ignore:.*asyncio.iscoroutinefunction.*:DeprecationWarning:slowapi",
+]
 markers = [
     "skip_config_fixture: skip autouse config fixture (test manages its own config)",
 ]

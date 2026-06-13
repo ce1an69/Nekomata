@@ -22,8 +22,9 @@ class SolidStatic(Static):
         self._content = content
         self._align = align
 
-    def update(self, content: str = "", *, layout: bool = True) -> None:
-        self._content = content
+    def update(self, content="", *, layout: bool = True) -> None:
+        # Coerce to str — SolidStatic pads via cell_len() and never parses rich markup.
+        self._content = content if isinstance(content, str) else str(content)
         self.refresh(layout=layout)
 
     def render(self) -> Text:

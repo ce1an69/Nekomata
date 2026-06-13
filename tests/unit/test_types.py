@@ -1,4 +1,4 @@
-from nekomata.core.card.display import card_keywords, card_meaning, card_name, status_label
+from nekomata.core.card.display import card_keywords, card_meaning, status_label
 from nekomata.core.card.types import Arcana, Card, DrawnCard, Position
 
 
@@ -46,7 +46,7 @@ def test_card_frozen():
     )
     try:
         card.name = "changed"
-        assert False, "Should be frozen"
+        raise AssertionError("Should be frozen")
     except AttributeError:
         pass
 

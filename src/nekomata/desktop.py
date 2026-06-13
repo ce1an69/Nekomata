@@ -6,8 +6,6 @@ import threading
 import time
 import urllib.request
 
-import webview
-
 from nekomata.web.server import create_app, find_free_port
 
 
@@ -77,6 +75,8 @@ def main(*, debug: bool = False) -> None:
             print(f"[debug] GET {url} → {resp.status}")
         except Exception as e:
             print(f"[debug] GET {url} → ERROR: {e}")
+
+    import webview  # lazy: pywebview is an optional desktop extra, avoid importing at module load
 
     if debug:
         print(f"[debug] opening webview window → {url}")

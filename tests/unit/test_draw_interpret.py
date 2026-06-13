@@ -24,7 +24,7 @@ def test_compose_copy_text_multiple_cards():
     drawn, _ = _draw_cards("past_present_future", seed=42)
     result = _compose_copy_text("My question", drawn, "The reading says...", "en")
     # Should have 3 card entries (one per drawn card)
-    lines = [l for l in result.split("\n") if l.startswith("- ")]
+    lines = [line for line in result.split("\n") if line.startswith("- ")]
     assert len(lines) == 3
 
 

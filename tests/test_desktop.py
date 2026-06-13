@@ -6,8 +6,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-pytest.importorskip("webview")
-
 import nekomata.desktop as _desktop
 
 
@@ -23,7 +21,7 @@ def test_main_starts_server_and_webview():
     mock_create_app = MagicMock(return_value=mock_app)
 
     with (
-        patch.object(_desktop, "webview", mock_webview),
+        patch.dict(sys.modules, {"webview": mock_webview}),
         patch.object(_desktop, "create_app", mock_create_app),
         patch.dict(sys.modules, {"uvicorn": mock_uvicorn}),
         patch("nekomata.desktop.find_free_port", return_value=9999),
@@ -53,7 +51,7 @@ def test_main_debug_mode():
     mock_create_app = MagicMock(return_value=mock_app)
 
     with (
-        patch.object(_desktop, "webview", mock_webview),
+        patch.dict(sys.modules, {"webview": mock_webview}),
         patch.object(_desktop, "create_app", mock_create_app),
         patch.dict(sys.modules, {"uvicorn": mock_uvicorn}),
         patch("nekomata.desktop.find_free_port", return_value=9999),
@@ -77,7 +75,7 @@ def test_server_runs_in_daemon_thread():
     mock_create_app = MagicMock(return_value=MagicMock())
 
     with (
-        patch.object(_desktop, "webview", MagicMock()),
+        patch.dict(sys.modules, {"webview": MagicMock()}),
         patch.object(_desktop, "create_app", mock_create_app),
         patch.dict(sys.modules, {"uvicorn": MagicMock()}),
         patch("nekomata.desktop.find_free_port", return_value=9999),

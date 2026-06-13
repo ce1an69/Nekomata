@@ -4,7 +4,7 @@ import asyncio
 import json
 import logging
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
@@ -288,8 +288,8 @@ def create_app() -> FastAPI:
         return ui_strings(lang=cfg.lang)
 
     @app.post("/api/interpret")
-    # AI endpoints: lower rate limit (expensive upstream calls)
-    async def interpret(req: InterpretPayload):
+    @limiter.limit("20/minute")
+    async def interpret(request: Request, req: InterpretPayload):
         config = _get_config(app)
         _, cards_by_id = _get_cached_cards(app)
         drawn = _resolve_drawn_cards(req.cards, cards_by_id)
@@ -328,7 +328,8 @@ def create_app() -> FastAPI:
         return StreamingResponse(_stream(), media_type="text/event-stream")
 
     @app.post("/api/interpret/followup")
-    async def interpret_followup(req: FollowupPayload):
+    @limiter.limit("20/minute")
+    async def interpret_followup(request: Request, req: FollowupPayload):
         """Stream a follow-up interpretation using conversation history."""
         config = _get_config(app)
         try:

@@ -14,11 +14,13 @@ async def test_draw_escape_goes_home():
         await pilot.click("#spread-single")
         await pilot.pause()
         from nekomata.tui.screens.draw import DrawScreen
+
         assert isinstance(app.screen, DrawScreen)
 
         await pilot.press("escape")
         await pilot.pause()
         from nekomata.tui.screens.home import HomeScreen
+
         assert isinstance(app.screen, HomeScreen)
 
 
@@ -33,6 +35,7 @@ async def test_draw_screen_has_spread_info():
         await pilot.click("#spread-single")
         await pilot.pause()
         from nekomata.tui.screens.draw import DrawScreen
+
         assert isinstance(app.screen, DrawScreen)
         title = app.screen.query_one("#draw-title")
         rendered = str(title.render())
@@ -49,7 +52,8 @@ async def test_draw_screen_has_deck_cards():
         await pilot.pause()
         await pilot.click("#spread-single")
         await pilot.pause()
-        from nekomata.tui.screens.draw import DrawScreen, DeckCard
+        from nekomata.tui.screens.draw import DeckCard, DrawScreen
+
         assert isinstance(app.screen, DrawScreen)
         deck_cards = list(app.screen.query(DeckCard))
         assert len(deck_cards) > 0
@@ -65,11 +69,13 @@ async def test_spread_select_digit_key():
         await pilot.press("enter")
         await pilot.pause()
         from nekomata.tui.screens.spread_select import SpreadSelectScreen
+
         assert isinstance(app.screen, SpreadSelectScreen)
 
         await pilot.press("1")
         await pilot.pause()
         from nekomata.tui.screens.draw import DrawScreen
+
         assert isinstance(app.screen, DrawScreen)
 
 
@@ -83,11 +89,13 @@ async def test_input_cleared_after_submit():
         await pilot.press("enter")
         await pilot.pause()
         from nekomata.tui.screens.spread_select import SpreadSelectScreen
+
         assert isinstance(app.screen, SpreadSelectScreen)
 
         await pilot.press("escape")
         await pilot.pause()
         from nekomata.tui.screens.home import HomeScreen
+
         assert isinstance(app.screen, HomeScreen)
         inp = app.screen.query_one("#prompt-input")
         assert inp.value == ""
@@ -105,11 +113,13 @@ async def test_draw_escape_goes_home_from_multi_spread():
         await pilot.click("#spread-past_present_future")
         await pilot.pause()
         from nekomata.tui.screens.draw import DrawScreen
+
         assert isinstance(app.screen, DrawScreen)
 
         await pilot.press("escape")
         await pilot.pause()
         from nekomata.tui.screens.home import HomeScreen
+
         assert isinstance(app.screen, HomeScreen)
 
 
@@ -123,6 +133,7 @@ async def test_spread_select_shows_position_preview():
         await pilot.press("enter")
         await pilot.pause()
         from nekomata.tui.screens.spread_select import SpreadSelectScreen
+
         assert isinstance(app.screen, SpreadSelectScreen)
 
         desc = app.screen.query_one("#preview-desc")
