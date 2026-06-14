@@ -194,7 +194,7 @@ class StreamHandler:
             return
 
         self._screen.run_worker(
-            self._consume_stream(stream_fn, cancelled_check),
+            lambda: self._consume_stream(stream_fn, cancelled_check),
             thread=True,
             exclusive=True,
         )
