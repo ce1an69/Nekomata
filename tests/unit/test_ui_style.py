@@ -2,6 +2,7 @@
 
 import inspect
 import re
+from unittest.mock import MagicMock
 
 from nekomata.core.render.styles import (
     C_CRUST,
@@ -108,6 +109,17 @@ def test_setup_language_select_has_no_blank_prompt_and_uses_local_style():
     assert "SetupScreen #lang-select > SelectCurrent" in css
     assert "SetupScreen #lang-select > SelectOverlay" in css
     assert ".option-list--option-highlighted" in css
+
+
+def test_setup_button_posts_pressed_message():
+    button = SetupButton("Save")
+    button.post_message = MagicMock()
+
+    button.on_click()
+    button.key_enter()
+
+    assert button.post_message.call_count == 2
+    assert all(call.args[0].__class__.__name__ == "Pressed" for call in button.post_message.call_args_list)
 
 
 def test_card_rendering_catppuccin_theme_uses_purple_accents():
